@@ -29,7 +29,7 @@
 
 
 
-import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
+import { Plus_Jakarta_Sans, Playfair_Display, Anton } from "next/font/google";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -43,6 +43,13 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
   style: ["normal", "italic"],
+});
+
+/** Impact-style display — Emergency section headline */
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: ["400"],
 });
 
 export const metadata = {
@@ -149,7 +156,7 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className={`${plusJakarta.variable} ${playfair.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}>
+      <body className={`${plusJakarta.variable} ${playfair.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}>
         {children}
       </body>
     </html>

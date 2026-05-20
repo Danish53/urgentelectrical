@@ -1,7 +1,7 @@
 /**
  * Featured carousel — replace images in /public/featured/
  * Card: pat.jpg, fire-alarm.jpg, emergency-lighting.jpg, fault-investigation.jpg, eicr.jpg, emergency-24.jpg
- * Nav: nav-prev.png, nav-next.png
+ * Nav arrows: built-in SVG in FeaturedServices.jsx (optional custom: nav-prev.png, nav-next.png)
  */
 export const FEATURED_SERVICES = [
   {
@@ -48,9 +48,6 @@ export const FEATURED_SERVICES = [
     tag: "Most Popular",
   },
 ];
-
-export const FEATURED_NAV_PREV = "/featured/nav-prev.png";
-export const FEATURED_NAV_NEXT = "/featured/nav-next.png";
 
 export function priceIncVat(priceExc) {
   return (priceExc * 1.2).toFixed(2);

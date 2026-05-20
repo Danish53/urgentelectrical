@@ -24,7 +24,7 @@ export default function HeroHome2() {
       <div className={`${CONTAINER} relative z-10`}>
         <div className="grid lg:grid-cols-2 xl:grid-cols-[1.1fr_0.9fr] gap-10 xl:gap-12 items-center">
           <div className="text-center lg:text-left order-2 lg:order-1">
-            <div className="inline-flex items-center gap-3 mb-6">
+            {/* <div className="inline-flex items-center gap-3 mb-6">
               <Image
                 src="/logo.jpg"
                 alt="Urgent Electrical Services"
@@ -37,7 +37,7 @@ export default function HeroHome2() {
                 <p className="text-white font-bold text-[15px]">Urgent Electrical Services</p>
                 <p className="text-[#ff5a3c] text-[10px] font-bold uppercase tracking-[0.16em]">24 HR Emergency Response</p>
               </div>
-            </div>
+            </div> */}
 
             <span className="home2-hero-badge-dark mb-5">
               <span className="w-2 h-2 rounded-full bg-[#4ADE80] animate-pulse" aria-hidden="true" />

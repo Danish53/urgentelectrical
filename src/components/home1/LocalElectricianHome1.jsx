@@ -26,23 +26,24 @@ export default function LocalElectricianHome1() {
                     {p}
                   </p>
                 ))}
-                {col.highlight && (
+                {(col.highlightLead || col.highlightRest) && (
                   <div
                     className="mt-6 rounded-xl px-4 py-4 text-[14px] font-medium leading-relaxed flex items-start gap-3"
                     style={{ background: "var(--home1-red-soft)", color: "var(--home1-red-deep)" }}
                   >
                     <IconPhone className="w-5 h-5 shrink-0 mt-0.5" />
                     <span>
+                      <strong>{col.highlightLead}</strong>{" "}
                       {col.highlightPhone ? (
                         <>
-                          {col.highlight.split("0115 778 0622")[0]}
+                          {col.highlightRest.split("0115 778 0622")[0]}
                           <a href={`tel:${col.highlightPhone}`} className="font-bold hover:underline" style={{ color: "var(--home1-red)" }}>
                             0115 778 0622
                           </a>
-                          {col.highlight.split("0115 778 0622")[1]}
+                          {col.highlightRest.split("0115 778 0622")[1]}
                         </>
                       ) : (
-                        col.highlight
+                        col.highlightRest
                       )}
                     </span>
                   </div>

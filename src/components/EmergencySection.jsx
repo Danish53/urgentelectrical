@@ -41,22 +41,10 @@ export default function EmergencySection() {
               Emergency Electrician · Nottingham · 24/7
             </p>
 
-            <h2
-              id="emergency-section-heading"
-              className="font-sans uppercase font-black leading-[1.02] tracking-[-0.01em] mb-7 sm:mb-9"
-            >
-              <span className="block text-white text-[26px] sm:text-[34px] lg:text-[40px] xl:text-[44px]">
-                Urgent Electrical —
-              </span>
-              <span
-                className="block text-[30px] sm:text-[42px] lg:text-[50px] xl:text-[56px] my-0.5"
-                style={{ color: ACCENT }}
-              >
-                Emergency
-              </span>
-              <span className="block text-white text-[26px] sm:text-[34px] lg:text-[40px] xl:text-[44px]">
-                Electrician Nottingham
-              </span>
+            <h2 id="emergency-section-heading" className="emergency-display-headline mb-7 sm:mb-9">
+              <span className="emergency-display-line text-white">Urgent Electrical –</span>
+              <span className="emergency-display-line emergency-display-line--accent">Emergency</span>
+              <span className="emergency-display-line text-white">Electrician Nottingham</span>
             </h2>
 
             <p className="text-[#d4d4d4] text-[15px] sm:text-[16px] leading-[1.7] mb-9 sm:mb-11 max-w-xl">

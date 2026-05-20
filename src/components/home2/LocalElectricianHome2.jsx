@@ -23,20 +23,21 @@ export default function LocalElectricianHome2() {
                     {p}
                   </p>
                 ))}
-                {col.highlight && (
+                {(col.highlightLead || col.highlightRest) && (
                   <p className="mt-4 text-sm font-medium text-[var(--h2-red)] bg-[var(--h2-red-soft)] rounded-xl px-4 py-3 flex items-start gap-2">
                     <IconPhone className="w-5 h-5 shrink-0 mt-0.5" />
                     <span>
+                      <strong>{col.highlightLead}</strong>{" "}
                       {col.highlightPhone ? (
                         <>
-                          {col.highlight.split("0115 778 0622")[0]}
+                          {col.highlightRest.split("0115 778 0622")[0]}
                           <a href={`tel:${col.highlightPhone}`} className="font-bold underline">
                             0115 778 0622
                           </a>
-                          {col.highlight.split("0115 778 0622")[1]}
+                          {col.highlightRest.split("0115 778 0622")[1]}
                         </>
                       ) : (
-                        col.highlight
+                        col.highlightRest
                       )}
                     </span>
                   </p>

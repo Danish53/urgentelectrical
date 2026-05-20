@@ -1,12 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  FEATURED_SERVICES,
-  FEATURED_NAV_PREV,
-  FEATURED_NAV_NEXT,
-  priceIncVat,
-} from "@/data/featuredServices";
+import { FEATURED_SERVICES, priceIncVat } from "@/data/featuredServices";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 const BRAND_RED = "#E32B2B";
@@ -65,8 +60,6 @@ function ServiceImage({ service }) {
 }
 
 function SliderNavButton({ direction, onClick, disabled }) {
-  const src = direction === "prev" ? FEATURED_NAV_PREV : FEATURED_NAV_NEXT;
-  const [imgFailed, setImgFailed] = useState(false);
   const label = direction === "prev" ? "Previous services" : "Next services";
 
   return (
@@ -74,20 +67,12 @@ function SliderNavButton({ direction, onClick, disabled }) {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`featured-nav-btn absolute top-1/2 -translate-y-1/2 z-30 disabled:opacity-35 disabled:cursor-not-allowed ${
-        !imgFailed ? "featured-nav-btn--custom-img" : ""
-      } ${direction === "prev" ? "left-0" : "right-0"}`}
+      className={`featured-nav-btn absolute top-1/2 z-30 disabled:opacity-35 disabled:cursor-not-allowed ${
+        direction === "prev" ? "left-0 sm:-left-1" : "right-0 sm:-right-1"
+      }`}
       aria-label={label}
     >
-      {!imgFailed && (
-        <img
-          src={src}
-          alt=""
-          className="h-11 w-11 sm:h-12 sm:w-12 object-contain"
-          onError={() => setImgFailed(true)}
-        />
-      )}
-      {imgFailed && (direction === "prev" ? <ChevronLeft /> : <ChevronRight />)}
+      {direction === "prev" ? <ChevronLeft /> : <ChevronRight />}
     </button>
   );
 }
