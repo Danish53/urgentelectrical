@@ -1,68 +1,68 @@
 "use client";
 
 import Navbar from "@/components/Navbar.jsx";
+import Hero from "@/components/Hero.jsx";
+import WhyChooseUs from "@/components/WhyChooseUs.jsx";
+import HowItWorks from "@/components/HowItWorks.jsx";
+import FeaturedServices from "@/components/FeaturedServices.jsx";
+import EmergencySection from "@/components/EmergencySection.jsx";
+import CommercialSection from "@/components/CommercialSection.jsx";
+import LocalElectricianSection from "@/components/LocalElectricianSection.jsx";
+import FAQSection from "@/components/FAQSection.jsx";
+import AreasSection from "@/components/AreasSection.jsx";
+import TestimonialsSection from "@/components/TestimonialsSection.jsx";
+import PartnersSection from "@/components/PartnersSection.jsx";
+import NewsletterSection from "@/components/NewsletterSection.jsx";
+import CTABannerSection from "@/components/CTABannerSection.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import MotionSection from "@/components/MotionSection.jsx";
-import HeroHome1 from "@/components/home1/HeroHome1";
-import WhyChooseUsHome1 from "@/components/home1/WhyChooseUsHome1";
-import HowItWorksHome1 from "@/components/home1/HowItWorksHome1";
-import FeaturedServicesHome1 from "@/components/home1/FeaturedServicesHome1";
-import EmergencyHome1 from "@/components/home1/EmergencyHome1";
-import CommercialHome1 from "@/components/home1/CommercialHome1";
-import LocalElectricianHome1 from "@/components/home1/LocalElectricianHome1";
-import FAQHome1 from "@/components/home1/FAQHome1";
-import AreasHome1 from "@/components/home1/AreasHome1";
-import TestimonialsHome1 from "@/components/home1/TestimonialsHome1";
-import PartnersHome1 from "@/components/home1/PartnersHome1";
-import NewsletterHome1 from "@/components/home1/NewsletterHome1";
-import CTAHome1 from "@/components/home1/CTAHome1";
-import "./home1.css";
 
-export default function Home1Page() {
+/** Original homepage design (pre–home1 default) — available at /home1 */
+export default function Home1LegacyPage() {
   return (
-    <div className="home1-page w-full min-w-0">
+    <div className="w-full min-w-0">
       <Navbar />
       <main className="w-full min-w-0">
-        <HeroHome1 />
+        <Hero />
         <MotionSection variant="fade-up">
-          <WhyChooseUsHome1 />
+          <WhyChooseUs />
         </MotionSection>
-        <MotionSection variant="fade-up" delay={0.08}>
-          <HowItWorksHome1 />
+        <MotionSection variant="fade-up" delay={0.1}>
+          <HowItWorks />
         </MotionSection>
-        <MotionSection variant="fade-up">
-          <FeaturedServicesHome1 />
+        <MotionSection variant="blur-up" duration={1.1}>
+          <FeaturedServices />
         </MotionSection>
-        <MotionSection variant="fade-up">
-          <EmergencyHome1 />
-        </MotionSection>
-        <MotionSection variant="fade-up">
-          <CommercialHome1 />
+        <MotionSection variant="fade-up" duration={1.05}>
+          <EmergencySection />
         </MotionSection>
         <MotionSection variant="fade-up">
-          <LocalElectricianHome1 />
+          <CommercialSection />
+        </MotionSection>
+        <MotionSection variant="fade-up" duration={1.05}>
+          <LocalElectricianSection />
         </MotionSection>
         <MotionSection variant="fade-up">
-          <FAQHome1 />
+          <FAQSection />
         </MotionSection>
-        <MotionSection variant="scale-up">
-          <AreasHome1 />
-        </MotionSection>
-        <MotionSection variant="fade-up">
-          <TestimonialsHome1 />
-        </MotionSection>
-        <MotionSection variant="fade-in">
-          <PartnersHome1 />
+        <MotionSection variant="scale-up" duration={1.1}>
+          <AreasSection />
         </MotionSection>
         <MotionSection variant="fade-up">
-          <NewsletterHome1 />
+          <TestimonialsSection />
         </MotionSection>
-        <MotionSection variant="fade-up">
-          <CTAHome1 />
+        <MotionSection variant="fade-in" duration={0.9}>
+          <PartnersSection />
+        </MotionSection>
+        <MotionSection variant="blur-up" duration={1.1}>
+          <NewsletterSection />
+        </MotionSection>
+        <MotionSection variant="fade-up" duration={1}>
+          <CTABannerSection />
         </MotionSection>
       </main>
-      <MotionSection variant="fade-up">
+      <MotionSection variant="fade-up" duration={0.95}>
         <Footer />
       </MotionSection>
       <FloatingCTA />

@@ -1,21 +1,28 @@
-export const FOOTER_SERVICES = ["Domestic", "Commercial", "Industrial", "Renewables"];
+import { serviceSlug } from "@/lib/slugs";
+
+export const FOOTER_SERVICES = [
+  { label: "Domestic", href: `/services#${serviceSlug("Domestic")}` },
+  { label: "Commercial", href: `/services#${serviceSlug("Commercial")}` },
+  { label: "Industrial", href: `/services#${serviceSlug("Industrial")}` },
+  { label: "Renewables", href: `/services#${serviceSlug("Renewables")}` },
+];
 
 export const FOOTER_COMPANY = [
-  "About us",
-  "Contact us",
-  "Blog & news",
-  "Locations",
-  "Other Services",
-  "Company Policies",
+  { label: "About us", href: "#" },
+  { label: "Contact us", href: "#" },
+  { label: "Blog & news", href: "#" },
+  { label: "Locations", href: "#" },
+  { label: "Other Services", href: "/services" },
+  { label: "Company Policies", href: "#" },
 ];
 
 export const FOOTER_AREAS = [
-  "Nottingham",
-  "Derby",
-  "Leicester",
-  "Loughborough",
-  "Newark-on-Trent",
-  "East Midlands",
+  { label: "Nottingham", href: "#" },
+  { label: "Derby", href: "#" },
+  { label: "Leicester", href: "#" },
+  { label: "Loughborough", href: "#" },
+  { label: "Newark-on-Trent", href: "#" },
+  { label: "East Midlands", href: "#" },
 ];
 
 export const FOOTER_BADGES = ["NICEIC Approved", "Fully Insured", "Est. 2014"];

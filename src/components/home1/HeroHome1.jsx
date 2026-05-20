@@ -262,7 +262,7 @@ export default function HeroHome1() {
       </div>
 
       {/* Trust marquee + footer strip */}
-      <aside className="relative z-10 border-t border-white/[0.06] pt-8 pb-12 sm:pb-14" aria-label="Trust highlights">
+      <aside className="relative z-10 border-t border-white/[0.06] pt-4 pb-12 sm:pb-14" aria-label="Trust highlights">
         <HeroMarqueeHome1 />
         <footer className={`${CONTAINER} text-center mt-8 space-y-2`}>
           <p className="text-white/70 text-[11px] font-bold uppercase tracking-[0.14em]">

@@ -61,9 +61,12 @@ function FooterLinkList({ title, links }) {
       <h3 className="text-[#888888] text-[11px] font-semibold uppercase tracking-[0.14em] mb-4">{title}</h3>
       <ul className="space-y-2.5">
         {links.map((link) => (
-          <li key={link}>
-            <Link href="#" className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200">
-              {link}
+          <li key={link.label}>
+            <Link
+              href={link.href}
+              className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200"
+            >
+              {link.label}
             </Link>
           </li>
         ))}

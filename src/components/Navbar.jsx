@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
+import { serviceSlug } from "@/lib/slugs";
 
 const NAV_MENU_ITEM =
   "flex items-center gap-[5px] text-[14px] font-[600] text-[#5A5856] py-2 px-[14px] rounded-xl whitespace-nowrap transition-all";
@@ -62,7 +63,7 @@ function NavIconBookArrow() {
 function BrandLogo({ compact = false }) {
   const logoSize = compact ? 40 : 46;
   return (
-    <a href="#" className="inline-flex items-center gap-2.5 shrink-0">
+    <a href="/" className="inline-flex items-center gap-2.5 shrink-0">
       <Image
         src="/logo.jpg"
         alt="Urgent Electrical Services"
@@ -164,7 +165,7 @@ function NavMegaDropdown({ group }) {
         </ul>
         <div className="px-5 py-3 border-t border-[#1f1f1f]">
           <a
-            href="#"
+            href={`/services#${serviceSlug(group.label)}`}
             className="inline-flex items-center gap-1 text-[#e11d48] text-[13px] font-medium hover:text-[#f87171] transition-colors"
           >
             {viewAllLabel}
@@ -246,6 +247,9 @@ export default function Navbar() {
                     </div>
                   );
                 })}
+                {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                  Services
+                </a> */}
                 <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Blogs
                 </a>
@@ -342,9 +346,17 @@ export default function Navbar() {
               );
             })}
             <a
-              href="#"
+              href="/services"
               onClick={closeMobile}
               className="flex items-center justify-between px-4 py-3.5 font-bold text-[15px] text-gray-900 bg-white border-b border-[#ebebeb]"
+            >
+              Services
+              <NavIconArrowRight />
+            </a>
+            <a
+              href="#"
+              onClick={closeMobile}
+              className="flex items-center justify-between px-4 py-3.5 text-[14px] font-medium text-[#4b5563] border-b border-[#ebebeb]"
             >
               Blogs
               <NavIconArrowRight />

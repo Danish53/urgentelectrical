@@ -2,7 +2,7 @@ import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER, SECTION_PY } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
 
-export default function CTAHome1() {
+export default function CTAHome1({ bookHref = "#book" }) {
   return (
     <section className={`${SECTION_PY} bg-[var(--home1-surface)] overflow-x-clip`} aria-labelledby="home1-cta-heading">
       <div className={CONTAINER}>
@@ -28,7 +28,7 @@ export default function CTAHome1() {
                 <IconPhone />
                 {FOOTER_PHONE}
               </a>
-              <a href="#book" className="home1-btn-outline">
+              <a href={bookHref} className="home1-btn-outline">
                 Book online
                 <IconArrow />
               </a>
