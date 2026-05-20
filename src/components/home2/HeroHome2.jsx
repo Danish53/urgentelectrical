@@ -26,7 +26,7 @@ export default function HeroHome2() {
           <div className="text-center lg:text-left order-2 lg:order-1">
             <div className="inline-flex items-center gap-3 mb-6">
               <Image
-                src="/logoelec.jfif"
+                src="/logo.jpg"
                 alt="Urgent Electrical Services"
                 width={56}
                 height={56}

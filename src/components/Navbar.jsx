@@ -64,7 +64,7 @@ function BrandLogo({ compact = false }) {
   return (
     <a href="#" className="inline-flex items-center gap-2.5 shrink-0">
       <Image
-        src="/logoelec.jfif"
+        src="/logo.jpg"
         alt="Urgent Electrical Services"
         width={logoSize}
         height={logoSize}

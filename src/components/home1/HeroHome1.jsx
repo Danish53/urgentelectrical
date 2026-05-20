@@ -91,7 +91,7 @@ export default function HeroHome1() {
             >
               <div className="relative shrink-0">
                 <Image
-                  src="/logoelec.jfif"
+                  src="/logo.jpg"
                   alt="Urgent Electrical Services"
                   width={56}
                   height={56}

@@ -84,7 +84,7 @@ export default function Footer() {
                 className="w-11 h-11 shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
                 style={{ backgroundColor: RED }}
               >
-                <Image src="/logoelec.jfif" alt="" width={44} height={44} className="w-full h-full object-cover" />
+                <Image src="/logo.jpg" alt="" width={44} height={44} className="w-full h-full object-cover" />
               </div>
               <div>
                 <p className="text-white font-bold text-[15px] leading-tight">Urgent Electrical Services</p>
