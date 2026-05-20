@@ -1,6 +1,5 @@
-Replace these images with your own:
+Featured section images (JPG) — replace with your own photos anytime:
 
-Cards (JPG or PNG):
   pat.jpg
   fire-alarm.jpg
   emergency-lighting.jpg
@@ -8,8 +7,5 @@ Cards (JPG or PNG):
   eicr.jpg
   emergency-24.jpg
 
-Slider arrows (PNG recommended, ~48x48):
-  nav-prev.png
-  nav-next.png
-
-Until you add files, colored placeholders will show automatically.
+Default files are stock placeholders (Unsplash). Swap filenames in
+src/data/home2Services.js and section components if you rename files.
