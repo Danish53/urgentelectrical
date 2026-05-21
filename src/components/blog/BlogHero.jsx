@@ -23,23 +23,8 @@ export default function BlogHero() {
           variants={reduceMotion ? undefined : HERO_CONTAINER}
           initial={reduceMotion ? false : "hidden"}
           animate={reduceMotion ? undefined : "visible"}
-          className="max-w-3xl mx-auto text-center"
+          className="max-w-3xl mx-auto text-center mt-5"
         >
-          <motion.nav
-            variants={reduceMotion ? undefined : HERO_ITEM}
-            aria-label="Breadcrumb"
-            className="flex flex-wrap items-center justify-center gap-2 text-[12px] font-semibold text-white/50 mb-6"
-          >
-            <Link href="/" className="hover:text-white transition-colors">
-              Home
-            </Link>
-            <span aria-hidden="true">/</span>
-            <span className="text-white/90">Blog &amp; news</span>
-          </motion.nav>
-
-          <motion.span variants={reduceMotion ? undefined : HERO_ITEM} className="home1-eyebrow home1-eyebrow--light inline-flex mb-5">
-            Insights &amp; guides
-          </motion.span>
 
           <motion.h1
             id="blog-hero-heading"

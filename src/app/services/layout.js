@@ -3,7 +3,9 @@ const PAGE_URL = `${SITE_URL}/services`;
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Our Services | Fixed-Price Electricians Nottingham",
+  title: {
+    absolute: "Our Services | Fixed-Price Electricians Nottingham",
+  },
   description:
     "Explore our comprehensive collection of electrical services and resources. Fixed-price EICR, PAT, emergency call-outs, fuse boards, and commercial testing across Nottingham and the East Midlands.",
   keywords: [

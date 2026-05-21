@@ -895,6 +895,429 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
+/* Services page — hero panel */
+.home1-services-hero-panel {
+  position: relative;
+  border-radius: 24px;
+  padding: 1.75rem 1.5rem;
+  background: rgba(10, 10, 10, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+
+.home1-services-hero-panel-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff5a3c;
+  margin: 0 0 0.5rem;
+}
+
+.home1-services-hero-panel-value {
+  font-size: 3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #fff;
+  margin: 0 0 0.25rem;
+}
+
+.home1-services-hero-panel-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0 0 1.25rem;
+}
+
+.home1-services-hero-list {
+  list-style: none;
+  margin: 0 0 1.25rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.home1-services-hero-list li {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.home1-services-hero-list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--home1-red);
+}
+
+.home1-services-hero-panel-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--home1-red);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.home1-services-hero-panel-cta:hover {
+  background: var(--home1-red-dark);
+  transform: translateY(-1px);
+}
+
+/* Services page — resource cards */
+.home1-services-resource-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--home1-border);
+  border-radius: 20px;
+  padding: 1.25rem 1.25rem 1rem;
+  box-shadow: var(--home1-shadow);
+  border-top: 4px solid var(--group-accent, var(--home1-red));
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  height: 100%;
+}
+
+.home1-services-resource-card:hover {
+  border-color: rgba(211, 35, 31, 0.2);
+  box-shadow: var(--home1-shadow-lg);
+  transform: translateY(-3px);
+}
+
+.home1-services-resource-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--home1-border);
+}
+
+.home1-services-resource-icon {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--group-accent, var(--home1-red));
+}
+
+.home1-services-resource-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.home1-services-resource-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--home1-text);
+  background: var(--home1-surface);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.home1-services-resource-link:hover {
+  color: var(--home1-red);
+  border-color: rgba(211, 35, 31, 0.2);
+  background: var(--home1-red-soft);
+}
+
+.home1-services-resource-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 0.75rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--home1-red);
+}
+
+.home1-services-resource-more:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 1023px) {
+  .home1-services-hero-panel {
+    max-width: 22rem;
+    margin-inline: auto;
+  }
+}
+
+/* Service detail page */
+.home1-service-detail-hero-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 52rem;
+  margin-inline: auto;
+}
+
+.home1-service-detail-breadcrumb {
+  justify-content: center;
+}
+
+.home1-service-detail-hero-price {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 22px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home1-service-detail-hero-price strong {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #ff5a3c;
+}
+
+@media (min-width: 640px) {
+  .home1-service-detail-hero-price strong {
+    font-size: 2.5rem;
+  }
+}
+
+.home1-service-detail-hero-price span {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 6px;
+}
+
+.home1-service-detail-banner {
+  width: 100%;
+  margin: 0;
+  border-radius: 24px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  min-height: 220px;
+  border: 1px solid var(--home1-border);
+  box-shadow: 0 24px 56px rgba(17, 24, 39, 0.1);
+  background: var(--home1-surface);
+}
+
+@media (min-width: 640px) {
+  .home1-service-detail-banner {
+    min-height: 280px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home1-service-detail-banner {
+    aspect-ratio: 21 / 9;
+    max-height: 440px;
+  }
+
+  .home1-service-detail-banner img {
+    object-position: center 40%;
+  }
+}
+
+.home1-service-detail-book {
+  width: 100%;
+}
+
+.home1-service-detail-about {
+  padding: 1.5rem 1.25rem;
+  border-radius: 20px;
+  background: var(--home1-surface);
+  border: 1px solid var(--home1-border);
+}
+
+@media (min-width: 640px) {
+  .home1-service-detail-about {
+    padding: 1.75rem 1.5rem;
+  }
+}
+
+.home1-service-detail-body .home1-service-detail-block h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.home1-service-detail-body .home1-service-detail-block h2::before {
+  content: "";
+  width: 4px;
+  height: 1.25rem;
+  border-radius: 4px;
+  background: var(--home1-red);
+  flex-shrink: 0;
+}
+
+.home1-service-detail-price {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.home1-service-detail-price strong {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #ff5a3c;
+}
+
+.home1-service-detail-price span {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  margin-top: 4px;
+}
+
+.home1-service-detail-sidebar {
+  border-radius: 24px;
+  padding: 1.5rem;
+  background: linear-gradient(160deg, var(--home1-charcoal) 0%, #0f172a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 50px rgba(17, 24, 39, 0.15);
+  color: #fff;
+}
+
+.home1-service-detail-sidebar .home1-service-detail-price strong {
+  font-size: 2.5rem;
+  color: #ff5a3c;
+}
+
+.home1-service-detail-sidebar .home1-service-detail-price span {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.home1-service-detail-sidebar-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ff5a3c;
+  margin: 0 0 0.75rem;
+}
+
+.home1-service-detail-sidebar-trust {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 1.25rem 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home1-service-detail-sidebar-trust li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.home1-service-detail-block {
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--home1-border);
+}
+
+.home1-service-detail-block:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.home1-service-detail-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .home1-service-detail-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.home1-service-detail-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--home1-surface);
+  border: 1px solid var(--home1-border);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--home1-text);
+  line-height: 1.45;
+}
+
+.home1-service-detail-includes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.home1-service-detail-includes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--home1-muted);
+  line-height: 1.5;
+}
+
+.home1-service-detail-includes li::before {
+  content: "✓";
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--home1-red);
+  background: var(--home1-red-soft);
+}
+
+.home1-service-detail-faq .home1-faq-item {
+  margin-bottom: 0;
+}
+
 /* Form panel */
 .home1-form-panel {
   background: var(--home1-white);

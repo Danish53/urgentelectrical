@@ -124,7 +124,7 @@ export function buildServiceMetadata(service) {
   const title = service.metaTitle;
   const description = service.metaDescription;
   return {
-    title,
+    title: { absolute: `${title} | Urgent Electrical Services` },
     description,
     keywords: [
       ...service.keywords,

@@ -6,18 +6,23 @@ const SITE = "https://www.urgentelectrical.services";
 /** Shorter FAQ set on homepage for faster load & focused schema */
 export const HOME_FAQ_ITEMS = FAQ_ITEMS.slice(0, 4);
 
+const HOME_TITLE = "Urgent Electrical Nottingham | Electricians Across the East Midlands";
+
 export const HOME_METADATA = {
   metadataBase: new URL(SITE),
-  title: "Emergency Electrician Nottingham | 24/7 NICEIC Approved",
+  title: {
+    absolute: HOME_TITLE,
+  },
   description:
-    "Urgent Electrical — NICEIC approved electricians in Nottingham & the East Midlands. 24/7 emergency call-outs, fixed-price EICR, PAT testing & fuse board upgrades. Book online.",
+    "Emergency electricians in Nottingham and across the East Midlands. NICEIC approved. 24/7 response. No call-out fees. Fixed transparent pricing.",
   keywords: [
     "emergency electrician Nottingham",
     "electrician Nottingham",
-    "NICEIC approved electrician Nottingham",
+    "NICEIC approved electrician",
     "24 hour electrician Nottingham",
-    "fixed price electrician",
     "EICR Nottingham",
+    "fuse box replacement Nottingham",
+    "electrical fault finding Nottingham",
     "commercial electrician Nottingham",
     "East Midlands electrician",
   ],
@@ -26,22 +31,23 @@ export const HOME_METADATA = {
     locale: "en_GB",
     url: SITE,
     siteName: "Urgent Electrical Services",
-    title: "Emergency Electrician Nottingham | Urgent Electrical Services",
+    title: "Local Emergency Electrician in Nottingham | 24 Hours",
     description:
-      "24/7 emergency electricians in Nottingham. Fixed transparent pricing. NICEIC approved. Book online or call 0115 778 0622.",
+      "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Urgent Electrical Services — Nottingham electricians",
+        alt: "Urgent Electrical Services Nottingham",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Emergency Electrician Nottingham | 24/7",
-    description: "NICEIC approved. Fast response. No call-out fees on fixed-price jobs. Book online now.",
+    title: "Urgent Electrical Nottingham | 24/7 Emergency Electricians",
+    description:
+      "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
   },
   robots: {
     index: true,
@@ -58,7 +64,7 @@ export const HOME_JSON_LD = {
       "@type": "WebPage",
       "@id": `${SITE}/#webpage`,
       url: SITE,
-      name: HOME_METADATA.title,
+      name: HOME_TITLE,
       description: HOME_METADATA.description,
       isPartOf: { "@id": `${SITE}/#website` },
       about: { "@id": `${SITE}/#organization` },

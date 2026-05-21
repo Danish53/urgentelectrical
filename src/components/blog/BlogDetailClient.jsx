@@ -49,22 +49,8 @@ export default function BlogDetailClient({ post, sections, related }) {
               variants={reduceMotion ? undefined : HERO_CONTAINER}
               initial={reduceMotion ? false : "hidden"}
               animate={reduceMotion ? undefined : "visible"}
+              className="mt-3"
             >
-              <motion.nav
-                variants={reduceMotion ? undefined : HERO_ITEM}
-                aria-label="Breadcrumb"
-                className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-white/50 mb-6"
-              >
-                <Link href="/" className="hover:text-white transition-colors">
-                  Home
-                </Link>
-                <span aria-hidden="true">/</span>
-                <Link href="/blog" className="hover:text-white transition-colors">
-                  Blog
-                </Link>
-                <span aria-hidden="true">/</span>
-                <span className="text-white/85 line-clamp-1">{post.title}</span>
-              </motion.nav>
 
               <motion.div variants={reduceMotion ? undefined : HERO_ITEM} className="flex flex-wrap items-center gap-3 mb-4">
                 <span className="home1-eyebrow home1-eyebrow--light">{post.categoryLabel}</span>

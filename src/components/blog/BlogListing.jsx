@@ -31,21 +31,6 @@ export default function BlogListing() {
           align="center"
         />
 
-        {showFeatured && (
-          <motion.div
-            className="mb-10 sm:mb-12"
-            initial={reduceMotion ? false : { opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.7, ease: EASE_SMOOTH }}
-          >
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--home1-red)] mb-3 text-center sm:text-left">
-              Featured
-            </p>
-            <BlogCard post={FEATURED_POST} featured />
-          </motion.div>
-        )}
-
         <div
           className="flex flex-wrap justify-center gap-2 mb-10 sm:mb-12"
           role="tablist"

@@ -8,17 +8,20 @@ import SectionHeader from "@/components/home1/SectionHeader";
 import { IconArrow } from "@/components/home1/icons";
 import { STAGGER_CONTAINER, STAGGER_ITEM, STAGGER_VIEWPORT } from "@/lib/motion";
 
+const GROUP_ACCENTS = {
+  Domestic: "#2563EB",
+  Commercial: "#D3231F",
+  Industrial: "#64748B",
+  Renewables: "#16A34A",
+  "Testing & Safety": "#7C3AED",
+};
+
 function ResourceLink({ item }) {
   return (
     <li>
-      <Link
-        href={item.href}
-        className="group flex items-center justify-between gap-3 py-3.5 px-4 rounded-xl border border-[var(--home1-border)] bg-white hover:border-[rgba(211,35,31,0.35)] hover:shadow-[var(--home1-shadow)] transition-all duration-200"
-      >
-        <span className="text-[14px] font-semibold text-[var(--home1-text)] group-hover:text-[var(--home1-red)] transition-colors">
-          {item.label}
-        </span>
-        <IconArrow className="w-4 h-4 shrink-0 text-[var(--home1-muted)] group-hover:text-[var(--home1-red)] group-hover:translate-x-0.5 transition-all" />
+      <Link href={item.href} className="home1-services-resource-link group">
+        <span className="line-clamp-2">{item.label}</span>
+        <IconArrow className="w-4 h-4 shrink-0 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
       </Link>
     </li>
   );
@@ -30,7 +33,7 @@ export default function ServicesResources() {
   return (
     <section
       id="services-resources"
-      className={`${SECTION_PY} home1-section-surface overflow-x-clip scroll-mt-24`}
+      className={`${SECTION_PY} home1-section-surface overflow-x-clip scroll-mt-28`}
       aria-labelledby="services-resources-heading"
     >
       <div className={CONTAINER}>
@@ -38,12 +41,12 @@ export default function ServicesResources() {
           id="services-resources-heading"
           eyebrow="Resources"
           title="Informative pages & specialist guides"
-          description="Deep-dive resources for domestic, commercial, industrial, renewable, and compliance electrical work across Nottinghamshire."
+          description="Browse guides by category — domestic, commercial, industrial, renewables, and compliance."
           align="center"
         />
 
         <motion.div
-          className="grid lg:grid-cols-2 gap-6 sm:gap-8"
+          className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6"
           variants={reduceMotion ? undefined : STAGGER_CONTAINER}
           initial={reduceMotion ? false : "hidden"}
           whileInView={reduceMotion ? undefined : "visible"}
@@ -54,17 +57,32 @@ export default function ServicesResources() {
               key={group.id}
               id={group.id}
               variants={reduceMotion ? undefined : STAGGER_ITEM}
-              className="home1-card p-6 sm:p-8 scroll-mt-32"
+              className="home1-services-resource-card scroll-mt-32"
+              style={{ "--group-accent": GROUP_ACCENTS[group.label] ?? "#D3231F" }}
             >
-              <header className="mb-5 pb-5 border-b border-[var(--home1-border)]">
-                <h3 className="text-xl font-extrabold text-[var(--home1-text)] mb-2">{group.label}</h3>
-                <p className="text-[var(--home1-muted)] text-[14px] leading-relaxed">{group.description}</p>
+              <header className="home1-services-resource-head">
+                <span className="home1-services-resource-icon" aria-hidden="true">
+                  {group.label.charAt(0)}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-extrabold text-[var(--home1-text)] leading-tight">{group.label}</h3>
+                  <p className="text-[var(--home1-muted)] text-[13px] leading-snug mt-1 line-clamp-2">{group.description}</p>
+                </div>
               </header>
-              <ul className="space-y-2 list-none p-0 m-0">
-                {group.items.map((item) => (
+              <ul className="home1-services-resource-list">
+                {group.items.slice(0, 4).map((item) => (
                   <ResourceLink key={item.slug} item={item} />
                 ))}
               </ul>
+              {group.items.length > 4 && (
+                <p className="text-[12px] font-semibold text-[var(--home1-muted)] px-1 pt-1">
+                  +{group.items.length - 4} more guides
+                </p>
+              )}
+              <Link href={`#${group.id}`} className="home1-services-resource-more">
+                View {group.label.toLowerCase()} resources
+                <IconArrow className="w-4 h-4" />
+              </Link>
             </motion.article>
           ))}
         </motion.div>
