@@ -1,30 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { FAQ_ITEMS } from "@/data/faqs";
+import { HOME_FAQ_ITEMS } from "@/data/homeSeo";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 
-export default function FAQHome1() {
-  const [openId, setOpenId] = useState(FAQ_ITEMS[0]?.id ?? null);
+export default function FAQHome1({ items = HOME_FAQ_ITEMS }) {
+  const [openId, setOpenId] = useState(items[0]?.id ?? null);
 
   return (
-    <section className={`home1-section-surface ${SECTION_PY} overflow-x-clip`} aria-labelledby="home1-faq-heading">
+    <section
+      id="faq"
+      className={`home1-section-surface ${SECTION_PY} overflow-x-clip scroll-mt-28`}
+      aria-labelledby="home1-faq-heading"
+    >
       <div className={CONTAINER}>
         <div className="grid lg:grid-cols-[minmax(0,340px)_1fr] gap-10 lg:gap-16 items-start">
-          <div className="lg:sticky lg:top-28">
+          <div className="lg:sticky lg:top-28 pt-2">
             <SectionHeader
               id="home1-faq-heading"
               eyebrow="FAQ"
               title="Frequently asked questions"
-              description="Electricians in Nottingham — clear answers from our NICEIC approved team."
+              description="Quick answers from our NICEIC approved Nottingham team."
               align="left"
               compact
             />
           </div>
 
           <div className="space-y-3">
-            {FAQ_ITEMS.map((item) => {
+            {items.map((item) => {
               const isOpen = openId === item.id;
               return (
                 <div key={item.id} data-open={isOpen} className="home1-faq-item home1-card overflow-hidden">

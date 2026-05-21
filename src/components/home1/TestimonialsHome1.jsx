@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { TESTIMONIALS } from "@/data/testimonials";
+
+const HOME_REVIEW_LIMIT = 3;
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 
@@ -20,10 +22,11 @@ function useSlidesPerView() {
   return n;
 }
 
-export default function TestimonialsHome1() {
+export default function TestimonialsHome1({ limit = TESTIMONIALS.length }) {
+  const reviews = TESTIMONIALS.slice(0, limit);
   const perView = useSlidesPerView();
   const [index, setIndex] = useState(0);
-  const maxIndex = Math.max(0, TESTIMONIALS.length - perView);
+  const maxIndex = Math.max(0, reviews.length - perView);
   const pct = 100 / perView;
 
   useEffect(() => setIndex((i) => Math.min(i, maxIndex)), [maxIndex]);
@@ -31,14 +34,18 @@ export default function TestimonialsHome1() {
   const next = useCallback(() => setIndex((i) => Math.min(maxIndex, i + 1)), [maxIndex]);
 
   return (
-    <section className={`${SECTION_PY} bg-white overflow-x-clip`} aria-labelledby="home1-reviews-heading">
+    <section
+      id="testimonials"
+      className={`${SECTION_PY} bg-white overflow-x-clip scroll-mt-28`}
+      aria-labelledby="home1-reviews-heading"
+    >
       <div className={CONTAINER}>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-10">
           <SectionHeader
             id="home1-reviews-heading"
             eyebrow="Customer reviews"
-            title="Trusted across the East Midlands"
-            description="Real feedback from domestic and commercial customers."
+            title="Customer testimonials"
+            description="Feedback from domestic and commercial clients across Nottingham."
             align="left"
             compact
           />
@@ -54,7 +61,7 @@ export default function TestimonialsHome1() {
 
         <div className="overflow-hidden">
           <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${index * pct}%)` }}>
-            {TESTIMONIALS.map((t) => (
+            {reviews.map((t) => (
               <article key={t.id} className="shrink-0 px-2.5" style={{ width: `${pct}%` }}>
                 <div className="home1-card h-full p-6 sm:p-7 flex flex-col min-h-[260px]">
                   <p className="text-[#F59E0B] text-sm tracking-wide mb-4" aria-hidden="true">

@@ -250,7 +250,7 @@ export default function Navbar() {
                 {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Services
                 </a> */}
-                <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                <a href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Blogs
                 </a>
                 <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
@@ -354,9 +354,9 @@ export default function Navbar() {
               <NavIconArrowRight />
             </a>
             <a
-              href="#"
+              href="/blog"
               onClick={closeMobile}
-              className="flex items-center justify-between px-4 py-3.5 text-[14px] font-medium text-[#4b5563] border-b border-[#ebebeb]"
+              className="flex items-center justify-between px-4 py-3.5 font-bold text-[15px] text-gray-900 bg-white border-b border-[#ebebeb]"
             >
               Blogs
               <NavIconArrowRight />

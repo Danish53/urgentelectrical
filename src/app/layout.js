@@ -119,9 +119,9 @@ export default function RootLayout({ children }) {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "ElectricalContractor",
+              "@id": "https://www.urgentelectrical.services/#organization",
               name: "Urgent Electrical Services",
               image: "https://www.urgentelectrical.services/assets/urgent_electrical_logo.svg",
-              "@id": "https://www.urgentelectrical.services",
               url: "https://www.urgentelectrical.services",
               telephone: "01157780622",
               priceRange: "££",

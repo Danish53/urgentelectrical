@@ -11,13 +11,17 @@ export default function WhyChooseUsHome1() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className={`${SECTION_PY} overflow-x-clip bg-white`} aria-labelledby="home1-why-heading">
+    <section
+      id="why-choose-us"
+      className="pt-16 sm:pt-20 lg:pt-24 pb-10 sm:pb-12 lg:pb-14 overflow-x-clip bg-white scroll-mt-28"
+      aria-labelledby="home1-why-heading"
+    >
       <div className={CONTAINER}>
         <SectionHeader
           id="home1-why-heading"
           eyebrow="Why choose us"
           title="Trusted local electricians in Nottingham & East Midlands"
-          description="Established in 2014 — hundreds of five-star reviews and a commitment to first-visit fixes every time."
+          description="Established in 2014 — five-star reviews and first-visit fixes across Nottingham & the East Midlands."
         />
 
         <motion.div

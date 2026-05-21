@@ -10,7 +10,7 @@ export const FOOTER_SERVICES = [
 export const FOOTER_COMPANY = [
   { label: "About us", href: "#" },
   { label: "Contact us", href: "#" },
-  { label: "Blog & news", href: "#" },
+  { label: "Blog & news", href: "/blog" },
   { label: "Locations", href: "#" },
   { label: "Other Services", href: "/services" },
   { label: "Company Policies", href: "#" },

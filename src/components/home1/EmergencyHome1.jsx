@@ -10,7 +10,11 @@ import { IconPhone } from "./icons";
 
 export default function EmergencyHome1() {
   return (
-    <section className={`home1-section-red ${SECTION_PY} overflow-x-clip relative`} aria-labelledby="home1-emergency-heading">
+    <section
+      id="emergency"
+      className={`home1-section-red ${SECTION_PY} overflow-x-clip relative scroll-mt-28`}
+      aria-labelledby="home1-emergency-heading"
+    >
       <div
         className="absolute inset-0 opacity-[0.07] pointer-events-none"
         style={{
@@ -26,7 +30,7 @@ export default function EmergencyHome1() {
               id="home1-emergency-heading"
               eyebrow="Emergency 24/7"
               title="Emergency electrician in Nottingham"
-              description="Power cuts, tripped breakers, burning smells, sparks, or complete failure — NICEIC certified engineers across Nottingham & the East Midlands, 365 days a year."
+              description="Power cuts, tripping breakers, burning smells or sparks — NICEIC engineers across Nottingham, 24/7."
               align="left"
               light
             />

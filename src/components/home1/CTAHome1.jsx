@@ -4,7 +4,11 @@ import { IconArrow, IconPhone } from "./icons";
 
 export default function CTAHome1({ bookHref = "#book" }) {
   return (
-    <section className={`${SECTION_PY} bg-[var(--home1-surface)] overflow-x-clip`} aria-labelledby="home1-cta-heading">
+    <section
+      id="cta"
+      className={`${SECTION_PY} bg-[var(--home1-surface)] overflow-x-clip scroll-mt-28`}
+      aria-labelledby="home1-cta-heading"
+    >
       <div className={CONTAINER}>
         <div className="relative rounded-[28px] overflow-hidden home1-section-red px-8 py-12 sm:px-14 sm:py-16 text-center">
           <div

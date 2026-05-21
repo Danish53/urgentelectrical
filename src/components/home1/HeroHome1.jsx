@@ -67,7 +67,8 @@ export default function HeroHome1() {
 
   return (
     <section
-      className="home1-hero relative bg-black overflow-x-clip pt-[118px] lg:pt-[122px]"
+      id="hero"
+      className="home1-hero relative bg-black overflow-x-clip pt-[118px] lg:pt-[122px] scroll-mt-0"
       aria-labelledby="home1-hero-heading"
     >
       <div className="hero-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
