@@ -1,41 +1,55 @@
-import { serviceSlug } from "@/lib/slugs";
+/** Nav label → bookable service detail slug (see src/data/services.js) */
+const SLUG = {
+  emergency: "emergency-response-24-7",
+  eicr: "electrical-installation-condition-report-eicr",
+  pat: "portable-appliance-testing-pat",
+  fireAlarm: "fire-alarm-inspection-and-testing",
+  emergencyLighting: "emergency-lighting-periodic-inspection-and-testing",
+  faultFinding: "domestic-electrical-fault-investigation",
+  fuseBox: "fuse-box-consumer-unit-replacement",
+  socket: "socket-replacement",
+};
 
-function serviceHref(label) {
-  return `/services#${serviceSlug(label)}`;
+function navItem(label, slug) {
+  return {
+    label,
+    slug: slug ?? null,
+    href: slug ? `/services/${slug}` : "/services",
+  };
 }
 
 export const NAV_DOMESTIC = [
-  { label: "Domestic Electrician", href: serviceHref("Domestic Electrician") },
-  { label: "EICR Nottingham", href: serviceHref("EICR Nottingham") },
-  { label: "Emergency Electrician Nottingham", href: serviceHref("Emergency Electrician Nottingham") },
-  { label: "Electrical Fault Finding Nottingham", href: serviceHref("Electrical Fault Finding Nottingham") },
-  { label: "Fuse Box Replacement Nottingham", href: serviceHref("Fuse Box Replacement Nottingham") },
-  { label: "Socket Replacement & Installation Nottingham", href: serviceHref("Socket Replacement & Installation Nottingham") },
+  navItem("Domestic Electrician", SLUG.faultFinding),
+  navItem("EICR Nottingham", SLUG.eicr),
+  navItem("Emergency Electrician Nottingham", SLUG.emergency),
+  navItem("Electrical Fault Finding Nottingham", SLUG.faultFinding),
+  navItem("Fuse Box Replacement Nottingham", SLUG.fuseBox),
+  navItem("Socket Replacement & Installation Nottingham", SLUG.socket),
 ];
 
 export const NAV_COMMERCIAL = [
-  { label: "Fire Alarm Installation Nottingham", href: serviceHref("Fire Alarm Installation Nottingham") },
-  { label: "Commercial Electrician Nottingham", href: serviceHref("Commercial Electrician Nottingham") },
-  { label: "PAT Testing Nottingham", href: serviceHref("PAT Testing Nottingham") },
-  { label: "Emergency Lighting Nottingham", href: serviceHref("Emergency Lighting Nottingham") },
+  navItem("Fire Alarm Installation Nottingham", SLUG.fireAlarm),
+  navItem("Commercial Electrician", SLUG.pat),
+  navItem("PAT Testing Nottingham", SLUG.pat),
+  navItem("Emergency Lighting Nottingham", SLUG.emergencyLighting),
 ];
 
 export const NAV_INDUSTRIAL = [
-  { label: "Industrial Electrician Nottingham", href: serviceHref("Industrial Electrician Nottingham") },
-  { label: "Planned Electrical Maintenance", href: serviceHref("Planned Electrical Maintenance") },
-  { label: "Electrical Certificates Nottingham", href: serviceHref("Electrical Certificates Nottingham") },
+  navItem("Industrial Electrician", SLUG.eicr),
+  navItem("Planned Electrical Maintenance", SLUG.emergency),
+  navItem("Electrical Certificates Nottingham", SLUG.eicr),
 ];
 
 export const NAV_RENEWABLES = [
-  { label: "EV Charger Installation Nottingham", href: serviceHref("EV Charger Installation Nottingham") },
-  { label: "Solar Panels Nottingham", href: serviceHref("Solar Panels Nottingham") },
+  navItem("EV Charger Installation Nottingham"),
+  navItem("Solar Panels Nottingham"),
 ];
 
 export const NAV_TESTING_SAFETY = [
-  { label: "EICR Testing Nottingham", href: serviceHref("EICR Testing Nottingham") },
-  { label: "PAT Testing Nottingham", href: serviceHref("PAT Testing Nottingham") },
-  { label: "Emergency Lighting Testing", href: serviceHref("Emergency Lighting Testing") },
-  { label: "Fire Alarm Testing Nottingham", href: serviceHref("Fire Alarm Testing Nottingham") },
+  navItem("EICR Testing Nottingham", SLUG.eicr),
+  navItem("PAT Testing Nottingham", SLUG.pat),
+  navItem("Emergency Lighting Testing", SLUG.emergencyLighting),
+  navItem("Fire Alarm Testing Nottingham", SLUG.fireAlarm),
 ];
 
 export const NAV_GROUPS = [

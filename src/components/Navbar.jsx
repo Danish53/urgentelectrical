@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
-import { serviceSlug } from "@/lib/slugs";
 
 const NAV_MENU_ITEM =
   "flex items-center gap-[5px] text-[14px] font-[600] text-[#5A5856] py-2 px-[14px] rounded-xl whitespace-nowrap transition-all";
@@ -63,7 +63,7 @@ function NavIconBookArrow() {
 function BrandLogo({ compact = false }) {
   const logoSize = compact ? 40 : 46;
   return (
-    <a href="/" className="inline-flex items-center gap-2.5 shrink-0">
+    <Link href="/" className="inline-flex items-center gap-2.5 shrink-0">
       <Image
         src="/logo.jpg"
         alt="Urgent Electrical Services"
@@ -84,7 +84,7 @@ function BrandLogo({ compact = false }) {
           {compact ? "24 HR EMERGENCY" : "24 HR EMERGENCY RESPONSE"}
         </span>
       </span>
-    </a>
+    </Link>
   );
 }
 
@@ -139,7 +139,7 @@ function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true }) {
   );
 }
 
-function NavMegaDropdown({ group }) {
+function NavMegaDropdown({ group, onNavigate }) {
   const subtitle =
     NAV_DROPDOWN_SUBTITLES[group.label] || `Professional ${group.label.toLowerCase()} services`;
   const viewAllLabel = `View all ${group.label.toLowerCase()}`;
@@ -154,23 +154,25 @@ function NavMegaDropdown({ group }) {
         <ul className="px-5 py-1">
           {group.items.map((item) => (
             <li key={item.label}>
-              <a
+              <Link
                 href={item.href}
+                onClick={onNavigate}
                 className="block py-2.5 text-[13px] font-normal text-[#d1d5db] hover:text-white transition-colors leading-snug"
               >
                 {item.label}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
         <div className="px-5 py-3 border-t border-[#1f1f1f]">
-          <a
-            href={`/services#${serviceSlug(group.label)}`}
+          <Link
+            href="/services"
+            onClick={onNavigate}
             className="inline-flex items-center gap-1 text-[#e11d48] text-[13px] font-medium hover:text-[#f87171] transition-colors"
           >
             {viewAllLabel}
             <span aria-hidden>→</span>
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -264,16 +266,18 @@ export default function Navbar() {
                         {group.label}
                         <NavIconChevron open={isOpen} />
                       </button>
-                      {isOpen && group.items.length > 0 && <NavMegaDropdown group={group} />}
+                      {isOpen && group.items.length > 0 && (
+                        <NavMegaDropdown group={group} onNavigate={() => setActiveMenu(null)} />
+                      )}
                     </div>
                   );
                 })}
                 {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Services
                 </a> */}
-                <a href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                <Link href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Blogs
-                </a>
+                </Link>
                 <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Contact
                 </a>
@@ -350,14 +354,14 @@ export default function Navbar() {
                       <ul className="space-y-0">
                         {group.items.map((item) => (
                           <li key={item.label}>
-                            <a
+                            <Link
                               href={item.href}
                               onClick={closeMobile}
                               className="flex items-center justify-between py-3 text-[14px] text-[#4b5563] font-medium border-b border-[#ebebeb]/80 last:border-0 hover:text-gray-900"
                             >
                               <span className="pr-3">{item.label}</span>
                               <NavIconArrowRight />
-                            </a>
+                            </Link>
                           </li>
                         ))}
                       </ul>
@@ -366,22 +370,22 @@ export default function Navbar() {
                 </div>
               );
             })}
-            <a
+            <Link
               href="/services"
               onClick={closeMobile}
               className="flex items-center justify-between px-4 py-3.5 font-bold text-[15px] text-gray-900 bg-white border-b border-[#ebebeb]"
             >
               Services
               <NavIconArrowRight />
-            </a>
-            <a
+            </Link>
+            <Link
               href="/blog"
               onClick={closeMobile}
               className="flex items-center justify-between px-4 py-3.5 font-bold text-[15px] text-gray-900 bg-white border-b border-[#ebebeb]"
             >
               Blogs
               <NavIconArrowRight />
-            </a>
+            </Link>
             <a
               href="#"
               onClick={closeMobile}

@@ -258,15 +258,11 @@ export const SERVICE_RESOURCE_GROUPS = NAV_GROUPS.map((group) => ({
           : group.label === "Renewables"
             ? "EV chargers and solar-ready electrical infrastructure."
             : "EICR, PAT, fire alarm, and emergency lighting compliance testing.",
-  items: group.items.map((item) => {
-    const slug = serviceSlug(item.label);
-    const bookable = BOOKABLE_SERVICES.find((s) => s.slug === slug);
-    return {
-      ...item,
-      slug,
-      href: bookable ? bookable.href : `/services#${slug}`,
-    };
-  }),
+  items: group.items.map((item) => ({
+    ...item,
+    slug: item.slug ?? null,
+    href: item.href ?? "/services",
+  })),
 }));
 
 export const SERVICES_PAGE_TRUST = [

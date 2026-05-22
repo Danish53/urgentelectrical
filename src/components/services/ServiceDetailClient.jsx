@@ -43,21 +43,17 @@ function ServiceProductImage({ service }) {
           {service.name}
         </div>
       )}
-      {service.tag && (
-        <span className="absolute top-4 left-4 z-10 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase bg-[var(--home1-red)]">
-          {service.tag}
-        </span>
-      )}
     </figure>
   );
 }
 
 function ServicePriceBar({ priceDisplay }) {
   return (
-    <p className="home1-service-product-price-bar" role="status" aria-live="polite">
+    <div className="home1-service-product-price-bar" role="status" aria-live="polite">
       {priceDisplay.type === "range" ? (
         <>
           <span className="home1-service-product-price-from">{priceDisplay.prefix}</span>
+          <span className="home1-service-product-price-divider" aria-hidden="true" />
           <span className="home1-service-product-price-amounts">{priceDisplay.amounts}</span>
           <span className="home1-service-product-price-vat">{priceDisplay.suffix}</span>
         </>
@@ -67,7 +63,7 @@ function ServicePriceBar({ priceDisplay }) {
           <span className="home1-service-product-price-vat">{priceDisplay.suffix}</span>
         </>
       )}
-    </p>
+    </div>
   );
 }
 
@@ -151,43 +147,56 @@ function ServiceBookingBlock({
 }
 
 function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVariant, sectionRef }) {
+  const priceDisplay = service.priceDisplay ?? STATIC_VARIANT_PRICE_DISPLAY;
+
   return (
-    <section className="home1-service-product bg-white" aria-labelledby="service-detail-heading">
+    <section className="home1-service-product" aria-labelledby="service-detail-heading">
+      <div className="home1-service-product-bg" aria-hidden="true" />
       <div className={`${CONTAINER} home1-service-product-inner`}>
         {/* <nav
           aria-label="Breadcrumb"
-          className="home1-service-product-breadcrumb flex flex-wrap items-center gap-2 text-[12px] font-semibold text-[var(--home1-muted)] mb-5 sm:mb-6"
+          className="home1-service-product-breadcrumb"
         >
-          <Link href="/" className="hover:text-[var(--home1-red)] transition-colors">
-            Home
-          </Link>
+          <Link href="/">Home</Link>
           <span aria-hidden="true">/</span>
-          <Link href="/services" className="hover:text-[var(--home1-red)] transition-colors">
-            Services
-          </Link>
+          <Link href="/services">Services</Link>
           <span aria-hidden="true">/</span>
-          <span className="text-[var(--home1-text)]">{service.name}</span>
+          <span className="home1-service-product-breadcrumb-current">{service.name}</span>
         </nav> */}
 
         <div className="home1-service-product-card">
+          <div className="home1-service-product-card-accent" aria-hidden="true" />
           <div className="home1-service-product-grid">
-            <ServiceProductImage service={service} />
+            <div className="home1-service-product-media-wrap">
+              <ServiceProductImage service={service} />
+            </div>
 
             <div className="home1-service-product-panel min-w-0">
+              <div className="home1-service-product-meta">
+                <span className="home1-service-product-category">{service.categoryLabel}</span>
+                {service.tag && (
+                  <span className="home1-service-product-badge">{service.tag}</span>
+                )}
+              </div>
+
               <h1 id="service-detail-heading" className="home1-service-product-title">
                 {service.name}
               </h1>
 
-              <ServicePriceBar priceDisplay={STATIC_VARIANT_PRICE_DISPLAY} />
+              <p className="home1-service-product-lead">{service.description}</p>
 
-              <ServiceBookingBlock
-                service={service}
-                selectedId={selectedId}
-                onSelectVariant={onSelectVariant}
-                selectedVariant={selectedVariant}
-                idPrefix="main"
-                theme="light"
-              />
+              <ServicePriceBar priceDisplay={priceDisplay} />
+
+              <div className="home1-service-product-booking">
+                <ServiceBookingBlock
+                  service={service}
+                  selectedId={selectedId}
+                  onSelectVariant={onSelectVariant}
+                  selectedVariant={selectedVariant}
+                  idPrefix="main"
+                  theme="light"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -314,6 +323,30 @@ export default function ServiceDetailClient({ service, related }) {
                         <li key={f}>
                           <IconCheck className="w-4 h-4 text-[var(--home1-red)] shrink-0 mt-0.5" aria-hidden="true" />
                           {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
+                {service.includes.length > 0 && (
+                  <section
+                    className="home1-service-detail-block home1-service-detail-includes-section"
+                    aria-labelledby="service-includes-heading"
+                  >
+                    <h2 id="service-includes-heading" className="text-xl font-extrabold text-[var(--home1-text)] mb-4">
+                      What&apos;s included
+                    </h2>
+                    <p className="home1-service-detail-includes-intro">
+                      Your fixed-price visit covers the following — clear scope with no hidden extras.
+                    </p>
+                    <ul className="home1-service-detail-includes">
+                      {service.includes.map((item) => (
+                        <li key={item} className="home1-service-detail-include-item">
+                          <span className="home1-service-detail-include-icon" aria-hidden="true">
+                            <IconCheck className="w-3.5 h-3.5" />
+                          </span>
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
