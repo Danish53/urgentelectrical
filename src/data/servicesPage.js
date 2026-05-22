@@ -56,6 +56,38 @@ export function priceIncVatFromString(price) {
   return (parseFloat(price) * 1.2).toFixed(2);
 }
 
+function buildServiceVariants(extraVariants) {
+  if (!extraVariants?.length) return null;
+  return extraVariants.map((v) => ({
+    ...v,
+    priceIncVat: priceIncVatFromString(String(v.priceExc)),
+  }));
+}
+
+function buildPriceDisplay(priceIncVat, variants) {
+  if (variants?.length) {
+    const amounts = variants.map((v) => parseFloat(v.priceIncVat));
+    const min = Math.min(...amounts).toFixed(2);
+    const max = Math.max(...amounts).toFixed(2);
+    return {
+      type: "range",
+      min,
+      max,
+      label: `FROM £${min} – £${max} Inc. VAT`,
+      prefix: "FROM",
+      amounts: `£${min} – £${max}`,
+      suffix: "Inc. VAT",
+    };
+  }
+  return {
+    type: "fixed",
+    amount: priceIncVat,
+    label: `£${priceIncVat} Inc. VAT`,
+    amounts: `£${priceIncVat}`,
+    suffix: "Inc. VAT",
+  };
+}
+
 export const SERVICE_CATEGORIES = [
   { id: "all", label: "All services" },
   { id: "emergency", label: "Emergency" },
@@ -83,6 +115,9 @@ export const BOOKABLE_SERVICES = SERVICES.map((s) => {
   const slug = serviceSlug(s.name);
   const extra = SERVICE_DETAIL_EXTRA[slug] ?? {};
   const category = SERVICE_CATEGORY_MAP[s.name] ?? "domestic";
+  const priceIncVat = priceIncVatFromString(s.price);
+  const variants = buildServiceVariants(extra.variants);
+  const priceDisplay = buildPriceDisplay(priceIncVat, variants);
   return {
     ...s,
     slug,
@@ -95,7 +130,9 @@ export const BOOKABLE_SERVICES = SERVICES.map((s) => {
     href: `/services/${slug}`,
     canonicalUrl: `${SITE}/services/${slug}`,
     bookHref: "/#book",
-    priceIncVat: priceIncVatFromString(s.price),
+    priceIncVat,
+    variants,
+    priceDisplay,
     longDescription: extra.longDescription ?? [SERVICE_DESCRIPTIONS[s.name] ?? ""],
     features: extra.features ?? [],
     includes: extra.includes ?? [],

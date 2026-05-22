@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
@@ -178,11 +178,31 @@ function NavMegaDropdown({ group }) {
 }
 
 export default function Navbar() {
+  const headerRef = useRef(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileAccordion, setMobileAccordion] = useState("Domestic");
   const [incVat, setIncVat] = useState(true);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const syncHeaderHeight = () => {
+      document.documentElement.style.setProperty("--site-header-height", `${header.offsetHeight}px`);
+    };
+
+    syncHeaderHeight();
+    const observer = new ResizeObserver(syncHeaderHeight);
+    observer.observe(header);
+    window.addEventListener("resize", syncHeaderHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", syncHeaderHeight);
+    };
+  }, [mobileOpen]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -196,6 +216,7 @@ export default function Navbar() {
   return (
     <>
       <motion.header
+        ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#e8e8e8] shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
         initial={reduceMotion ? false : { y: -120, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}

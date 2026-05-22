@@ -42,7 +42,7 @@ export default function BlogDetailClient({ post, sections, related }) {
     <div className="home1-page w-full min-w-0">
       <Navbar />
       <main className="w-full min-w-0">
-        <section className="relative bg-black overflow-x-clip pt-[118px] lg:pt-[122px] pb-10 sm:pb-14">
+        <section className="relative bg-black overflow-x-clip pt-[111px] lg:pt-[122px] pb-10 sm:pb-14">
           <div className="hero-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
           <div className={`${CONTAINER} relative z-10 max-w-4xl`}>
             <motion.div

@@ -76,6 +76,15 @@ export const SERVICE_DETAIL_EXTRA = {
     metaDescription:
       "PAT testing in Nottingham from £78 inc. VAT. Certificates, asset labelling, and compliant records for offices, shops, and rental properties.",
     keywords: ["PAT testing Nottingham", "portable appliance testing", "landlord PAT test", "office PAT testing"],
+    variants: [
+      { id: "1-5", label: "1-5 Items", priceExc: 65 },
+      { id: "6-10", label: "6-10 Items", priceExc: 72 },
+      { id: "10-15", label: "10-15 Items", priceExc: 80 },
+      { id: "15-20", label: "15-20 Items", priceExc: 88 },
+      { id: "20-30", label: "20-30 Items", priceExc: 100 },
+      { id: "30-40", label: "30-40 Items", priceExc: 120 },
+      { id: "40-50", label: "40-50 Items", priceExc: 155 },
+    ],
     longDescription: [
       "Portable Appliance Testing (PAT) helps demonstrate that plug-in equipment is safe to use. We test kettles, IT equipment, tools, and extension leads for businesses, landlords, and HMO operators across Nottingham.",
       "Each item is inspected, tested where appropriate, labelled, and logged on a certificate you can present to insurers or auditors.",
