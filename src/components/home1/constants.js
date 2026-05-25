@@ -16,4 +16,8 @@ export const BRAND = {
 
 export const CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 
+/** Tighter side padding on service detail (mobile) */
+export const SERVICE_DETAIL_CONTAINER =
+  "w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
+
 export const SECTION_PY = "py-16 sm:py-20 lg:py-24";

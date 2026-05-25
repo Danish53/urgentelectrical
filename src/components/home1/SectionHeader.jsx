@@ -17,7 +17,7 @@ export default function SectionHeader({
       <SectionEyebrow light={light}>{eyebrow}</SectionEyebrow>
       <h2
         id={id}
-        className={`text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold leading-[1.15] tracking-tight ${
+        className={`text-[28px] sm:text-[34px] lg:text-[38px] font-extrabold leading-[1.15] pb-3 tracking-tight ${
           light ? "text-white" : "text-[var(--home1-text)]"
         }`}
       >

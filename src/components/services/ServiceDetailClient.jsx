@@ -11,7 +11,7 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import ServiceCard from "@/components/services/ServiceCard";
 import ServiceDetailStickyBar from "@/components/services/ServiceDetailStickyBar";
 import SectionHeader from "@/components/home1/SectionHeader";
-import { CONTAINER, SECTION_PY } from "@/components/home1/constants";
+import { SECTION_PY, SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import {
@@ -31,7 +31,7 @@ function ServiceProductImage({ service }) {
           alt={`${service.name} — electrical service Nottingham`}
           fill
           priority
-          sizes="(max-width: 640px) 280px, 340px"
+          sizes="(max-width: 1023px) 100vw, 400px"
           className="object-cover"
           onError={() => setFailed(true)}
         />
@@ -49,18 +49,18 @@ function ServiceProductImage({ service }) {
 
 function ServicePriceBar({ priceDisplay }) {
   return (
-    <div className="home1-service-product-price-bar" role="status" aria-live="polite">
+    <div className="" role="status" aria-live="polite">
       {priceDisplay.type === "range" ? (
         <>
           <span className="home1-service-product-price-from">{priceDisplay.prefix}</span>
           <span className="home1-service-product-price-divider" aria-hidden="true" />
           <span className="home1-service-product-price-amounts">{priceDisplay.amounts}</span>
-          <span className="home1-service-product-price-vat">{priceDisplay.suffix}</span>
+          <span className="home1-service-product-price-vat ml-2">{priceDisplay.suffix}</span>
         </>
       ) : (
         <>
           <span className="home1-service-product-price-amounts">{priceDisplay.amounts}</span>
-          <span className="home1-service-product-price-vat">{priceDisplay.suffix}</span>
+          <span className="home1-service-product-price-vat ml-2 text-xs text-gray-500">{priceDisplay.suffix}</span>
         </>
       )}
     </div>
@@ -72,9 +72,9 @@ function ServiceVariantPicker({ variants, selectedId, onSelect, idPrefix = "main
   return (
     <div className={`home1-service-product-variants home1-service-product-variants--${theme}`}>
       <p id={labelId} className="home1-service-product-variants-label">
-        Select a variant
+        Choose your Variant
       </p>
-      <div className="home1-service-product-variant-list" role="group" aria-labelledby={labelId}>
+      <div className="home1-service-product-variant-list mt-2" role="group" aria-labelledby={labelId}>
         {variants.map((variant) => {
           const isActive = variant.id === selectedId;
           return (
@@ -94,18 +94,44 @@ function ServiceVariantPicker({ variants, selectedId, onSelect, idPrefix = "main
   );
 }
 
-function ServiceSelectedPrice({ priceIncVat, theme = "light" }) {
+const TRUST_PILLS = ["NICEIC approved", "Fixed pricing", "12-month warranty"];
+
+function ServiceTrustStrip({ theme = "light", className = "" }) {
   return (
-    <p className={`home1-service-product-selected-price home1-service-product-selected-price--${theme}`} aria-live="polite">
-      <strong>£{priceIncVat}</strong>
-      <span>Inc. VAT</span>
-    </p>
+    <ul
+      className={`home1-service-trust-strip home1-service-trust-strip--${theme}${className ? ` ${className}` : ""}`}
+    >
+      {TRUST_PILLS.map((item) => (
+        <li key={item}>
+          <IconCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+          {item}
+        </li>
+      ))}
+    </ul>
   );
 }
 
-function ServiceBookingButtons({ bookHref, compact = false }) {
+function ServiceSelectedPrice({ priceIncVat, theme = "light", variantLabel }) {
   return (
-    <div className={`home1-service-product-actions${compact ? " home1-service-product-actions--compact" : ""}`}>
+    <div className={`home1-service-selected-price-card my-4 home1-service-selected-price-card--${theme}`} aria-live="polite">
+      <div className="home1-service-selected-price-card-top">
+        <span className="home1-service-selected-price-label">
+          {variantLabel ? `Selected · ${variantLabel}` : "Your price"}
+        </span>
+        <span className="home1-service-selected-price-vat">Inc. VAT</span>
+      </div>
+      <p className="home1-service-selected-price-value">
+        <strong>£{priceIncVat}</strong>
+      </p>
+    </div>
+  );
+}
+
+function ServiceBookingButtons({ bookHref, compact = false, variant = "default" }) {
+  return (
+    <div
+      className={`home1-service-product-actions${compact ? " home1-service-product-actions--compact" : ""}${variant === "hero" ? " home1-service-product-actions--hero" : ""}`}
+    >
       <Link href={bookHref} className="home1-service-product-btn home1-service-product-btn--book">
         <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
         Book Now
@@ -126,23 +152,153 @@ function ServiceBookingBlock({
   idPrefix = "main",
   theme = "light",
   showStaticVariants = true,
+  showButtons = true,
+  variantsScrollable = false,
 }) {
   const price = selectedVariant?.priceIncVat ?? service.priceIncVat;
 
   return (
-    <div className="home1-service-product-checkout">
+    <div
+      className={`home1-service-product-checkout${variantsScrollable ? " home1-service-product-checkout--scroll-variants" : ""}`}
+    >
       {showStaticVariants && (
-        <ServiceVariantPicker
-          variants={STATIC_SERVICE_VARIANTS}
-          selectedId={selectedId}
-          onSelect={onSelectVariant}
-          idPrefix={idPrefix}
-          theme={theme}
-        />
+        <div className={variantsScrollable ? "home1-service-hero-variants-scroll" : undefined}>
+          <ServiceVariantPicker
+            variants={STATIC_SERVICE_VARIANTS}
+            selectedId={selectedId}
+            onSelect={onSelectVariant}
+            idPrefix={idPrefix}
+            theme={theme}
+          />
+        </div>
       )}
-      <ServiceSelectedPrice priceIncVat={price} theme={theme} />
-      <ServiceBookingButtons bookHref={service.bookHref} />
+      <ServiceSelectedPrice
+        priceIncVat={price}
+        theme={theme}
+        variantLabel={selectedVariant?.label}
+      />
+      {showButtons && <ServiceBookingButtons bookHref={service.bookHref} />}
     </div>
+  );
+}
+
+function ServiceDetailSection({ id, number, title, subtitle, children, className = "" }) {
+  return (
+    <section
+      id={id}
+      className={`home1-service-detail-section ${className}`.trim()}
+      aria-labelledby={id ? `${id}-heading` : undefined}
+    >
+      <header className="home1-service-detail-section-head">
+        <span className="home1-service-detail-section-num" aria-hidden="true">
+          {number}
+        </span>
+        <div className="home1-service-detail-section-titles">
+          <h2 id={id ? `${id}-heading` : undefined} className="home1-service-detail-section-title">
+            {title}
+          </h2>
+          {subtitle && <p className="home1-service-detail-section-subtitle">{subtitle}</p>}
+        </div>
+      </header>
+      <div className="home1-service-detail-section-body">{children}</div>
+    </section>
+  );
+}
+
+function buildContentSections(service) {
+  const items = [
+    {
+      id: "about",
+      title: "About this service",
+      subtitle: "What we do and who this is for",
+      className: "home1-service-detail-about",
+      render: () => (
+        <div className="home1-service-detail-prose">
+          {service.longDescription.map((para) => (
+            <p key={para.slice(0, 48)}>{para}</p>
+          ))}
+        </div>
+      ),
+    },
+  ];
+
+  if (service.includes.length > 0) {
+    items.push({
+      id: "included",
+      title: "What's included",
+      subtitle: "Clear scope with no hidden extras",
+      className: "home1-service-detail-includes-section",
+      render: () => (
+        <>
+          <ul className="home1-service-detail-includes">
+            {service.includes.map((item) => (
+              <li key={item} className="home1-service-detail-include-item">
+                <span className="home1-service-detail-include-icon" aria-hidden="true">
+                  <IconCheck className="w-3.5 h-3.5" />
+                </span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ),
+    });
+  }
+
+  if (service.features.length > 0) {
+    items.push({
+      id: "benefits",
+      title: "Key benefits",
+      subtitle: "Outcomes you can expect from this service",
+      render: () => (
+        <ul className="home1-service-detail-list">
+          {service.features.map((f) => (
+            <li key={f}>
+              <IconCheck className="w-4 h-4 text-[var(--home1-red)] shrink-0 mt-0.5" aria-hidden="true" />
+              {f}
+            </li>
+          ))}
+        </ul>
+      ),
+    });
+  }
+
+  if (service.faqs.length > 0) {
+    items.push({
+      id: "faqs",
+      title: "Frequently asked questions",
+      subtitle: "Common questions before you book",
+      render: () => <ServiceFaq faqs={service.faqs} />,
+    });
+  }
+
+  return items.map((item, index) => ({
+    ...item,
+    number: String(index + 1).padStart(2, "0"),
+  }));
+}
+
+function ServiceDetailJumpNav({ sections }) {
+  if (sections.length < 2) return null;
+
+  const labels = {
+    about: "Overview",
+    included: "Included",
+    benefits: "Benefits",
+    faqs: "FAQs",
+  };
+
+  return (
+    <nav className="home1-service-detail-jump" aria-label="On this page">
+      <span className="home1-service-detail-jump-label">On this page</span>
+      <ul className="home1-service-detail-jump-list">
+        {sections.map((s) => (
+          <li key={s.id}>
+            <a href={`#${s.id}`}>{labels[s.id] ?? s.title}</a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }
 
@@ -152,42 +308,36 @@ function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVa
   return (
     <section className="home1-service-product" aria-labelledby="service-detail-heading">
       <div className="home1-service-product-bg" aria-hidden="true" />
-      <div className={`${CONTAINER} home1-service-product-inner`}>
-        {/* <nav
-          aria-label="Breadcrumb"
-          className="home1-service-product-breadcrumb"
-        >
-          <Link href="/">Home</Link>
-          <span aria-hidden="true">/</span>
-          <Link href="/services">Services</Link>
-          <span aria-hidden="true">/</span>
-          <span className="home1-service-product-breadcrumb-current">{service.name}</span>
-        </nav> */}
+      <div className={`${SERVICE_DETAIL_CONTAINER} home1-service-product-inner`}>
 
-        <div className="home1-service-product-card">
-          <div className="home1-service-product-card-accent" aria-hidden="true" />
-          <div className="home1-service-product-grid">
-            <div className="home1-service-product-media-wrap">
-              <ServiceProductImage service={service} />
-            </div>
-
-            <div className="home1-service-product-panel min-w-0">
-              <div className="home1-service-product-meta">
+        <div className="home1-service-hero-card">
+          <div className="home1-service-hero-card-grid">
+            <div className="home1-service-hero-content min-w-0">
+              <div className="home1-service-hero-meta">
                 <span className="home1-service-product-category">{service.categoryLabel}</span>
                 {service.tag && (
-                  <span className="home1-service-product-badge">{service.tag}</span>
+                  <span className="home1-service-hero-tag">{service.tag}</span>
                 )}
+                <span className="home1-service-hero-availability">
+                  <span className="home1-service-hero-availability-dot" aria-hidden="true" />
+                  Same-day slots
+                </span>
               </div>
 
-              <h1 id="service-detail-heading" className="home1-service-product-title">
+              <h1 id="service-detail-heading" className="home1-service-hero-title">
                 {service.name}
               </h1>
 
-              <p className="home1-service-product-lead">{service.description}</p>
+              <p className="home1-service-hero-lead">{service.description}</p>
 
-              <ServicePriceBar priceDisplay={priceDisplay} />
+              <div className="home1-service-hero-price-row">
+                <div className="home1-service-hero-price-block">
+                  <span className="home1-service-hero-price-label">Starting from</span>
+                  <ServicePriceBar priceDisplay={priceDisplay} />
+                </div>
+              </div>
 
-              <div className="home1-service-product-booking">
+              <div className="home1-service-hero-book-panel">
                 <ServiceBookingBlock
                   service={service}
                   selectedId={selectedId}
@@ -195,7 +345,20 @@ function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVa
                   selectedVariant={selectedVariant}
                   idPrefix="main"
                   theme="light"
+                  showButtons
                 />
+              </div>
+            </div>
+
+            <div className="home1-service-hero-image-col">
+              <div className="home1-service-hero-image-stack">
+                <div className="home1-service-hero-media-frame">
+                  <div className="home1-service-hero-media-glow" aria-hidden="true" />
+                  <div className="home1-service-product-media-wrap">
+                    <ServiceProductImage service={service} />
+                  </div>
+                </div>
+                <ServiceTrustStrip theme="light" className="home1-service-hero-trust-below" />
               </div>
             </div>
           </div>
@@ -209,29 +372,25 @@ function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVa
 function PricingCard({ service, selectedVariant, selectedId, onSelectVariant }) {
   return (
     <aside className="home1-service-detail-sidebar" aria-label="Book this service">
-      {service.tag && (
-        <span className="inline-block mb-4 text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase bg-[var(--home1-red)]">
-          {service.tag}
-        </span>
-      )}
+      <div className="home1-service-sidebar-head">
+        <p className="home1-service-detail-sidebar-label">Quick book</p>
+        <h3 className="home1-service-sidebar-title">Book this service</h3>
+        {service.tag && <span className="home1-service-detail-sidebar-tag">{service.tag}</span>}
+      </div>
 
-      <ServiceBookingBlock
-        service={service}
-        selectedId={selectedId}
-        onSelectVariant={onSelectVariant}
-        selectedVariant={selectedVariant}
-        idPrefix="sidebar"
-        theme="dark"
-      />
+      <div className="home1-service-sidebar-panel">
+        <ServiceBookingBlock
+          service={service}
+          selectedId={selectedId}
+          onSelectVariant={onSelectVariant}
+          selectedVariant={selectedVariant}
+          idPrefix="sidebar"
+          theme="dark"
+          showButtons
+        />
+      </div>
 
-      {/* <ul className="home1-service-detail-sidebar-trust">
-        {["NICEIC approved", "12-month warranty", "Same-day booking"].map((t) => (
-          <li key={t}>
-            <IconCheck className="w-4 h-4 text-[#4ADE80] shrink-0" aria-hidden="true" />
-            {t}
-          </li>
-        ))}
-      </ul> */}
+      <p className="home1-service-sidebar-foot">Secure booking · Same-day slots where available</p>
     </aside>
   );
 }
@@ -241,7 +400,7 @@ function ServiceFaq({ faqs }) {
   if (!faqs.length) return null;
 
   return (
-    <div className="home1-service-detail-faq space-y-3">
+    <div className="home1-service-detail-faq">
       {faqs.map((item, i) => {
         const isOpen = openId === i;
         return (
@@ -281,8 +440,10 @@ export default function ServiceDetailClient({ service, related }) {
     [selectedId]
   );
 
+  const contentSections = useMemo(() => buildContentSections(service), [service]);
+
   return (
-    <div className="home1-page w-full min-w-0">
+    <div className="home1-page home1-service-detail-page w-full min-w-0">
       <Navbar />
       <ServiceDetailStickyBar
         service={service}
@@ -300,86 +461,44 @@ export default function ServiceDetailClient({ service, related }) {
           sectionRef={productSectionRef}
         />
 
-        <section className={`home1-service-detail-body bg-white ${SECTION_PY} !pt-0`}>
-          <div className={CONTAINER}>
-            <div className="grid lg:grid-cols-[1fr_350px] gap-10 lg:gap-12 items-start">
-              <div className="min-w-0">
-                <article className="home1-service-detail-block home1-service-detail-about">
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--home1-text)] mb-4">About this service</h2>
-                  <div className="space-y-3 text-[15px] leading-relaxed text-[var(--home1-muted)]">
-                    {service.longDescription.map((para) => (
-                      <p key={para.slice(0, 48)}>{para}</p>
-                    ))}
-                  </div>
-                </article>
+        <section className="home1-service-detail-body p-0" aria-label="Service information">
+          <div className="home1-service-detail-body-bg" aria-hidden="true" />
+          <div className={SERVICE_DETAIL_CONTAINER}>
+            <ServiceDetailJumpNav sections={contentSections} />
 
-                {service.features.length > 0 && (
-                  <section className="home1-service-detail-block" aria-labelledby="service-features-heading">
-                    <h2 id="service-features-heading" className="text-xl font-extrabold text-[var(--home1-text)] mb-4">
-                      Key benefits
-                    </h2>
-                    <ul className="home1-service-detail-list">
-                      {service.features.map((f) => (
-                        <li key={f}>
-                          <IconCheck className="w-4 h-4 text-[var(--home1-red)] shrink-0 mt-0.5" aria-hidden="true" />
-                          {f}
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                {service.includes.length > 0 && (
-                  <section
-                    className="home1-service-detail-block home1-service-detail-includes-section"
-                    aria-labelledby="service-includes-heading"
+            <div className="home1-service-detail-layout">
+              <div className="home1-service-detail-main min-w-0">
+                {contentSections.map((section) => (
+                  <ServiceDetailSection
+                    key={section.id}
+                    id={section.id}
+                    number={section.number}
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    className={section.className ?? ""}
                   >
-                    <h2 id="service-includes-heading" className="text-xl font-extrabold text-[var(--home1-text)] mb-4">
-                      What&apos;s included
-                    </h2>
-                    <p className="home1-service-detail-includes-intro">
-                      Your fixed-price visit covers the following — clear scope with no hidden extras.
-                    </p>
-                    <ul className="home1-service-detail-includes">
-                      {service.includes.map((item) => (
-                        <li key={item} className="home1-service-detail-include-item">
-                          <span className="home1-service-detail-include-icon" aria-hidden="true">
-                            <IconCheck className="w-3.5 h-3.5" />
-                          </span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                )}
-
-                {service.faqs.length > 0 && (
-                  <section className="home1-service-detail-block" aria-labelledby="service-faq-heading">
-                    <h2 id="service-faq-heading" className="text-xl font-extrabold text-[var(--home1-text)] mb-4">
-                      FAQs
-                    </h2>
-                    <ServiceFaq faqs={service.faqs} />
-                  </section>
-                )}
+                    {section.render()}
+                  </ServiceDetailSection>
+                ))}
               </div>
 
-              <div className="hidden lg:block min-w-0">
+              <aside className="home1-service-detail-aside min-w-0" aria-label="Book this service">
                 <PricingCard
                   service={service}
                   selectedVariant={selectedVariant}
                   selectedId={selectedId}
                   onSelectVariant={setSelectedId}
                 />
-              </div>
+              </aside>
             </div>
           </div>
         </section>
 
         {related.length > 0 && (
           <MotionSection variant="fade-up">
-            <section className={`${SECTION_PY} home1-section-surface`}>
-              <div className={CONTAINER}>
-                <SectionHeader eyebrow="Related" title="You may also need" align="left" compact />
+            <section className={`${SECTION_PY} home1-section-surface pt-0`}>
+              <div className={SERVICE_DETAIL_CONTAINER}>
+                <SectionHeader eyebrow="Related" className="pb-3" title="You may also need" align="left" compact />
                 <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
                   {related.map((s, i) => (
                     <li key={s.slug}>
