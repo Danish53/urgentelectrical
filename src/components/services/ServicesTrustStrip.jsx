@@ -1,20 +1,27 @@
 import { SERVICES_PAGE_TRUST } from "@/data/servicesPage";
-import { CONTAINER } from "@/components/home1/constants";
+import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 
 export default function ServicesTrustStrip() {
   return (
-    <section className="home1-stats-bar overflow-x-clip" aria-label="Service guarantees">
-      <div className={CONTAINER}>
-        <ul className="grid grid-cols-2 lg:grid-cols-4 list-none p-0 m-0 divide-y sm:divide-y-0 divide-white/10">
-          {SERVICES_PAGE_TRUST.map((s, i) => (
-            <li
-              key={s.label}
-              className={`sm:border-r sm:border-white/10 ${i === SERVICES_PAGE_TRUST.length - 1 ? "sm:border-r-0" : ""} min-w-0`}
-            >
-              <div className="home1-stats-item">
-                <p className="home1-stats-value">{s.value}</p>
-                <p className="home1-stats-title">{s.label}</p>
-              </div>
+    <section
+      className="home1-stats-bar home1-services-trust overflow-x-clip"
+      aria-label="Service guarantees"
+    >
+      <div className={SERVICES_PAGE_CONTAINER}>
+        <ul className="home1-services-trust-grid list-none p-0 m-0">
+          {SERVICES_PAGE_TRUST.map((s) => (
+            <li key={s.label} className="home1-services-trust-cell min-w-0">
+              <article className="home1-stats-item home1-services-trust-item">
+                <p className="home1-stats-value home1-services-trust-value" aria-hidden="true">
+                  {s.value}
+                </p>
+                <div className="home1-stats-copy">
+                  <h3 className="home1-stats-title">{s.label}</h3>
+                </div>
+                <span className="sr-only">
+                  {s.value} — {s.label}
+                </span>
+              </article>
             </li>
           ))}
         </ul>

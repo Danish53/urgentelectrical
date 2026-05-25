@@ -2,133 +2,290 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import Image from "next/image";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
-import MotionSection from "@/components/MotionSection.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
 import BlogCard from "@/components/blog/BlogCard";
-import { CONTAINER, SECTION_PY } from "@/components/home1/constants";
-import { IconArrow } from "@/components/home1/icons";
-import { HERO_CONTAINER, HERO_ITEM, HERO_TITLE, EASE_SMOOTH } from "@/lib/motion";
+import SectionHeader from "@/components/home1/SectionHeader";
+import { SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
+import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
+import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+import { getBlogImageAlt, getBlogImageUrl } from "@/data/blogs";
 
-function ArticleImage({ post, priority }) {
+const SIDEBAR_TRUST = ["NICEIC approved", "Fixed pricing", "Same-day slots"];
+
+function BlogHeroImage({ post, alt }) {
   const [failed, setFailed] = useState(false);
+
   if (failed) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center text-white font-bold" style={{ backgroundColor: post.color }}>
+      <div
+        className="home1-blog-hero-media-fallback"
+        style={{ backgroundColor: post.color }}
+        role="img"
+        aria-label={alt}
+      >
         {post.categoryLabel}
       </div>
     );
   }
+
   return (
-    <img
+    <Image
       src={post.image}
-      alt=""
-      loading={priority ? "eager" : "lazy"}
-      decoding="async"
-      fetchPriority={priority ? "high" : "auto"}
-      className="w-full h-full object-cover"
+      alt={alt}
+      fill
+      priority
+      quality={82}
+      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 896px"
+      className="object-cover"
       onError={() => setFailed(true)}
     />
   );
 }
 
-export default function BlogDetailClient({ post, sections, related }) {
-  const reduceMotion = useReducedMotion();
+function BlogBreadcrumb({ title }) {
+  return (
+    <nav className="home1-blog-breadcrumb" aria-label="Breadcrumb">
+      <ol
+        className="home1-blog-breadcrumb-list"
+        itemScope
+        itemType="https://schema.org/BreadcrumbList"
+      >
+        <li
+          className="home1-blog-breadcrumb-item"
+          itemProp="itemListElement"
+          itemScope
+          itemType="https://schema.org/ListItem"
+        >
+          <Link href="/" itemProp="item">
+            <span itemProp="name">Home</span>
+          </Link>
+          <meta itemProp="position" content="1" />
+        </li>
+        <li
+          className="home1-blog-breadcrumb-item"
+          itemProp="itemListElement"
+          itemScope
+          itemType="https://schema.org/ListItem"
+        >
+          <Link href="/blog" itemProp="item">
+            <span itemProp="name">Blog</span>
+          </Link>
+          <meta itemProp="position" content="2" />
+        </li>
+        <li
+          className="home1-blog-breadcrumb-item home1-blog-breadcrumb-item--current"
+          itemProp="itemListElement"
+          itemScope
+          itemType="https://schema.org/ListItem"
+        >
+          <span itemProp="name">{title}</span>
+          <meta itemProp="position" content="3" />
+        </li>
+      </ol>
+    </nav>
+  );
+}
+
+function BlogTags({ post }) {
+  if (!post.keywords?.length) return null;
 
   return (
-    <div className="home1-page w-full min-w-0">
+    <div className="home1-blog-tags" aria-label="Article topics">
+      <p className="home1-blog-tags-label">Topics</p>
+      <ul className="home1-blog-tags-list">
+        {post.keywords.map((tag) => (
+          <li key={tag}>
+            <span className="home1-blog-tag">{tag}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function BlogSidebar({ post }) {
+  return (
+    <aside className="home1-blog-sidebar" aria-label="Article actions">
+      <div className="home1-blog-sidebar-card">
+        <p className="home1-blog-sidebar-label">Keep reading</p>
+        <Link href="/blog" className="home1-blog-sidebar-link">
+          <span>All articles</span>
+          <IconArrow className="w-4 h-4 shrink-0" aria-hidden="true" />
+        </Link>
+        <Link href="/services" className="home1-blog-sidebar-link home1-blog-sidebar-link--primary">
+          <span>Our services</span>
+          <IconArrow className="w-4 h-4 shrink-0" aria-hidden="true" />
+        </Link>
+      </div>
+
+      <div className="home1-blog-sidebar-card home1-blog-sidebar-card--muted">
+        <p className="home1-blog-sidebar-label">Need an electrician?</p>
+        <p className="home1-blog-sidebar-text">
+          Book online or call for NICEIC approved work across Nottingham &amp; the East Midlands.
+        </p>
+        <a href="/#book" className="home1-btn-primary home1-blog-sidebar-cta w-full justify-center">
+          <IconCalendar className="w-4 h-4" aria-hidden="true" />
+          Book online
+        </a>
+        <a href={FOOTER_PHONE_TEL} className="home1-btn-outline home1-blog-sidebar-cta w-full justify-center">
+          Call {FOOTER_PHONE}
+        </a>
+      </div>
+
+      <ul className="home1-blog-sidebar-trust">
+        {SIDEBAR_TRUST.map((item) => (
+          <li key={item}>
+            <IconCheck className="w-3.5 h-3.5 shrink-0 text-[var(--home1-red)]" aria-hidden="true" />
+            {item}
+          </li>
+        ))}
+      </ul>
+
+      <div className="home1-blog-sidebar-meta">
+        <p className="home1-blog-sidebar-label">Published</p>
+        <time dateTime={post.publishedISO}>{post.publishedDisplay}</time>
+        <p className="home1-blog-sidebar-meta-sub">
+          {post.readMinutes} min read · {post.categoryLabel}
+        </p>
+      </div>
+    </aside>
+  );
+}
+
+export default function BlogDetailClient({ post, sections, related }) {
+  const imageAlt = getBlogImageAlt(post);
+  const authorInitials = post.author
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return (
+    <div className="home1-page home1-blog-detail-page w-full min-w-0">
       <Navbar />
-      <main className="w-full min-w-0">
-        <section className="relative bg-black overflow-x-clip pt-[111px] lg:pt-[122px] pb-10 sm:pb-14">
-          <div className="hero-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
-          <div className={`${CONTAINER} relative z-10 max-w-4xl`}>
-            <motion.div
-              variants={reduceMotion ? undefined : HERO_CONTAINER}
-              initial={reduceMotion ? false : "hidden"}
-              animate={reduceMotion ? undefined : "visible"}
-              className="mt-3"
-            >
+      <main id="main-content" className="w-full min-w-0">
+        <article
+          className="home1-blog-article-wrap"
+          itemScope
+          itemType="https://schema.org/BlogPosting"
+          lang="en-GB"
+        >
+          <link itemProp="mainEntityOfPage" href={post.canonicalUrl} />
+          <link itemProp="image" href={getBlogImageUrl(post)} />
+          <meta itemProp="description" content={post.metaDescription} />
+          <meta itemProp="datePublished" content={post.publishedISO} />
+          <meta itemProp="dateModified" content={post.publishedISO} />
+          {post.keywords?.length > 0 && (
+            <meta itemProp="keywords" content={post.keywords.join(", ")} />
+          )}
 
-              <motion.div variants={reduceMotion ? undefined : HERO_ITEM} className="flex flex-wrap items-center gap-3 mb-4">
-                <span className="home1-eyebrow home1-eyebrow--light">{post.categoryLabel}</span>
-                <span className="text-white/50 text-[12px] font-semibold">
-                  {post.publishedDisplay} · {post.readMinutes} min read
-                </span>
-              </motion.div>
+          <header
+            className="home1-blog-hero"
+            style={{ paddingTop: "calc(var(--site-header-height, 88px) + 1rem)" }}
+          >
+            <div className={`${SERVICE_DETAIL_CONTAINER} home1-blog-hero-inner`}>
+              {/* <BlogBreadcrumb title={post.title} /> */}
 
-              <motion.h1
-                variants={reduceMotion ? undefined : HERO_TITLE}
-                className="text-white text-[28px] sm:text-[38px] lg:text-[44px] font-extrabold leading-[1.1] tracking-tight mb-6"
-              >
-                {post.title}
-              </motion.h1>
+              <div className="home1-blog-hero-card">
+                <div className="home1-blog-hero-card-head">
+                  <div className="home1-blog-hero-meta">
+                    <span className="home1-blog-category-pill" itemProp="articleSection">
+                      {post.categoryLabel}
+                    </span>
+                    <time
+                      className="home1-blog-hero-date"
+                      dateTime={post.publishedISO}
+                      itemProp="datePublished"
+                    >
+                      {post.publishedDisplay}
+                    </time>
+                    <span className="home1-blog-hero-read">{post.readMinutes} min read</span>
+                  </div>
 
-              <motion.p variants={reduceMotion ? undefined : HERO_ITEM} className="text-white/80 text-[16px] leading-relaxed mb-8">
-                {post.excerpt}
-              </motion.p>
+                  <h1 className="home1-blog-hero-title" itemProp="headline">
+                    {post.title}
+                  </h1>
+                  <p className="home1-blog-hero-lead" itemProp="abstract">
+                    {post.excerpt}
+                  </p>
+                </div>
 
-              <motion.div variants={reduceMotion ? undefined : HERO_ITEM} className="rounded-2xl overflow-hidden aspect-[16/9] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
-                <ArticleImage post={post} priority />
-              </motion.div>
-            </motion.div>
-          </div>
-        </section>
-
-        <article className={`${SECTION_PY} bg-white`}>
-          <div className={`${CONTAINER} max-w-3xl`}>
-            <div className="prose-blog space-y-5 text-[16px] leading-[1.75] text-[var(--home1-muted)]">
-              {sections.map((para, i) => (
-                <motion.p
-                  key={i}
-                  initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ delay: i * 0.05, duration: 0.6, ease: EASE_SMOOTH }}
-                >
-                  {para}
-                </motion.p>
-              ))}
+                <figure className="home1-blog-hero-media">
+                  <BlogHeroImage post={post} alt={imageAlt} />
+                  <figcaption className="sr-only">{imageAlt}</figcaption>
+                </figure>
+              </div>
             </div>
+          </header>
 
-            <div className="mt-12 pt-8 border-t border-[var(--home1-border)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <p className="text-[14px] text-[var(--home1-muted)]">
-                Written by <strong className="text-[var(--home1-text)]">{post.author}</strong>
-              </p>
-              <Link href="/services" className="home1-btn-primary text-sm py-3 px-5 w-fit">
-                View our services
-                <IconArrow className="w-4 h-4" />
-              </Link>
+          <div className="home1-blog-body">
+            <div className={`${SERVICE_DETAIL_CONTAINER} home1-blog-layout`}>
+              <div className="home1-blog-main min-w-0">
+                <div className="home1-blog-article-card">
+                  <BlogTags post={post} />
+
+                  <div className="home1-blog-prose" itemProp="articleBody">
+                    {sections.map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
+
+                  <footer className="home1-blog-article-footer">
+                    <div className="home1-blog-author">
+                      <span className="home1-blog-author-avatar" aria-hidden="true">
+                        {authorInitials}
+                      </span>
+                      <div>
+                        <p className="home1-blog-author-label">Written by</p>
+                        <p className="home1-blog-author-name" itemProp="author">
+                          {post.author}
+                        </p>
+                        <p className="home1-blog-author-role">Urgent Electrical · Nottingham</p>
+                      </div>
+                    </div>
+                    <Link href="/blog" className="home1-btn-outline text-sm py-3 px-5 w-full sm:w-fit justify-center shrink-0">
+                      More articles
+                      <IconArrow className="w-4 h-4" aria-hidden="true" />
+                    </Link>
+                  </footer>
+                </div>
+              </div>
+
+              <BlogSidebar post={post} />
             </div>
           </div>
         </article>
 
         {related.length > 0 && (
-          <MotionSection variant="fade-up">
-            <section className={`${SECTION_PY} home1-section-surface`}>
-              <div className={CONTAINER}>
-                <h2 className="text-2xl font-extrabold text-[var(--home1-text)] mb-8">Related articles</h2>
-                <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
-                  {related.map((p) => (
-                    <li key={p.slug}>
-                      <BlogCard post={p} />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </section>
-          </MotionSection>
+          <section className="home1-blog-related" aria-labelledby="blog-related-heading">
+            <div className={SERVICE_DETAIL_CONTAINER}>
+              <SectionHeader
+                id="blog-related-heading"
+                eyebrow="Continue reading"
+                title="Related articles"
+                description="More guides and tips from our Nottingham electricians."
+                align="left"
+                compact
+              />
+              <ul className="home1-blog-related-grid list-none p-0 m-0">
+                {related.map((p) => (
+                  <li key={p.slug} className="min-w-0">
+                    <BlogCard post={p} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
         )}
 
-        <MotionSection variant="fade-up">
-          <CTAHome1 bookHref="/#book" />
-        </MotionSection>
+        <CTAHome1 bookHref="/#book" />
       </main>
-      <MotionSection variant="fade-up">
-        <Footer />
-      </MotionSection>
+      <Footer />
       <FloatingCTA />
     </div>
   );

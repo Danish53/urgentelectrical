@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BOOKABLE_SERVICES, SERVICE_CATEGORIES } from "@/data/servicesPage";
-import { CONTAINER, SECTION_PY } from "@/components/home1/constants";
+import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import SectionHeader from "@/components/home1/SectionHeader";
 import ServiceCard from "./ServiceCard";
-import { EASE_SMOOTH } from "@/lib/motion";
 
 export default function ServicesCatalog() {
   const [active, setActive] = useState("all");
@@ -28,10 +27,10 @@ export default function ServicesCatalog() {
   return (
     <section
       id="services-catalog"
-      className={`${SECTION_PY} bg-white overflow-x-clip scroll-mt-28`}
+      className="py-10 sm:py-16 lg:py-20 bg-white overflow-x-clip scroll-mt-28 relative z-[1]"
       aria-labelledby="services-catalog-heading"
     >
-      <div className={CONTAINER}>
+      <div className={SERVICES_PAGE_CONTAINER}>
         <SectionHeader
           id="services-catalog-heading"
           eyebrow="Our Services"
@@ -41,7 +40,7 @@ export default function ServicesCatalog() {
         />
 
         <div
-          className="flex flex-wrap justify-center gap-2 mb-10 sm:mb-12"
+          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10 -mx-0.5 px-0.5"
           role="tablist"
           aria-label="Filter services by category"
         >
@@ -54,7 +53,7 @@ export default function ServicesCatalog() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActive(cat.id)}
-                className={`relative px-4 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
+                className={`relative shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[13px] font-bold transition-colors ${
                   isActive ? "text-white" : "text-[var(--home1-muted)] hover:text-[var(--home1-text)] bg-[var(--home1-surface)]"
                 }`}
               >
@@ -75,31 +74,19 @@ export default function ServicesCatalog() {
           })}
         </div>
 
-        <AnimatePresence mode="popLayout">
-          <motion.ul
+        {filtered.length === 0 ? (
+          <p className="text-center text-[var(--home1-muted)] py-14">No services in this category.</p>
+        ) : (
+          <ul
             key={active}
-            className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6 list-none p-0 m-0"
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.4, ease: EASE_SMOOTH }}
+            className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 list-none p-0 m-0"
           >
             {filtered.map((service, i) => (
-              <motion.li
-                key={service.id}
-                initial={reduceMotion ? false : { opacity: 0, y: 32 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: reduceMotion ? 0 : i * 0.05, duration: 0.45, ease: EASE_SMOOTH }}
-                className="min-w-0"
-              >
+              <li key={service.id} className="min-w-0">
                 <ServiceCard service={service} imagePriority={i < 3} />
-              </motion.li>
+              </li>
             ))}
-          </motion.ul>
-        </AnimatePresence>
-
-        {filtered.length === 0 && (
-          <p className="text-center text-[var(--home1-muted)] py-14">No services in this category.</p>
+          </ul>
         )}
       </div>
     </section>

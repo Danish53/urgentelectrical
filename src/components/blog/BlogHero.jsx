@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
-import { CONTAINER } from "@/components/home1/constants";
+import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { HERO_CONTAINER, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
 
 export default function BlogHero() {
@@ -10,7 +10,8 @@ export default function BlogHero() {
 
   return (
     <section
-      className="relative bg-black overflow-x-clip pt-[118px] lg:pt-[122px] pb-14 sm:pb-16"
+      className="relative bg-black overflow-x-clip pb-10 sm:pb-14 lg:pb-16"
+      style={{ paddingTop: "calc(var(--site-header-height, 88px) + 1.25rem)" }}
       aria-labelledby="blog-hero-heading"
     >
       <div className="hero-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
@@ -18,7 +19,7 @@ export default function BlogHero() {
       <div className="home1-hero-orb home1-hero-orb--left" aria-hidden="true" />
       <div className="home1-hero-orb home1-hero-orb--right" aria-hidden="true" />
 
-      <div className={`${CONTAINER} relative z-10`}>
+      <div className={`${SERVICES_PAGE_CONTAINER} relative z-10`}>
         <motion.div
           variants={reduceMotion ? undefined : HERO_CONTAINER}
           initial={reduceMotion ? false : "hidden"}
@@ -29,7 +30,7 @@ export default function BlogHero() {
           <motion.h1
             id="blog-hero-heading"
             variants={reduceMotion ? undefined : HERO_TITLE}
-            className="text-white text-[32px] sm:text-[42px] lg:text-[48px] font-extrabold leading-[1.08] tracking-tight mb-5"
+            className="text-white text-[26px] sm:text-[38px] lg:text-[48px] font-extrabold leading-[1.1] tracking-tight mb-4 sm:mb-5"
           >
             Electrical tips from{" "}
             <span className="text-[#ff5a3c]">local experts</span>

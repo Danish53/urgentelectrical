@@ -20,9 +20,7 @@ export default function BlogPage() {
       <Navbar />
       <main className="w-full min-w-0">
         <BlogHero />
-        <MotionSection variant="fade-up">
-          <BlogListing />
-        </MotionSection>
+        <BlogListing />
         <MotionSection variant="fade-in">
           <NewsletterHome1 />
         </MotionSection>

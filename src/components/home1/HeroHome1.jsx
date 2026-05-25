@@ -68,7 +68,7 @@ export default function HeroHome1() {
   return (
     <section
       id="hero"
-      className="home1-hero relative bg-black overflow-x-clip pt-[118px] lg:pt-[122px] scroll-mt-0"
+      className="home1-hero relative bg-black overflow-x-clip pt-[118px] lg:pt-[152px] scroll-mt-0"
       aria-labelledby="home1-hero-heading"
     >
       <div className="hero-grid-bg absolute inset-0 pointer-events-none" aria-hidden="true" />
@@ -160,7 +160,7 @@ export default function HeroHome1() {
               </a>
             </motion.div>
 
-            <motion.ul
+            {/* <motion.ul
               variants={reduceMotion ? undefined : HERO_ITEM}
               className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-xl mx-auto lg:mx-0"
             >
@@ -170,7 +170,7 @@ export default function HeroHome1() {
                   <span>{s.label}</span>
                 </li>
               ))}
-            </motion.ul>
+            </motion.ul> */}
           </motion.div>
 
           {/* Right — dark booking form */}

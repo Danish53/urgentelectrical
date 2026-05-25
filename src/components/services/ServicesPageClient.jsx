@@ -12,14 +12,12 @@ import ServicesCatalog from "@/components/services/ServicesCatalog";
 
 export default function ServicesPageClient() {
   return (
-    <div className="home1-page w-full min-w-0">
+    <div className="home1-page home1-services-page w-full min-w-0">
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
         <ServicesHero />
         <ServicesTrustStrip />
-        <MotionSection variant="fade-up">
-          <ServicesCatalog />
-        </MotionSection>
+        <ServicesCatalog />
         {/* <MotionSection variant="fade-up" delay={0.05}>
           <ServicesResources />
         </MotionSection> */}

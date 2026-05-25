@@ -161,6 +161,18 @@ export function getRelatedPosts(post, limit = 3) {
   return [...same, ...other].slice(0, limit);
 }
 
+/** 16:9 hero — used for Next/Image and schema.org */
+export const BLOG_HERO_IMAGE_WIDTH = 1200;
+export const BLOG_HERO_IMAGE_HEIGHT = 675;
+
+export function getBlogImageAlt(post) {
+  return `${post.title} — ${post.categoryLabel} electrical guide, Nottingham`;
+}
+
+export function getBlogImageUrl(post) {
+  return post.image.startsWith("http") ? post.image : `${SITE}${post.image}`;
+}
+
 export function buildBlogListingMetadata() {
   return {
     title: "Blog & Electrical News | Nottingham Electricians",
@@ -188,10 +200,14 @@ export function buildBlogListingMetadata() {
 }
 
 export function buildBlogPostMetadata(post) {
+  const imageUrl = getBlogImageUrl(post);
+  const imageAlt = getBlogImageAlt(post);
+
   return {
     title: post.title,
     description: post.metaDescription,
     keywords: [...post.keywords, "Urgent Electrical blog", "Nottingham electrician"],
+    authors: [{ name: post.author }],
     openGraph: {
       type: "article",
       locale: "en_GB",
@@ -200,7 +216,22 @@ export function buildBlogPostMetadata(post) {
       title: post.title,
       description: post.metaDescription,
       publishedTime: post.publishedISO,
-      images: [{ url: post.image, alt: post.title }],
+      section: post.categoryLabel,
+      tags: post.keywords,
+      images: [
+        {
+          url: imageUrl,
+          width: BLOG_HERO_IMAGE_WIDTH,
+          height: BLOG_HERO_IMAGE_HEIGHT,
+          alt: imageAlt,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.metaDescription,
+      images: [imageUrl],
     },
     alternates: { canonical: post.canonicalUrl },
   };
@@ -239,6 +270,9 @@ export const BLOG_LISTING_JSON_LD = {
 };
 
 export function buildBlogPostJsonLd(post, sections) {
+  const body = sections.join(" ");
+  const wordCount = body.split(/\s+/).filter(Boolean).length;
+
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -252,18 +286,33 @@ export function buildBlogPostJsonLd(post, sections) {
       },
       {
         "@type": "BlogPosting",
+        "@id": `${post.canonicalUrl}#article`,
         headline: post.title,
         description: post.metaDescription,
-        image: `${SITE}${post.image}`,
+        abstract: post.excerpt,
+        image: {
+          "@type": "ImageObject",
+          url: getBlogImageUrl(post),
+          width: BLOG_HERO_IMAGE_WIDTH,
+          height: BLOG_HERO_IMAGE_HEIGHT,
+          caption: getBlogImageAlt(post),
+        },
         datePublished: post.publishedISO,
-        author: { "@type": "Organization", name: post.author },
+        dateModified: post.publishedISO,
+        inLanguage: "en-GB",
+        wordCount,
+        articleSection: post.categoryLabel,
+        keywords: post.keywords.join(", "),
+        url: post.canonicalUrl,
+        author: { "@type": "Organization", name: post.author, url: SITE },
         publisher: {
           "@type": "Organization",
           name: "Urgent Electrical Services",
           url: SITE,
         },
-        mainEntityOfPage: post.canonicalUrl,
-        articleBody: sections.join(" "),
+        mainEntityOfPage: { "@type": "WebPage", "@id": post.canonicalUrl },
+        isPartOf: { "@type": "Blog", name: "Urgent Electrical Blog", url: `${SITE}/blog` },
+        articleBody: body,
       },
     ],
   };

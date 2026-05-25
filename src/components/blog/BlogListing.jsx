@@ -1,12 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { BLOG_CATEGORIES, BLOG_POSTS, FEATURED_POST } from "@/data/blogs";
-import { CONTAINER, SECTION_PY } from "@/components/home1/constants";
+import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import SectionHeader from "@/components/home1/SectionHeader";
 import BlogCard from "./BlogCard";
-import { EASE_SMOOTH } from "@/lib/motion";
 
 export default function BlogListing() {
   const [active, setActive] = useState("all");
@@ -21,8 +20,11 @@ export default function BlogListing() {
   const gridPosts = showFeatured ? filtered.filter((p) => p.slug !== FEATURED_POST.slug) : filtered;
 
   return (
-    <section className={`${SECTION_PY} bg-white overflow-x-clip`} aria-labelledby="blog-list-heading">
-      <div className={CONTAINER}>
+    <section
+      className="py-10 sm:py-16 lg:py-20 bg-white overflow-x-clip relative z-[1]"
+      aria-labelledby="blog-list-heading"
+    >
+      <div className={SERVICES_PAGE_CONTAINER}>
         <SectionHeader
           id="blog-list-heading"
           eyebrow="Latest articles"
@@ -32,7 +34,7 @@ export default function BlogListing() {
         />
 
         <div
-          className="flex flex-wrap justify-center gap-2 mb-10 sm:mb-12"
+          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10"
           role="tablist"
           aria-label="Filter articles by category"
         >
@@ -45,7 +47,7 @@ export default function BlogListing() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => setActive(cat.id)}
-                className={`relative px-4 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
+                className={`relative shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[13px] font-bold transition-colors ${
                   isActive ? "text-white" : "text-[var(--home1-muted)] hover:text-[var(--home1-text)] bg-[var(--home1-surface)]"
                 }`}
               >
@@ -66,30 +68,19 @@ export default function BlogListing() {
           })}
         </div>
 
-        <AnimatePresence mode="popLayout">
-          <motion.ul
-            key={active}
-            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 list-none p-0 m-0"
-            initial={reduceMotion ? false : { opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduceMotion ? undefined : { opacity: 0 }}
-            transition={{ duration: 0.4, ease: EASE_SMOOTH }}
-          >
-            {gridPosts.map((post, i) => (
-              <motion.li
-                key={post.slug}
-                initial={reduceMotion ? false : { opacity: 0, y: 36 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: reduceMotion ? 0 : i * 0.05, duration: 0.5, ease: EASE_SMOOTH }}
-              >
-                <BlogCard post={post} />
-              </motion.li>
-            ))}
-          </motion.ul>
-        </AnimatePresence>
-
-        {gridPosts.length === 0 && (
+        {gridPosts.length === 0 ? (
           <p className="text-center text-[var(--home1-muted)] py-16">No articles in this category yet.</p>
+        ) : (
+          <ul
+            key={active}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 list-none p-0 m-0"
+          >
+            {gridPosts.map((post) => (
+              <li key={post.slug} className="min-w-0">
+                <BlogCard post={post} />
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </section>

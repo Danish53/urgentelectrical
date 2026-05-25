@@ -18,7 +18,7 @@ import {
   getStaticVariantById,
   STATIC_SERVICE_VARIANTS,
   STATIC_VARIANT_DEFAULT_ID,
-  STATIC_VARIANT_PRICE_DISPLAY,
+  buildStaticVariantPriceDisplay,
 } from "@/data/serviceVariantsStatic";
 
 function ServiceProductImage({ service }) {
@@ -48,21 +48,14 @@ function ServiceProductImage({ service }) {
 }
 
 function ServicePriceBar({ priceDisplay }) {
+  const ariaLabel = priceDisplay.label ?? `${priceDisplay.amounts} ${priceDisplay.suffix ?? ""}`.trim();
+
   return (
-    <div className="" role="status" aria-live="polite">
-      {priceDisplay.type === "range" ? (
-        <>
-          <span className="home1-service-product-price-from">{priceDisplay.prefix}</span>
-          <span className="home1-service-product-price-divider" aria-hidden="true" />
-          <span className="home1-service-product-price-amounts">{priceDisplay.amounts}</span>
-          <span className="home1-service-product-price-vat ml-2">{priceDisplay.suffix}</span>
-        </>
-      ) : (
-        <>
-          <span className="home1-service-product-price-amounts">{priceDisplay.amounts}</span>
-          <span className="home1-service-product-price-vat ml-2 text-xs text-gray-500">{priceDisplay.suffix}</span>
-        </>
-      )}
+    <div className="p-0" role="status" aria-label={ariaLabel} aria-live="polite">
+      <span className="home1-service-product-price-amounts p-0 m-0">{priceDisplay.amounts}</span>
+      {priceDisplay.suffix ? (
+        <span className="home1-service-product-price-vat ml-2 text-xs text-gray-500">{priceDisplay.suffix}</span>
+      ) : null}
     </div>
   );
 }
@@ -193,7 +186,7 @@ function ServiceDetailSection({ id, number, title, subtitle, children, className
         <span className="home1-service-detail-section-num" aria-hidden="true">
           {number}
         </span>
-        <div className="home1-service-detail-section-titles">
+        <div className="home1-service-detail-section-titles p-0 m-0">
           <h2 id={id ? `${id}-heading` : undefined} className="home1-service-detail-section-title">
             {title}
           </h2>
@@ -303,7 +296,7 @@ function ServiceDetailJumpNav({ sections }) {
 }
 
 function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVariant, sectionRef }) {
-  const priceDisplay = service.priceDisplay ?? STATIC_VARIANT_PRICE_DISPLAY;
+  const priceDisplay = buildStaticVariantPriceDisplay();
 
   return (
     <section className="home1-service-product" aria-labelledby="service-detail-heading">

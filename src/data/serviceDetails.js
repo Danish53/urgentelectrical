@@ -84,6 +84,7 @@ export const SERVICE_DETAIL_EXTRA = {
       { id: "20-30", label: "20-30 Items", priceExc: 100 },
       { id: "30-40", label: "30-40 Items", priceExc: 120 },
       { id: "40-50", label: "40-50 Items", priceExc: 155 },
+      { id: "50+", label: "50+ Items", priceExc: 220 },
     ],
     longDescription: [
       "Portable Appliance Testing (PAT) helps demonstrate that plug-in equipment is safe to use. We test kettles, IT equipment, tools, and extension leads for businesses, landlords, and HMO operators across Nottingham.",
