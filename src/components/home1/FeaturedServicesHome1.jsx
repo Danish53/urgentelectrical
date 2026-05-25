@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
+import { buildCheckoutHref } from "@/lib/checkoutHref";
 import Image from "next/image";
-import { FEATURED_SERVICES, priceIncVat } from "@/data/featuredServices";
-import { BOOKABLE_SERVICES } from "@/data/servicesPage";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchServices } from "@/store/slices/servicesSlice";
+import { useBookableServices, useFeaturedServices } from "@/hooks/useServices";
+import FeaturedServicesSkeleton from "@/components/skeletons/FeaturedServicesSkeleton";
+import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconArrow } from "./icons";
@@ -27,14 +31,14 @@ function useSlidesPerView() {
   return n;
 }
 
-function resolveHref(serviceName) {
-  const match = BOOKABLE_SERVICES.find((s) => s.name === serviceName);
+function resolveHref(serviceName, bookable) {
+  const match = bookable.find((s) => s.name === serviceName);
   return match?.href ?? "/services";
 }
 
 function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
   const [failed, setFailed] = useState(false);
-  const price = priceIncVat(service.priceExc);
+  const price = service.priceIncVat;
   const alt = `${service.name} — electrical service Nottingham`;
 
   return (
@@ -77,7 +81,7 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
           <Link href={detailHref} className="home1-service-btn home1-service-btn--ghost">
             Details
           </Link>
-          <Link href="/#book" className="home1-service-btn home1-service-btn--primary">
+          <Link href={buildCheckoutHref({ service: service.name })} className="home1-service-btn home1-service-btn--primary">
             Book now
             <IconArrow className="w-4 h-4 shrink-0" />
           </Link>
@@ -90,11 +94,13 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
 export default function FeaturedServicesHome1({ compact = false }) {
   const slidesPerView = useSlidesPerView();
   const [index, setIndex] = useState(0);
+  const { bookable } = useBookableServices();
+  const dispatch = useAppDispatch();
+  const { services: featuredList, loading, failed } = useFeaturedServices({
+    limit: compact ? HOME_LIMIT : undefined,
+  });
 
-  const services = useMemo(
-    () => (compact ? FEATURED_SERVICES.slice(0, HOME_LIMIT) : FEATURED_SERVICES),
-    [compact]
-  );
+  const services = featuredList;
 
   const maxIndex = Math.max(0, services.length - slidesPerView);
   const slidePct = 100 / slidesPerView;
@@ -140,13 +146,19 @@ export default function FeaturedServicesHome1({ compact = false }) {
           )}
         </div>
 
-        {compact ? (
+        {loading ? (
+          <FeaturedServicesSkeleton compact={compact} count={compact ? HOME_LIMIT : 3} />
+        ) : failed ? (
+          <ServicesLoadError onRetry={() => dispatch(fetchServices())} />
+        ) : services.length === 0 ? (
+          <p className="text-center text-[var(--home1-muted)] py-10">No services available right now.</p>
+        ) : compact ? (
           <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
             {services.map((s, i) => (
               <ServiceCardHome1
                 key={s.id}
                 service={s}
-                detailHref={resolveHref(s.name)}
+                detailHref={resolveHref(s.name, bookable)}
                 imagePriority={i < 2}
               />
             ))}
@@ -159,7 +171,7 @@ export default function FeaturedServicesHome1({ compact = false }) {
             >
               {services.map((s, i) => (
                 <div key={s.id} className="shrink-0 px-2.5" style={{ width: `${slidePct}%` }}>
-                  <ServiceCardHome1 service={s} detailHref={resolveHref(s.name)} imagePriority={i === 0} />
+                  <ServiceCardHome1 service={s} detailHref={resolveHref(s.name, bookable)} imagePriority={i === 0} />
                 </div>
               ))}
             </div>

@@ -1,0 +1,43 @@
+@keyframes ue-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.ue-skeleton {
+  background: linear-gradient(
+    90deg,
+    #f1f5f9 0%,
+    #e8ecf1 42%,
+    #f8fafc 50%,
+    #e8ecf1 58%,
+    #f1f5f9 100%
+  );
+  background-size: 200% 100%;
+  animation: ue-skeleton-shimmer 1.35s ease-in-out infinite;
+  border-radius: 10px;
+}
+
+.ue-skeleton--dark {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.08) 100%
+  );
+  background-size: 200% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ue-skeleton,
+  .ue-skeleton--dark {
+    animation: none;
+    background: #f1f5f9;
+  }
+  .ue-skeleton--dark {
+    background: rgba(255, 255, 255, 0.12);
+  }
+}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { SERVICES } from "@/data/services";
+import { useEffect, useState } from "react";
+import { useBookingOptions } from "@/hooks/useServices";
+import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionEyebrow from "./SectionEyebrow";
@@ -13,7 +14,14 @@ export default function QuoteFormHome1() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [service, setService] = useState(SERVICES[0]?.name ?? "");
+  const { options, loading: servicesLoading } = useBookingOptions();
+  const [service, setService] = useState("");
+
+  useEffect(() => {
+    if (options.length && !service) {
+      setService(options[0].name);
+    }
+  }, [options, service]);
   const [message, setMessage] = useState("");
 
   return (
@@ -114,19 +122,24 @@ export default function QuoteFormHome1() {
 
               <div className="home1-quote-field">
                 <label htmlFor="quote-service">Service needed</label>
-                <select
-                  id="quote-service"
-                  name="service"
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  className="home1-quote-input"
-                >
-                  {SERVICES.map((s) => (
-                    <option key={s.name} value={s.name}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                {servicesLoading ? (
+                  <FormFieldSkeleton className="rounded-lg !bg-[#1f2937]" />
+                ) : (
+                  <select
+                    id="quote-service"
+                    name="service"
+                    value={service}
+                    onChange={(e) => setService(e.target.value)}
+                    disabled={!options.length}
+                    className="home1-quote-input"
+                  >
+                    {options.map((s) => (
+                      <option key={s.name} value={s.name}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div className="home1-quote-field">

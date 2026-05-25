@@ -39,7 +39,7 @@ export default function EmergencyHome1() {
                 <IconPhone />
                 {EMERGENCY_PHONE}
               </a>
-              <a href="#book" className="home1-btn-outline">
+              <a href="/checkout" className="home1-btn-outline">
                 Book online
               </a>
             </div>

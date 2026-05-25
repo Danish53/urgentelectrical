@@ -54,7 +54,7 @@ export default function CTABannerSection() {
               {FOOTER_PHONE}
             </a>
             <a
-              href="#book"
+              href="/checkout"
               className="inline-flex items-center justify-center gap-2 border-2 border-white text-white font-bold text-[15px] px-7 sm:px-8 py-3.5 sm:py-4 rounded-md transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
             >
               Book Online Now

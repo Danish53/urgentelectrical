@@ -1,31 +1,35 @@
 import { notFound } from "next/navigation";
 import ServiceDetailClient from "@/components/services/ServiceDetailClient";
+import { buildServiceJsonLd, buildServiceMetadata } from "@/data/servicesPage";
 import {
-  buildServiceJsonLd,
-  buildServiceMetadata,
-  getAllServiceSlugs,
-  getRelatedServices,
-  getServiceBySlug,
-} from "@/data/servicesPage";
+  getBookableServices,
+  getRelatedServicesFromList,
+  getServiceBySlugFromList,
+} from "@/lib/services/getServices";
 import "../../home1/home1.css";
 
-export function generateStaticParams() {
-  return getAllServiceSlugs().map((slug) => ({ slug }));
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const services = await getBookableServices();
+  return services.map((s) => ({ slug: s.slug }));
 }
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const service = getServiceBySlug(slug);
+  const services = await getBookableServices();
+  const service = getServiceBySlugFromList(slug, services);
   if (!service) return { title: "Service not found" };
   return buildServiceMetadata(service);
 }
 
 export default async function ServiceDetailPage({ params }) {
   const { slug } = await params;
-  const service = getServiceBySlug(slug);
+  const services = await getBookableServices();
+  const service = getServiceBySlugFromList(slug, services);
   if (!service) notFound();
 
-  const related = getRelatedServices(service);
+  const related = getRelatedServicesFromList(service, services, 3);
   const jsonLd = buildServiceJsonLd(service);
 
   return (

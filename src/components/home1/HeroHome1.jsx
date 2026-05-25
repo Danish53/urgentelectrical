@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { SERVICES } from "@/data/services";
+import { useBookingOptions } from "@/hooks/useServices";
+import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
@@ -61,9 +63,26 @@ const HERO_STATS = [
 ];
 
 export default function HeroHome1() {
-  const [service, setService] = useState("Portable Appliance Testing (PAT)");
+  const router = useRouter();
+  const { options, loading: servicesLoading } = useBookingOptions();
+  const [service, setService] = useState("");
+
+  useEffect(() => {
+    if (options.length && !service) {
+      setService(options[0].name);
+    }
+  }, [options, service]);
   const [postcode, setPostcode] = useState("");
   const reduceMotion = useReducedMotion();
+
+  function handleBookSubmit(e) {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (service) params.set("service", service);
+    if (postcode.trim()) params.set("postcode", postcode.trim().toUpperCase());
+    const qs = params.toString();
+    router.push(qs ? `/checkout?${qs}` : "/checkout");
+  }
 
   return (
     <section
@@ -154,7 +173,7 @@ export default function HeroHome1() {
                 <IconPhone className="text-[#D3231F] w-5 h-5"  />
                 {FOOTER_PHONE}
               </a>
-              <a href="#book" className="home1-btn-primary text-sm py-3 px-5">
+              <a href="/checkout" className="home1-btn-primary text-sm py-3 px-5">
                 Book online
                 <IconArrow className="w-4 h-4" />
               </a>
@@ -192,7 +211,7 @@ export default function HeroHome1() {
               </span>
             </div>
 
-            <form id="book" className="space-y-4" aria-label="Book an electrician online">
+            <form id="book" className="space-y-4" aria-label="Book an electrician online" onSubmit={handleBookSubmit}>
               <div>
                 <label
                   htmlFor="home1-service"
@@ -203,20 +222,25 @@ export default function HeroHome1() {
                   </svg>
                   Service needed
                 </label>
-                <select
-                  id="home1-service"
-                  name="service"
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  required
-                  className="home1-hero-input cursor-pointer appearance-none"
-                >
-                  {SERVICES.map((s) => (
-                    <option key={s.name} value={s.name}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                {servicesLoading ? (
+                  <FormFieldSkeleton dark />
+                ) : (
+                  <select
+                    id="home1-service"
+                    name="service"
+                    value={service}
+                    onChange={(e) => setService(e.target.value)}
+                    required
+                    disabled={!options.length}
+                    className="home1-hero-input cursor-pointer appearance-none"
+                  >
+                    {options.map((s) => (
+                      <option key={s.name} value={s.name}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               <div>

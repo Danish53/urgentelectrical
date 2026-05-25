@@ -5,12 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
+import { CONTAINER } from "@/components/home1/constants";
+import NavAuthControl from "@/components/nav/NavAuthControl";
 import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
 
 const NAV_MENU_ITEM =
   "flex items-center gap-[5px] text-[14px] font-[600] text-[#5A5856] py-2 px-[14px] rounded-xl whitespace-nowrap transition-all";
-
-const NAV_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (
@@ -91,7 +91,7 @@ function BrandLogo({ compact = false }) {
 function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true }) {
   return (
     <div className="bg-[#f9f8f6] border-b border-[#ececec]">
-      <div className={`${NAV_CONTAINER} h-10 flex items-center justify-between text-[13px] leading-none`}>
+      <div className={`${CONTAINER} h-10 flex items-center justify-between text-[13px] leading-none`}>
         <div className="flex items-center gap-4 min-w-0">
           <a
             href="tel:01157780622"
@@ -227,7 +227,7 @@ export default function Navbar() {
         <NavTopUtilityBar incVat={incVat} onVatToggle={() => setIncVat((v) => !v)} />
 
         {!mobileOpen && (
-          <div className={NAV_CONTAINER}>
+          <div className={CONTAINER}>
             {/* Mobile */}
             <div className="flex lg:hidden items-center justify-between min-h-[68px] py-3 gap-4">
               <BrandLogo compact />
@@ -278,17 +278,15 @@ export default function Navbar() {
                 <Link href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Blogs
                 </Link>
-                <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                <Link href="/contact-us" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Contact
-                </a>
-                <a href="#" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
-                  Login
-                </a>
+                </Link>
+                <NavAuthControl variant="desktop" />
               </nav>
 
               <div className="flex items-center justify-end min-w-0">
                 <a
-                  href="#book"
+                  href="/checkout"
                   className="group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
                   Book Now
@@ -309,14 +307,14 @@ export default function Navbar() {
           <div className="flex items-center justify-between px-5 min-h-[68px] py-3 border-b border-[#e8e8e8] shrink-0">
             <BrandLogo compact />
             <div className="flex items-center gap-2.5 shrink-0">
-              <a
-                href="#book"
+              <Link
+                href="/checkout"
                 onClick={closeMobile}
                 className="inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
               >
                 <NavIconCalendar />
                 Book
-              </a>
+              </Link>
               <button
                 type="button"
                 onClick={closeMobile}
@@ -386,20 +384,15 @@ export default function Navbar() {
               Blogs
               <NavIconArrowRight />
             </Link>
-            <a
-              href="#"
+            <Link
+              href="/contact-us"
               onClick={closeMobile}
               className="flex items-center justify-between px-4 py-3.5 text-[14px] font-medium text-[#4b5563] border-b border-[#ebebeb]"
             >
               Contact
-            </a>
-            <a
-              href="#"
-              onClick={closeMobile}
-              className="flex items-center justify-between px-4 py-3.5 text-[14px] font-medium text-[#4b5563]"
-            >
-              Login
-            </a>
+              <NavIconArrowRight />
+            </Link>
+            <NavAuthControl variant="mobile" onNavigate={closeMobile} />
           </nav>
         </div>
       )}

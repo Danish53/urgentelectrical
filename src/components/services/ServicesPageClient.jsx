@@ -22,7 +22,7 @@ export default function ServicesPageClient() {
           <ServicesResources />
         </MotionSection> */}
         <MotionSection variant="fade-up">
-          <CTAHome1 bookHref="/#book" />
+          <CTAHome1 />
         </MotionSection>
       </main>
       <Footer />

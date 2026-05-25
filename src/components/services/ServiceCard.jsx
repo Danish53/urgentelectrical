@@ -3,12 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { priceIncVatFromString } from "@/data/servicesPage";
 import { IconArrow } from "@/components/home1/icons";
 
 export default function ServiceCard({ service, imagePriority = false }) {
   const [failed, setFailed] = useState(false);
-  const price = priceIncVatFromString(service.price);
+  const price = service.priceIncVat ?? service.price;
   const alt = `${service.name} — electrical service Nottingham`;
 
   return (

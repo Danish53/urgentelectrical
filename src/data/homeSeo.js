@@ -1,5 +1,4 @@
 import { FAQ_ITEMS } from "./faqs";
-import { BOOKABLE_SERVICES } from "./servicesPage";
 
 const SITE = "https://www.urgentelectrical.services";
 
@@ -84,16 +83,6 @@ export const HOME_JSON_LD = {
         "@type": "Question",
         name: item.q,
         acceptedAnswer: { "@type": "Answer", text: item.a.replace(/0115 778 0622/g, "01157780622") },
-      })),
-    },
-    {
-      "@type": "ItemList",
-      name: "Our electrical services",
-      itemListElement: BOOKABLE_SERVICES.slice(0, 6).map((s, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: s.canonicalUrl,
-        name: s.name,
       })),
     },
   ],

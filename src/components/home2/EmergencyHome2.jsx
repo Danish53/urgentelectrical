@@ -30,7 +30,7 @@ export default function EmergencyHome2() {
                 <IconPhone />
                 {EMERGENCY_PHONE}
               </a>
-              <a href="#book" className="home2-btn home2-btn--outline-light">
+              <a href="/checkout" className="home2-btn home2-btn--outline-light">
                 Book online
               </a>
             </div>

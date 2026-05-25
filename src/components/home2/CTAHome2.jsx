@@ -18,7 +18,7 @@ export default function CTAHome2() {
               <IconPhone />
               {FOOTER_PHONE}
             </a>
-            <a href="#book" className="home2-btn home2-btn--outline !border-white !text-white hover:!bg-white/10">
+            <a href="/checkout" className="home2-btn home2-btn--outline !border-white !text-white hover:!bg-white/10">
               Book online
               <IconArrow />
             </a>

@@ -1,14 +1,24 @@
 import { BLOG_POSTS } from "@/data/blogs";
-import { BOOKABLE_SERVICES } from "@/data/servicesPage";
+import { ALL_LOCATIONS } from "@/data/locationDetails";
+import { getBookableServices } from "@/lib/services/getServices";
 
 const SITE_URL = "https://www.urgentelectrical.services";
 
-export default function sitemap() {
-  const servicePages = BOOKABLE_SERVICES.map((s) => ({
+export default async function sitemap() {
+  const bookable = await getBookableServices();
+
+  const servicePages = bookable.map((s) => ({
     url: s.canonicalUrl,
     lastModified: new Date(),
     changeFrequency: "monthly",
     priority: 0.85,
+  }));
+
+  const locationPages = ALL_LOCATIONS.map((loc) => ({
+    url: loc.canonicalUrl,
+    lastModified: new Date(),
+    changeFrequency: "monthly",
+    priority: 0.8,
   }));
 
   const blogPages = BLOG_POSTS.map((p) => ({
@@ -37,7 +47,32 @@ export default function sitemap() {
       changeFrequency: "weekly",
       priority: 0.85,
     },
+    {
+      url: `${SITE_URL}/contact-us`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.88,
+    },
+    {
+      url: `${SITE_URL}/about-us`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.88,
+    },
+    {
+      url: `${SITE_URL}/locations`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.88,
+    },
+    {
+      url: `${SITE_URL}/checkout`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
     ...servicePages,
+    ...locationPages,
     ...blogPages,
   ];
 }

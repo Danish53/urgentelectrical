@@ -2,37 +2,48 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { HOME2_SERVICES, priceIncVatFromString } from "@/data/home2Services";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchServices } from "@/store/slices/servicesSlice";
+import { useBookableServices } from "@/hooks/useServices";
+import ServicesSliderSkeleton from "@/components/skeletons/ServicesSliderSkeleton";
+import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 import Slider from "./Slider";
 
 function ServiceSlideCard({ service }) {
   const [imgFail, setImgFail] = useState(false);
-  const price = priceIncVatFromString(service.price);
+  const price = service.priceIncVat ?? service.price;
 
   return (
     <article className={`home2-service-slide ${service.tag ? "relative" : ""}`}>
-      {service.tag && (
+      {service.tag ? (
         <span className="absolute top-3 right-3 z-10 bg-[var(--h2-red)] text-white text-[10px] font-bold px-2.5 py-1 rounded-md uppercase">
           {service.tag}
         </span>
-      )}
+      ) : null}
       <div className="home2-service-slide-image">
-        {!imgFail ? (
+        {!imgFail && service.image ? (
           <img src={service.image} alt="" onError={() => setImgFail(true)} />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: service.color }}>
-            <span>Your image here</span>
-            <span className="text-xs opacity-70 mt-1 px-4 text-center">{service.image}</span>
+          <div
+            className="w-full h-full flex flex-col items-center justify-center text-white text-sm font-semibold px-4 text-center"
+            style={{ backgroundColor: service.color }}
+          >
+            {service.name}
           </div>
         )}
       </div>
       <div className="home2-service-slide-body">
-        <h3 className="font-bold text-[var(--h2-navy)] text-[15px] leading-snug mb-2 line-clamp-2 min-h-[2.75rem]">{service.name}</h3>
+        <h3 className="font-bold text-[var(--h2-navy)] text-[15px] leading-snug mb-2 line-clamp-2 min-h-[2.75rem]">
+          {service.name}
+        </h3>
         <p className="text-2xl font-extrabold text-[var(--h2-red)]">£{price}</p>
         <p className="text-xs text-[var(--h2-muted)] mb-4">Inc. VAT · Fixed price</p>
-        <Link href="#book" className="home2-btn home2-btn--primary w-full mt-auto text-sm py-3">
+        <Link
+          href={service.bookHref ?? "/checkout"}
+          className="home2-btn home2-btn--primary w-full mt-auto text-sm py-3"
+        >
           Book now
           <span aria-hidden="true">→</span>
         </Link>
@@ -42,6 +53,9 @@ function ServiceSlideCard({ service }) {
 }
 
 export default function ServicesHome2() {
+  const dispatch = useAppDispatch();
+  const { bookable, loading, failed, error } = useBookableServices();
+
   return (
     <section
       id="home2-services"
@@ -56,11 +70,17 @@ export default function ServicesHome2() {
           description="Browse our most popular jobs — transparent pricing, professional engineers, book online in minutes."
         />
 
-        <Slider perView={1} perViewMd={2} perViewLg={3} ariaLabel="Electrical services carousel">
-          {HOME2_SERVICES.map((s) => (
-            <ServiceSlideCard key={s.name} service={s} />
-          ))}
-        </Slider>
+        {loading ? (
+          <ServicesSliderSkeleton count={3} />
+        ) : failed ? (
+          <ServicesLoadError message={error} onRetry={() => dispatch(fetchServices())} />
+        ) : (
+          <Slider perView={1} perViewMd={2} perViewLg={3} ariaLabel="Electrical services carousel">
+            {bookable.map((s) => (
+              <ServiceSlideCard key={s.id} service={s} />
+            ))}
+          </Slider>
+        )}
 
         <p className="text-center text-[var(--h2-muted)] text-sm mt-8">
           Custom job? Call{" "}

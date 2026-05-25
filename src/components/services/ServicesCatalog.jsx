@@ -2,18 +2,26 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { BOOKABLE_SERVICES, SERVICE_CATEGORIES } from "@/data/servicesPage";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchServices } from "@/store/slices/servicesSlice";
+import { SERVICE_CATEGORIES } from "@/data/servicesPage";
+import { useBookableServices } from "@/hooks/useServices";
+import ServicesGridSkeleton from "@/components/skeletons/ServicesGridSkeleton";
+import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import SectionHeader from "@/components/home1/SectionHeader";
 import ServiceCard from "./ServiceCard";
 
 export default function ServicesCatalog() {
+  const dispatch = useAppDispatch();
   const [active, setActive] = useState("all");
   const reduceMotion = useReducedMotion();
+  const { bookable, loading, failed, error } = useBookableServices();
+  const totalCount = useAppSelector((s) => s.services.meta?.total ?? bookable.length);
 
   const filtered = useMemo(
-    () => (active === "all" ? BOOKABLE_SERVICES : BOOKABLE_SERVICES.filter((s) => s.category === active)),
-    [active]
+    () => (active === "all" ? bookable : bookable.filter((s) => s.category === active)),
+    [active, bookable]
   );
 
   useEffect(() => {
@@ -35,7 +43,11 @@ export default function ServicesCatalog() {
           id="services-catalog-heading"
           eyebrow="Our Services"
           title="Book electrical services online"
-          description="Transparent pricing with NICEIC approved engineers — select a service for full details."
+          description={
+            totalCount > 0
+              ? `${totalCount} fixed-price services from our live catalogue — transparent pricing with NICEIC approved engineers.`
+              : "Transparent pricing with NICEIC approved engineers — select a service for full details."
+          }
           align="center"
         />
 
@@ -74,7 +86,11 @@ export default function ServicesCatalog() {
           })}
         </div>
 
-        {filtered.length === 0 ? (
+        {loading ? (
+          <ServicesGridSkeleton count={6} />
+        ) : failed ? (
+          <ServicesLoadError message={error} onRetry={() => dispatch(fetchServices())} />
+        ) : filtered.length === 0 ? (
           <p className="text-center text-[var(--home1-muted)] py-14">No services in this category.</p>
         ) : (
           <ul

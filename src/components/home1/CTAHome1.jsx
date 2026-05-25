@@ -2,7 +2,9 @@ import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER, SECTION_PY } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
 
-export default function CTAHome1({ bookHref = "#book" }) {
+import { CHECKOUT_PATH } from "@/lib/checkoutHref";
+
+export default function CTAHome1({ bookHref = CHECKOUT_PATH }) {
   return (
     <section
       id="cta"

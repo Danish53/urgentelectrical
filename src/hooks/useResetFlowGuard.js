@@ -1,0 +1,38 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { selectResetFlow } from "@/store/selectors/authSelectors";
+import { hydrateResetFlow } from "@/store/slices/authSlice";
+
+/**
+ * Ensures password-reset flow state is hydrated before route guards run.
+ * @param {{ requireEmail?: boolean, requireOtp?: boolean }} options
+ */
+export function useResetFlowGuard({ requireEmail = false, requireOtp = false } = {}) {
+  const router = useRouter();
+  const dispatch = useAppDispatch();
+  const resetFlow = useAppSelector(selectResetFlow);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    dispatch(hydrateResetFlow());
+    setReady(true);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    if (requireEmail && !resetFlow.email) {
+      router.replace("/login/forgot-password");
+      return;
+    }
+
+    if (requireOtp && (!resetFlow.otpVerified || !resetFlow.otp)) {
+      router.replace("/login/verify-otp");
+    }
+  }, [ready, resetFlow, requireEmail, requireOtp, router]);
+
+  return { ready, resetFlow };
+}

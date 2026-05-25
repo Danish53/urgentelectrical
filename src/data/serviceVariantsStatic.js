@@ -25,9 +25,10 @@ export function buildStaticVariantPriceDisplay() {
     type: "range",
     min,
     max,
+    prefix: "FROM",
     amounts: `${formatGbp(min)} – ${formatGbp(max)}`,
     suffix: "Inc. VAT",
-    label: `Starting from ${formatGbp(min)} – ${formatGbp(max)} Inc. VAT`,
+    label: `FROM ${formatGbp(min)} – ${formatGbp(max)} Inc. VAT`,
   };
 }
 

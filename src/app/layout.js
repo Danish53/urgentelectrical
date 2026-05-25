@@ -30,6 +30,7 @@
 
 
 import { Plus_Jakarta_Sans, Playfair_Display, Anton } from "next/font/google";
+import AppProviders from "@/components/providers/AppProviders";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -157,7 +158,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${plusJakarta.variable} ${playfair.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}>
-        {children}
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

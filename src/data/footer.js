@@ -8,21 +8,21 @@ export const FOOTER_SERVICES = [
 ];
 
 export const FOOTER_COMPANY = [
-  { label: "About us", href: "#" },
-  { label: "Contact us", href: "#" },
+  { label: "About us", href: "/about-us" },
+  { label: "Contact us", href: "/contact-us" },
   { label: "Blog & news", href: "/blog" },
-  { label: "Locations", href: "#" },
+  { label: "Locations", href: "/locations" },
   { label: "Other Services", href: "/services" },
   { label: "Company Policies", href: "#" },
 ];
 
 export const FOOTER_AREAS = [
-  { label: "Nottingham", href: "#" },
-  { label: "Derby", href: "#" },
-  { label: "Leicester", href: "#" },
-  { label: "Loughborough", href: "#" },
-  { label: "Newark-on-Trent", href: "#" },
-  { label: "East Midlands", href: "#" },
+  { label: "Nottingham", href: "/locations" },
+  { label: "Derby", href: "/locations" },
+  { label: "Leicester", href: "/locations" },
+  { label: "Loughborough", href: "/locations" },
+  { label: "Newark-on-Trent", href: "/locations" },
+  { label: "East Midlands", href: "/locations" },
 ];
 
 export const FOOTER_BADGES = ["NICEIC Approved", "Fully Insured", "Est. 2014"];

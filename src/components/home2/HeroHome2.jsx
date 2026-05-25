@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Home2Image from "./Home2Image";
-import { SERVICES as BOOKING_SERVICES } from "@/data/services";
+import { useBookingOptions } from "@/hooks/useServices";
+import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER } from "./constants";
 import { IconArrow, IconCheck, IconPhone } from "./icons";
 
 export default function HeroHome2() {
-  const [service, setService] = useState("Portable Appliance Testing (PAT)");
+  const { options, loading: servicesLoading } = useBookingOptions();
+  const [service, setService] = useState("");
+
+  useEffect(() => {
+    if (options.length && !service) {
+      setService(options[0].name);
+    }
+  }, [options, service]);
   const [postcode, setPostcode] = useState("");
 
   return (
@@ -94,19 +102,24 @@ export default function HeroHome2() {
                   <label htmlFor="home2-service" className="text-white/70 text-xs font-bold uppercase tracking-wider mb-1.5 block">
                     Service
                   </label>
-                  <select
-                    id="home2-service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
-                    className="home2-input cursor-pointer w-full"
-                    required
-                  >
-                    {BOOKING_SERVICES.map((s) => (
-                      <option key={s.name} value={s.name}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                  {servicesLoading ? (
+                    <FormFieldSkeleton dark className="rounded-md" />
+                  ) : (
+                    <select
+                      id="home2-service"
+                      value={service}
+                      onChange={(e) => setService(e.target.value)}
+                      className="home2-input cursor-pointer w-full"
+                      required
+                      disabled={!options.length}
+                    >
+                      {options.map((s) => (
+                        <option key={s.name} value={s.name}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="home2-postcode" className="text-white/70 text-xs font-bold uppercase tracking-wider mb-1.5 block">

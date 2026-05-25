@@ -127,7 +127,7 @@ function BlogSidebar({ post }) {
         <p className="home1-blog-sidebar-text">
           Book online or call for NICEIC approved work across Nottingham &amp; the East Midlands.
         </p>
-        <a href="/#book" className="home1-btn-primary home1-blog-sidebar-cta w-full justify-center">
+        <a href="/checkout" className="home1-btn-primary home1-blog-sidebar-cta w-full justify-center">
           <IconCalendar className="w-4 h-4" aria-hidden="true" />
           Book online
         </a>
@@ -283,7 +283,7 @@ export default function BlogDetailClient({ post, sections, related }) {
           </section>
         )}
 
-        <CTAHome1 bookHref="/#book" />
+        <CTAHome1 />
       </main>
       <Footer />
       <FloatingCTA />

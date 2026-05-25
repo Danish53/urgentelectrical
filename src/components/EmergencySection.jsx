@@ -64,7 +64,7 @@ export default function EmergencySection() {
                 Call Us Now
               </a>
               <a
-                href="#book"
+                href="/checkout"
                 className="inline-flex items-center justify-center gap-2.5 min-w-[160px] px-7 py-3.5 rounded-md border border-white/70 text-white font-bold text-[13px] sm:text-sm uppercase tracking-[0.06em] bg-transparent transition-all duration-300 ease-out delay-0 hover:delay-100 cursor-pointer hover:bg-white hover:text-[#0a0a0a]"
               >
                 <IconCalendar />

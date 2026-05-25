@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { SERVICES } from "@/data/services";
+import { useBookingOptions } from "@/hooks/useServices";
+import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
 
 const MARQUEE_ITEMS = [
@@ -92,8 +93,15 @@ function HeroMarquee() {
 }
 
 export default function Hero() {
-  const [service, setService] = useState("Portable Appliance Testing (PAT)");
+  const { options, loading: servicesLoading } = useBookingOptions();
+  const [service, setService] = useState("");
   const [postcode, setPostcode] = useState("");
+
+  useEffect(() => {
+    if (options.length && !service) {
+      setService(options[0].name);
+    }
+  }, [options, service]);
   const reduceMotion = useReducedMotion();
 
   return (
@@ -187,20 +195,25 @@ export default function Hero() {
                   </svg>
                   Service needed
                 </label>
-                <select
-                  id="hero-service"
-                  name="service"
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  required
-                  className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all appearance-none cursor-pointer"
-                >
-                  {SERVICES.map((s) => (
-                    <option key={s.name} value={s.name} className="bg-[#141414]">
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                {servicesLoading ? (
+                  <FormFieldSkeleton dark className="rounded-xl !bg-[#1a1a1a]" />
+                ) : (
+                  <select
+                    id="hero-service"
+                    name="service"
+                    value={service}
+                    onChange={(e) => setService(e.target.value)}
+                    required
+                    disabled={!options.length}
+                    className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all appearance-none cursor-pointer"
+                  >
+                    {options.map((s) => (
+                      <option key={s.name} value={s.name} className="bg-[#141414]">
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
               <div>
                 <label

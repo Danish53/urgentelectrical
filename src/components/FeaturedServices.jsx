@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FEATURED_SERVICES, priceIncVat } from "@/data/featuredServices";
+import { useAppDispatch } from "@/store/hooks";
+import { fetchServices } from "@/store/slices/servicesSlice";
+import { useFeaturedServices } from "@/hooks/useServices";
+import FeaturedServicesSkeleton from "@/components/skeletons/FeaturedServicesSkeleton";
+import ServicesLoadError from "@/components/services/ServicesLoadError";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 const BRAND_RED = "#E32B2B";
@@ -78,7 +82,7 @@ function SliderNavButton({ direction, onClick, disabled }) {
 }
 
 function ServiceCard({ service }) {
-  const price = priceIncVat(service.priceExc);
+  const price = service.priceIncVat;
 
   return (
     <article className="featured-service-card group relative flex h-full min-h-[400px] flex-col rounded-2xl border border-[#E32B2B] bg-white p-4 sm:p-5 cursor-pointer overflow-hidden transition-all duration-500 ease-out delay-0 hover:delay-150 hover:scale-[1.02] hover:shadow-[0_14px_36px_rgba(227,43,43,0.14)]">
@@ -105,13 +109,13 @@ function ServiceCard({ service }) {
 
       <div className="mt-auto flex gap-2 items-stretch">
         <a
-          href="#book"
+          href="/checkout"
           className="featured-btn-select flex-1 flex items-center justify-center bg-[#E32B2B] hover:bg-[#c42424] text-white font-semibold text-sm rounded-lg transition-colors duration-300"
         >
           Select Option
         </a>
         <a
-          href="#book"
+          href="/checkout"
           className="featured-btn-cart w-12 shrink-0 flex items-center justify-center bg-[#E32B2B] hover:bg-[#c42424] rounded-lg transition-colors duration-300"
           aria-label={`Add ${service.name} to booking`}
         >
@@ -140,10 +144,12 @@ function useSlidesPerView() {
 }
 
 export default function FeaturedServices() {
+  const dispatch = useAppDispatch();
   const slidesPerView = useSlidesPerView();
   const [index, setIndex] = useState(0);
+  const { services, loading, failed } = useFeaturedServices();
 
-  const maxIndex = Math.max(0, FEATURED_SERVICES.length - slidesPerView);
+  const maxIndex = Math.max(0, services.length - slidesPerView);
 
   useEffect(() => {
     setIndex((i) => Math.min(i, maxIndex));
@@ -173,31 +179,38 @@ export default function FeaturedServices() {
           Featured Services
         </h2>
 
-        <div className="relative px-8 sm:px-10 lg:px-12">
-          <SliderNavButton direction="prev" onClick={goPrev} disabled={index === 0} />
-          <SliderNavButton direction="next" onClick={goNext} disabled={index >= maxIndex} />
+        {loading ? (
+          <FeaturedServicesSkeleton count={4} />
+        ) : failed ? (
+          <ServicesLoadError onRetry={() => dispatch(fetchServices())} />
+        ) : (
+          <div className="relative px-8 sm:px-10 lg:px-12">
+            <SliderNavButton direction="prev" onClick={goPrev} disabled={index === 0} />
+            <SliderNavButton direction="next" onClick={goNext} disabled={index >= maxIndex} />
 
-          <div className="overflow-hidden min-w-0">
-            <div
-              className="featured-slider-track flex ease-in-out"
-              style={{
-                transform: `translateX(-${index * slideWidthPercent}%)`,
-                transitionDuration: `${SLIDE_MS}ms`,
-              }}
-            >
-              {FEATURED_SERVICES.map((service) => (
-                <div
-                  key={service.id}
-                  className="shrink-0 px-2 sm:px-2.5"
-                  style={{ width: `${slideWidthPercent}%` }}
-                >
-                  <ServiceCard service={service} />
-                </div>
-              ))}
+            <div className="overflow-hidden min-w-0">
+              <div
+                className="featured-slider-track flex ease-in-out"
+                style={{
+                  transform: `translateX(-${index * slideWidthPercent}%)`,
+                  transitionDuration: `${SLIDE_MS}ms`,
+                }}
+              >
+                {services.map((service) => (
+                  <div
+                    key={service.id}
+                    className="shrink-0 px-2 sm:px-2.5"
+                    style={{ width: `${slideWidthPercent}%` }}
+                  >
+                    <ServiceCard service={service} />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
+        {!loading && !failed && services.length > 0 ? (
         <div className="flex justify-center gap-2 mt-6 md:hidden" role="tablist" aria-label="Service slides">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
@@ -212,6 +225,7 @@ export default function FeaturedServices() {
             />
           ))}
         </div>
+        ) : null}
       </div>
     </section>
   );

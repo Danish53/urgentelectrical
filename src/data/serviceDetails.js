@@ -1,4 +1,4 @@
-/** Extended SEO & content per service slug — merged into BOOKABLE_SERVICES */
+/** Extended SEO & content per service slug — merged with API services in buildBookableServiceFromApi */
 export const SERVICE_DETAIL_EXTRA = {
   "emergency-response-24-7": {
     metaTitle: "24/7 Emergency Electrician Nottingham | Fast Response",
