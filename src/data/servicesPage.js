@@ -6,18 +6,16 @@ const SITE = "https://www.urgentelectrical.services";
 
 export { formatApiPrice, priceIncVatFromString };
 
-export const SERVICE_CATEGORIES = [
-  { id: "all", label: "All services" },
-  { id: "emergency", label: "Emergency" },
-  { id: "testing", label: "Testing & safety" },
-  { id: "domestic", label: "Domestic" },
-  { id: "commercial", label: "Commercial" },
-];
-
 export function getRelatedServices(service, list, limit = 3) {
-  const same = list.filter((s) => s.slug !== service.slug && s.category === service.category);
-  const other = list.filter((s) => s.slug !== service.slug && s.category !== service.category);
-  return [...same, ...other].slice(0, limit);
+  return list
+    .filter((s) => {
+      if (s.slug === service.slug) return false;
+      if (service.serviceCategoryId != null && s.serviceCategoryId != null) {
+        return s.serviceCategoryId === service.serviceCategoryId;
+      }
+      return s.category === service.category;
+    })
+    .slice(0, limit);
 }
 
 export function buildServiceMetadata(service) {

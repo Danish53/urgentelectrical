@@ -10,6 +10,7 @@ import { apiRequest } from "@/lib/api/client";
  * @property {string} price
  * @property {string | null} description
  * @property {string | null} image
+ * @property {string | null} [slug]
  */
 
 /**
@@ -96,4 +97,44 @@ export async function fetchServicesList() {
   }
 
   return { services: all, meta, links };
+}
+
+/**
+ * @param {unknown} payload
+ * @returns {Record<string, unknown> | null}
+ */
+export function parseServiceDetailResponse(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const record = /** @type {Record<string, unknown>} */ (payload);
+
+  if (record.status === true && record.data && typeof record.data === "object") {
+    return /** @type {Record<string, unknown>} */ (record.data);
+  }
+
+  if (record.data && typeof record.data === "object" && "id" in record.data) {
+    return /** @type {Record<string, unknown>} */ (record.data);
+  }
+
+  if ("id" in record && "title" in record) {
+    return record;
+  }
+
+  return null;
+}
+
+/**
+ * GET /services/{slug} — full detail (variants, long_description, schedules).
+ * @param {string} slug
+ */
+export async function fetchServiceBySlug(slug) {
+  const encoded = encodeURIComponent(slug);
+  const payload = await apiRequest(`${SERVICES_API_PATH}/${encoded}`, { method: "GET" });
+  const data = parseServiceDetailResponse(payload);
+
+  if (!data) {
+    throw new ApiError("Invalid service detail response from server.", { status: 0, data: payload });
+  }
+
+  return data;
 }

@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/api/errors";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
+import { ensureCsrfCookie, getXsrfTokenFromCookie } from "@/lib/api/csrf";
 
 function getBaseUrl() {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
@@ -14,14 +15,20 @@ function getBaseUrl() {
 
 /**
  * @param {string} path - e.g. `/auth/login`
- * @param {RequestInit & { auth?: boolean }} options
+ * @param {RequestInit & { auth?: boolean, csrf?: boolean }} options
  */
 export async function apiRequest(path, options = {}) {
-  const { auth = false, headers: customHeaders, body, ...rest } = options;
+  const { auth = false, csrf = false, headers: customHeaders, body, credentials, ...rest } =
+    options;
   const url = `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+
+  if (csrf) {
+    await ensureCsrfCookie();
+  }
 
   const headers = {
     Accept: "application/json",
+    ...(csrf ? { "X-Requested-With": "XMLHttpRequest" } : {}),
     ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
     ...customHeaders,
   };
@@ -31,10 +38,16 @@ export async function apiRequest(path, options = {}) {
     if (token) headers.Authorization = `Bearer ${token}`;
   }
 
+  if (csrf) {
+    const xsrf = getXsrfTokenFromCookie();
+    if (xsrf) headers["X-XSRF-TOKEN"] = xsrf;
+  }
+
   let response;
   try {
     response = await fetch(url, {
       ...rest,
+      credentials: credentials ?? (csrf ? "include" : "same-origin"),
       headers,
       body: body !== undefined ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,
     });

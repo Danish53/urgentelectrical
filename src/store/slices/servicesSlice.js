@@ -5,18 +5,40 @@ import {
   toBookingOptions,
   toFeaturedCard,
 } from "@/lib/services/buildBookableService";
+import {
+  buildCategoryMapById,
+  buildServiceCategoriesFromApi,
+} from "@/lib/services/buildServiceCategory";
+import { fetchServiceCategories } from "@/services/serviceCategoriesApiService";
 import { fetchServicesList } from "@/services/servicesApiService";
 
 export const fetchServices = createAsyncThunk(
   "services/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const { services: apiList, meta, links } = await fetchServicesList();
-      const bookable = buildBookableServicesFromApi(apiList);
+      const [servicesResult, categoriesResult] = await Promise.allSettled([
+        fetchServicesList(),
+        fetchServiceCategories(),
+      ]);
+
+      if (servicesResult.status !== "fulfilled") {
+        throw servicesResult.reason;
+      }
+
+      const { services: apiList, meta, links } = servicesResult.value;
+      const categories =
+        categoriesResult.status === "fulfilled"
+          ? buildServiceCategoriesFromApi(categoriesResult.value)
+          : [];
+      const categoryMap = buildCategoryMapById(categories);
+      const bookable = buildBookableServicesFromApi(apiList, categoryMap);
+
       return {
         raw: apiList,
         meta,
         links,
+        categories,
+        categoryMap,
         bookable,
         bookingOptions: toBookingOptions(bookable),
         featured: bookable.map(toFeaturedCard),
@@ -31,6 +53,8 @@ const initialState = {
   raw: [],
   meta: null,
   links: null,
+  categories: [],
+  categoryMap: {},
   bookable: [],
   bookingOptions: [],
   featured: [],
@@ -55,6 +79,8 @@ const servicesSlice = createSlice({
         state.raw = action.payload.raw;
         state.meta = action.payload.meta;
         state.links = action.payload.links;
+        state.categories = action.payload.categories;
+        state.categoryMap = action.payload.categoryMap;
         state.bookable = action.payload.bookable;
         state.bookingOptions = action.payload.bookingOptions;
         state.featured = action.payload.featured;
@@ -63,6 +89,8 @@ const servicesSlice = createSlice({
       .addCase(fetchServices.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+        state.categories = [];
+        state.categoryMap = {};
         state.bookable = [];
         state.bookingOptions = [];
         state.featured = [];

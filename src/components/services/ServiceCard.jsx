@@ -4,10 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { IconArrow } from "@/components/home1/icons";
+import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
+import { getDisplayPrice, getVatSuffix } from "@/lib/pricing";
 
 export default function ServiceCard({ service, imagePriority = false }) {
   const [failed, setFailed] = useState(false);
-  const price = service.priceIncVat ?? service.price;
+  const { incVat } = useVatPreference();
+  const priceExc = service.priceExcVat ?? service.price;
+  const displayPrice = getDisplayPrice(priceExc, incVat);
+  const vatLabel = getVatSuffix(incVat);
   const alt = `${service.name} — electrical service Nottingham`;
 
   return (
@@ -59,10 +64,10 @@ export default function ServiceCard({ service, imagePriority = false }) {
           itemScope
           itemType="https://schema.org/Offer"
         >
-          <span itemProp="price">£{price}</span>
+          <span itemProp="price">£{displayPrice}</span>
           <meta itemProp="priceCurrency" content="GBP" />
         </p>
-        <p className="text-[var(--home1-muted)] text-xs font-medium mb-4">Inc. VAT · Fixed price</p>
+        <p className="text-[var(--home1-muted)] text-xs font-medium mb-4">{vatLabel} · Fixed price</p>
 
         <div className="home1-service-actions">
           <Link href={service.href} className="home1-service-btn home1-service-btn--ghost">

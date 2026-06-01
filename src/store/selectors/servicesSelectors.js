@@ -7,3 +7,5 @@ export const selectFeaturedFromApi = (state) => state.services.featured;
 export const selectServicesStatus = (state) => state.services.status;
 export const selectServicesError = (state) => state.services.error;
 export const selectServicesSource = (state) => state.services.source;
+export const selectServiceCategories = (state) => state.services.categories;
+export const selectServiceCategoryMap = (state) => state.services.categoryMap;

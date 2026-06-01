@@ -24,7 +24,8 @@ export const SERVICE_DETAIL_CONTAINER =
 export const SERVICES_PAGE_CONTAINER =
   "w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
 
-/** Checkout — aligned with navbar / site container */
-export const CHECKOUT_PAGE_CONTAINER = CONTAINER;
+/** Checkout — full width on mobile; side padding from sm+ */
+export const CHECKOUT_PAGE_CONTAINER =
+  "w-full max-w-[1440px] mx-auto px-0 sm:px-6 md:px-8 lg:px-12 xl:px-16";
 
 export const SECTION_PY = "py-16 sm:py-20 lg:py-24";

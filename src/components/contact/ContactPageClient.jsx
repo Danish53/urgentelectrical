@@ -22,9 +22,13 @@ export default function ContactPageClient() {
           aria-label="Contact form and details"
         >
           <div className={`${SERVICES_PAGE_CONTAINER}`}>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-10 items-start">
-              <ContactInfoPanel />
-              <ContactForm />
+            <div className="home1-contact-main-grid">
+              <div className="home1-contact-form-col min-w-0">
+                <ContactForm />
+              </div>
+              <div className="home1-contact-info-col min-w-0">
+                <ContactInfoPanel />
+              </div>
             </div>
           </div>
         </section>

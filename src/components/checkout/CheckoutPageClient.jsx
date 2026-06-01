@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
-import { CONTAINER } from "@/components/home1/constants";
+import { CHECKOUT_PAGE_CONTAINER } from "@/components/home1/constants";
 import CheckoutSessionBar from "@/components/checkout/CheckoutSessionBar";
 import CheckoutStepper from "@/components/checkout/CheckoutStepper";
 import CheckoutSummary from "@/components/checkout/CheckoutSummary";
@@ -18,16 +18,20 @@ import CheckoutComplete from "@/components/checkout/CheckoutComplete";
 import {
   CHECKOUT_SESSION_SECONDS,
   buildCheckoutLineItems,
-  findServiceByName,
   getDefaultCheckoutService,
 } from "@/data/checkoutPage";
+import { useCheckoutSessionTimer } from "@/hooks/useCheckoutSessionTimer";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
 import { useBookableServices } from "@/hooks/useServices";
+import { useCheckoutServiceDetail } from "@/hooks/useCheckoutServiceDetail";
 import CheckoutMainSkeleton from "@/components/skeletons/CheckoutMainSkeleton";
 import CheckoutSummarySkeleton from "@/components/skeletons/CheckoutSummarySkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
-import { dateHasSlots, getDefaultBookingDate } from "@/components/checkout/checkoutUtils";
+import {
+  dateHasAvailableSlots,
+  getDefaultBookingDateForSchedules,
+} from "@/components/checkout/checkoutUtils";
 
 const EMPTY_DETAILS = {
   firstName: "",
@@ -42,9 +46,13 @@ const EMPTY_DETAILS = {
 
 export default function CheckoutPageClient() {
   const searchParams = useSearchParams();
+  const slug = searchParams.get("slug") ?? "";
+  const variantId = searchParams.get("variant") ?? "";
+  const variantLabelParam = searchParams.get("variantLabel") ?? "";
+
   const [step, setStep] = useState(1);
-  const [secondsLeft, setSecondsLeft] = useState(CHECKOUT_SESSION_SECONDS);
-  const [selectedDate, setSelectedDate] = useState(() => getDefaultBookingDate());
+  const secondsLeft = useCheckoutSessionTimer(CHECKOUT_SESSION_SECONDS);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
   const [details, setDetails] = useState(EMPTY_DETAILS);
   const [stepError, setStepError] = useState("");
@@ -54,16 +62,42 @@ export default function CheckoutPageClient() {
   const dispatch = useAppDispatch();
   const { bookable, loading: servicesLoading, failed: servicesFailed, error: servicesError } =
     useBookableServices();
+  const { service: detailService, schedules, loading: detailLoading, failed: detailFailed } =
+    useCheckoutServiceDetail(slug);
+
+  const bookingList = useMemo(
+    () => bookable.map((s) => ({ name: s.name, price: s.price, priceIncVat: s.priceIncVat, slug: s.slug })),
+    [bookable]
+  );
 
   const service = useMemo(() => {
-    const bookingList = bookable.map((s) => ({ name: s.name, price: s.price }));
     const name = searchParams.get("service");
-    return name ? findServiceByName(name, bookingList) : getDefaultCheckoutService(bookingList);
-  }, [searchParams, bookable]);
+    if (detailService) return detailService;
+    if (name) {
+      const match = bookable.find((s) => s.name === name);
+      if (match) return match;
+    }
+    return getDefaultCheckoutService(bookingList);
+  }, [searchParams, detailService, bookable, bookingList]);
 
-  const lineItems = useMemo(() => buildCheckoutLineItems(service), [service]);
+  const selectedVariant = useMemo(() => {
+    if (!service?.variants?.length) return null;
+    if (variantId) {
+      return service.variants.find((v) => v.id === variantId) ?? null;
+    }
+    return null;
+  }, [service, variantId]);
+
+  const variantLabel = selectedVariant?.label ?? (variantLabelParam || null);
+
+  const lineItems = useMemo(
+    () => buildCheckoutLineItems(service, 0, selectedVariant),
+    [service, selectedVariant]
+  );
 
   const initialPostcode = searchParams.get("postcode") ?? "";
+  const pageLoading = servicesLoading || (Boolean(slug) && detailLoading);
+  const pageFailed = servicesFailed || (Boolean(slug) && detailFailed && !service);
 
   useEffect(() => {
     if (initialPostcode) {
@@ -72,11 +106,10 @@ export default function CheckoutPageClient() {
   }, [initialPostcode]);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+    if (!schedules.length) return;
+    const next = getDefaultBookingDateForSchedules(schedules);
+    if (next) setSelectedDate(next);
+  }, [schedules]);
 
   function handleSelectDate(date) {
     setSelectedDate(date);
@@ -85,12 +118,12 @@ export default function CheckoutPageClient() {
   }
 
   function validateStep1() {
-    if (!selectedDate || !dateHasSlots(selectedDate)) {
+    if (!selectedDate || !dateHasAvailableSlots(selectedDate, schedules)) {
       setStepError("Please select an available date.");
       return false;
     }
     if (!selectedTime) {
-      setStepError("Please select a time slot.");
+      setStepError("Please select a time slot to continue.");
       return false;
     }
     setStepError("");
@@ -127,17 +160,15 @@ export default function CheckoutPageClient() {
       className={`home1-page home1-checkout-page w-full min-w-0${complete ? " home1-checkout-page--complete" : ""}`}
     >
       <Navbar />
-      {!complete ? <CheckoutSessionBar secondsLeft={secondsLeft} /> : null}
+
+      {!complete ? (
+        <div className="home1-checkout-top">
+          <CheckoutSessionBar secondsLeft={secondsLeft} />
+        </div>
+      ) : null}
 
       <main id="main-content" className="home1-checkout-main w-full min-w-0">
-        <div className={`${CONTAINER} home1-checkout-shell`}>
-          {!complete ? (
-            <nav className="home1-checkout-breadcrumb" aria-label="Breadcrumb">
-              <Link href="/">Cart</Link>
-              <span aria-hidden="true">/</span>
-              <span>Checkout</span>
-            </nav>
-          ) : null}
+        <div className={`${CHECKOUT_PAGE_CONTAINER} home1-checkout-shell`}>
 
           {complete ? (
             <CheckoutComplete
@@ -149,67 +180,82 @@ export default function CheckoutPageClient() {
                 totalInc: lineItems.totalInc,
               }}
             />
-          ) : servicesLoading ? (
-            <div className="home1-checkout-layout">
-              <div className="home1-checkout-main-col min-w-0">
-                <CheckoutMainSkeleton />
+          ) : pageLoading ? (
+            <div className="home1-checkout-flow home1-checkout-flow--loading">
+              <div className="home1-checkout-skeleton-stepper" aria-hidden="true">
+                <div className="ue-skeleton home1-checkout-skeleton-stepper-bar" />
               </div>
-              <CheckoutSummarySkeleton />
+              <div className="home1-checkout-flow-inner">
+                <div className="home1-checkout-layout">
+                  <div className="home1-checkout-main-col min-w-0 w-full">
+                    <CheckoutMainSkeleton />
+                  </div>
+                  <CheckoutSummarySkeleton />
+                </div>
+              </div>
             </div>
-          ) : servicesFailed ? (
+          ) : pageFailed ? (
             <ServicesLoadError message={servicesError} onRetry={() => dispatch(fetchServices())} />
           ) : (
             <>
-              <CheckoutStepper currentStep={step} />
-              <div className="home1-checkout-layout">
-                <div className="home1-checkout-main-col min-w-0">
-                  {step === 1 ? (
-                    <CheckoutDateTimeStep
+              <div className="home1-checkout-flow">
+                <CheckoutStepper currentStep={step} />
+
+                <div className="home1-checkout-flow-inner">
+                  <div className="home1-checkout-layout">
+                    <div className="home1-checkout-main-col min-w-0">
+                      {step === 1 ? (
+                        <CheckoutDateTimeStep
+                          schedules={schedules}
+                          selectedDate={selectedDate}
+                          selectedTime={selectedTime}
+                          onSelectDate={handleSelectDate}
+                          onSelectTime={(t) => {
+                            setSelectedTime(t);
+                            setStepError("");
+                          }}
+                          onContinue={() => {
+                            if (validateStep1()) setStep(2);
+                          }}
+                          error={stepError}
+                        />
+                      ) : step === 2 ? (
+                        <CheckoutDetailsStep
+                          details={details}
+                          onChange={setDetails}
+                          onBack={() => {
+                            setStep(1);
+                            setStepError("");
+                          }}
+                          onContinue={() => {
+                            if (validateStep2()) setStep(3);
+                          }}
+                          error={stepError}
+                        />
+                      ) : (
+                        <CheckoutPaymentStep
+                          totalInc={lineItems.totalInc}
+                          onBack={() => {
+                            setStep(2);
+                            setStepError("");
+                          }}
+                          onComplete={handlePaymentComplete}
+                          error={stepError}
+                          processing={processing}
+                        />
+                      )}
+                    </div>
+
+                    <CheckoutSummary
+                      service={service}
+                      variantLabel={variantLabel}
+                      lineItems={lineItems}
                       selectedDate={selectedDate}
                       selectedTime={selectedTime}
-                      onSelectDate={handleSelectDate}
-                      onSelectTime={(t) => {
-                        setSelectedTime(t);
-                        setStepError("");
-                      }}
-                      onContinue={() => {
-                        if (validateStep1()) setStep(2);
-                      }}
-                      error={stepError}
+                      postcode={summaryPostcode}
                     />
-                  ) : step === 2 ? (
-                    <CheckoutDetailsStep
-                      details={details}
-                      onChange={setDetails}
-                      onBack={() => {
-                        setStep(1);
-                        setStepError("");
-                      }}
-                      onContinue={() => {
-                        if (validateStep2()) setStep(3);
-                      }}
-                      error={stepError}
-                    />
-                  ) : (
-                    <CheckoutPaymentStep
-                      totalInc={lineItems.totalInc}
-                      onBack={() => {
-                        setStep(2);
-                        setStepError("");
-                      }}
-                      onComplete={handlePaymentComplete}
-                      error={stepError}
-                      processing={processing}
-                    />
-                  )}
+                  </div>
                 </div>
-
-                <CheckoutSummary
-                  lineItems={lineItems}
-                  selectedDate={selectedDate}
-                  selectedTime={selectedTime}
-                  postcode={summaryPostcode}
-                />
               </div>
             </>
           )}

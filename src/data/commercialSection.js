@@ -4,37 +4,6 @@ export const COMMERCIAL_BADGES = [
   { id: "available", label: "Available 24/7", icon: "clock" },
 ];
 
-export const COMMERCIAL_SERVICES = [
-  {
-    id: "domestic",
-    title: "Domestic call-outs Nottingham",
-    description:
-      "Power cuts, tripped breakers, burning smells, and socket faults — fast response for homes and rental properties across Nottingham and Nottinghamshire.",
-    icon: "home",
-  },
-  {
-    id: "commercial",
-    title: "Commercial & industrial electricians",
-    description:
-      "Full electrical services for offices, warehouses, and commercial premises. Emergency and planned works for businesses across Nottingham and the East Midlands.",
-    icon: "briefcase",
-  },
-  {
-    id: "fault",
-    title: "Electrical fault finding Nottingham",
-    description:
-      "Prompt diagnosis and safe repairs using modern test equipment. All work certified and compliant with UK wiring regulations (BS 7671).",
-    icon: "wrench",
-  },
-  {
-    id: "installations",
-    title: "Electrical installations Nottingham",
-    description:
-      "Consumer unit upgrades, EV charger installations, full rewires, EICR testing, and outdoor lighting — installed to specification and certified.",
-    icon: "bolt",
-  },
-];
-
 export const COMMERCIAL_STATS = [
   {
     value: "11+",

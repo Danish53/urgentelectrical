@@ -1,11 +1,7 @@
 import { notFound } from "next/navigation";
 import ServiceDetailClient from "@/components/services/ServiceDetailClient";
 import { buildServiceJsonLd, buildServiceMetadata } from "@/data/servicesPage";
-import {
-  getBookableServices,
-  getRelatedServicesFromList,
-  getServiceBySlugFromList,
-} from "@/lib/services/getServices";
+import { getBookableServices, getServiceDetailBySlug } from "@/lib/services/getServices";
 import "../../home1/home1.css";
 
 export const revalidate = 3600;
@@ -17,19 +13,17 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const services = await getBookableServices();
-  const service = getServiceBySlugFromList(slug, services);
-  if (!service) return { title: "Service not found" };
-  return buildServiceMetadata(service);
+  const detail = await getServiceDetailBySlug(slug);
+  if (!detail) return { title: "Service not found" };
+  return buildServiceMetadata(detail.service);
 }
 
 export default async function ServiceDetailPage({ params }) {
   const { slug } = await params;
-  const services = await getBookableServices();
-  const service = getServiceBySlugFromList(slug, services);
-  if (!service) notFound();
+  const detail = await getServiceDetailBySlug(slug);
+  if (!detail) notFound();
 
-  const related = getRelatedServicesFromList(service, services, 3);
+  const { service, related } = detail;
   const jsonLd = buildServiceJsonLd(service);
 
   return (

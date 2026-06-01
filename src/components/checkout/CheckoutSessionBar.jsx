@@ -1,6 +1,6 @@
 "use client";
 
-import { CONTAINER } from "@/components/home1/constants";
+import { CHECKOUT_PAGE_CONTAINER } from "@/components/home1/constants";
 
 function formatTimer(seconds) {
   const m = Math.floor(seconds / 60);
@@ -16,15 +16,10 @@ export default function CheckoutSessionBar({ secondsLeft }) {
       className={`home1-checkout-session${urgent ? " is-urgent" : ""}`}
       role="status"
       aria-live="polite"
+      aria-atomic="true"
     >
-      <div className={`home1-checkout-session-inner ${CONTAINER}`}>
-        <span className="home1-checkout-session-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </span>
-        <p>
+      <div className={`home1-checkout-session-inner ${CHECKOUT_PAGE_CONTAINER}`}>
+        <p className="home1-checkout-session-text">
           Your checkout session is reserved for{" "}
           <strong>{formatTimer(Math.max(0, secondsLeft))}</strong>
         </p>

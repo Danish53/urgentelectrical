@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
@@ -18,8 +17,9 @@ const SIDEBAR_TRUST = ["NICEIC approved", "Fixed pricing", "Same-day slots"];
 
 function BlogHeroImage({ post, alt }) {
   const [failed, setFailed] = useState(false);
+  const src = getBlogImageUrl(post);
 
-  if (failed) {
+  if (failed || !src) {
     return (
       <div
         className="home1-blog-hero-media-fallback"
@@ -33,14 +33,15 @@ function BlogHeroImage({ post, alt }) {
   }
 
   return (
-    <Image
-      src={post.image}
+    // Native img — remote serviceImage URLs fail via Next /_next/image optimizer (500/timeout).
+    <img
+      src={src}
       alt={alt}
-      fill
-      priority
-      quality={82}
-      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 92vw, 896px"
-      className="object-cover"
+      width={1200}
+      height={675}
+      decoding="async"
+      fetchPriority="high"
+      className="home1-blog-hero-media-img"
       onError={() => setFailed(true)}
     />
   );
@@ -158,6 +159,10 @@ function BlogSidebar({ post }) {
 
 export default function BlogDetailClient({ post, sections, related }) {
   const imageAlt = getBlogImageAlt(post);
+  const heroLead =
+    (post.excerpt && String(post.excerpt).trim()) ||
+    (post.metaDescription && String(post.metaDescription).trim()) ||
+    "";
   const authorInitials = post.author
     .split(" ")
     .map((w) => w[0])
@@ -210,9 +215,11 @@ export default function BlogDetailClient({ post, sections, related }) {
                   <h1 className="home1-blog-hero-title" itemProp="headline">
                     {post.title}
                   </h1>
-                  <p className="home1-blog-hero-lead" itemProp="abstract">
-                    {post.excerpt}
-                  </p>
+                  {heroLead ? (
+                    <p className="home1-blog-hero-lead" itemProp="description">
+                      {heroLead}
+                    </p>
+                  ) : null}
                 </div>
 
                 <figure className="home1-blog-hero-media">
@@ -230,9 +237,16 @@ export default function BlogDetailClient({ post, sections, related }) {
                   <BlogTags post={post} />
 
                   <div className="home1-blog-prose" itemProp="articleBody">
-                    {sections.map((para, i) => (
-                      <p key={i}>{para}</p>
-                    ))}
+                    {post.htmlContent ? (
+                      <div
+                        className="home1-blog-prose-html"
+                        dangerouslySetInnerHTML={{ __html: post.htmlContent }}
+                      />
+                    ) : (
+                      sections.map((para, i) => (
+                        <p key={i}>{para}</p>
+                      ))
+                    )}
                   </div>
 
                   <footer className="home1-blog-article-footer">

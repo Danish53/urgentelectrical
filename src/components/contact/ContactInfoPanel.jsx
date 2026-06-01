@@ -61,7 +61,7 @@ function InfoCell({ type, label, children }) {
 export default function ContactInfoPanel() {
   return (
     <div
-      className="flex flex-col gap-5 sm:gap-6 h-full"
+      className="home1-contact-info-panel flex flex-col gap-5 sm:gap-6 h-full"
       itemScope
       itemType="https://schema.org/LocalBusiness"
       itemID="https://www.urgentelectrical.services/#organization"

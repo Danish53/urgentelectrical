@@ -1,34 +1,47 @@
 import { notFound } from "next/navigation";
 import BlogDetailClient from "@/components/blog/BlogDetailClient";
-import { BLOG_ARTICLE_BODY } from "@/data/blogArticles";
 import {
   buildBlogPostJsonLd,
   buildBlogPostMetadata,
-  getAllBlogSlugs,
-  getBlogBySlug,
-  getRelatedPosts,
 } from "@/data/blogs";
+import { getAllBlogSlugs, getBlogBySlug, getRelatedBlogPosts } from "@/lib/blogs/getBlogs";
 import "../../home1/home1.css";
 
-export function generateStaticParams() {
-  return getAllBlogSlugs().map((slug) => ({ slug }));
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const slugs = await getAllBlogSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
+
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const post = getBlogBySlug(slug);
-  if (!post) return { title: "Article not found" };
-  return buildBlogPostMetadata(post);
+  try {
+    const post = await getBlogBySlug(slug);
+    if (!post) return { title: "Article not found" };
+    return buildBlogPostMetadata(post);
+  } catch {
+    return { title: "Article not found" };
+  }
 }
 
 export default async function BlogArticlePage({ params }) {
   const { slug } = await params;
-  const post = getBlogBySlug(slug);
+
+  let post;
+  try {
+    post = await getBlogBySlug(slug);
+  } catch {
+    notFound();
+  }
+
   if (!post) notFound();
 
-  const sections = BLOG_ARTICLE_BODY[slug] ?? [post.excerpt];
-  const related = getRelatedPosts(post);
-  const jsonLd = buildBlogPostJsonLd(post, sections);
+  const related = await getRelatedBlogPosts(post);
+  const sections = post.htmlContent ? [] : [post.excerpt];
+  const jsonLd = buildBlogPostJsonLd(post, sections, post.htmlContent);
 
   return (
     <>

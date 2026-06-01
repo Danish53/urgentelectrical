@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import FooterServicesLinks from "@/components/footer/FooterServicesLinks";
 import {
-  FOOTER_SERVICES,
   FOOTER_COMPANY,
   FOOTER_AREAS,
   FOOTER_BADGES,
@@ -138,7 +138,10 @@ export default function Footer() {
             </div>
           </div>
 
-          <FooterLinkList title="Services" links={FOOTER_SERVICES} />
+          <div>
+            <h3 className="text-white font-bold text-sm mb-4">Services</h3>
+            <FooterServicesLinks />
+          </div>
           <FooterLinkList title="Company" links={FOOTER_COMPANY} />
           <FooterLinkList title="Areas Served" links={FOOTER_AREAS} />
         </div>

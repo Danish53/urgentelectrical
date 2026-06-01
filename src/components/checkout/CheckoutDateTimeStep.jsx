@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CHECKOUT_TIME_SLOTS } from "@/data/checkoutPage";
 import {
   WEEKDAY_LABELS,
-  dateHasSlots,
+  dateHasAvailableSlots,
   formatLongDate,
   formatMonthYear,
   getCalendarCells,
+  getTimeSlotsForBooking,
   getTodayStart,
   isPastDate,
   isSameDay,
@@ -34,6 +34,7 @@ function CalNavIcon({ direction }) {
 }
 
 export default function CheckoutDateTimeStep({
+  schedules = [],
   selectedDate,
   selectedTime,
   onSelectDate,
@@ -48,7 +49,12 @@ export default function CheckoutDateTimeStep({
   const [viewMonth, setViewMonth] = useState(selectedDate?.getMonth() ?? today.getMonth());
 
   const cells = useMemo(() => getCalendarCells(viewYear, viewMonth), [viewYear, viewMonth]);
-  const slotsAvailable = selectedDate ? dateHasSlots(selectedDate) : false;
+  const hasSchedules = schedules.length > 0;
+  const slotsAvailable = selectedDate ? dateHasAvailableSlots(selectedDate, schedules) : false;
+  const timeSlots = useMemo(
+    () => getTimeSlotsForBooking(selectedDate, schedules),
+    [selectedDate, schedules]
+  );
 
   function prevMonth() {
     const d = new Date(viewYear, viewMonth - 1, 1);
@@ -65,34 +71,36 @@ export default function CheckoutDateTimeStep({
   function goToToday() {
     setViewYear(today.getFullYear());
     setViewMonth(today.getMonth());
-    if (dateHasSlots(today)) onSelectDate(new Date(today));
+    if (dateHasAvailableSlots(today, schedules)) onSelectDate(new Date(today));
   }
 
   return (
     <div className="home1-checkout-step-panel">
       <header className="home1-checkout-step-header">
         <p className="home1-checkout-step-eyebrow">Step 1 of 3</p>
-        <h1 className="home1-checkout-step-title font-playfair">When would you like us to visit?</h1>
+        <h2 className="home1-checkout-step-title">When should we visit?</h2>
         <p className="home1-checkout-step-lead">
-          Choose your preferred date and time. Same-day slots may be available for emergencies.
+          Choose a date and an available time slot.
         </p>
       </header>
 
-      {selectedDate && slotsAvailable ? (
+      {/* {selectedDate && slotsAvailable ? (
         <div className="home1-checkout-selected-chip" role="status">
           <span className="home1-checkout-selected-chip-label">Selected visit</span>
           <strong>
             {formatLongDate(selectedDate)}
-            {selectedTime ? ` · ${selectedTime}` : " — pick a time below"}
+            {selectedTime ? ` · ${selectedTime}` : " — choose a slot below"}
           </strong>
         </div>
-      ) : null}
+      ) : null} */}
 
       <div className="home1-checkout-card home1-checkout-calendar-card">
         <div className="home1-checkout-card-head">
           <div>
-            <h2 className="home1-checkout-card-title">Select a date</h2>
-            <p className="home1-checkout-card-sub">Available Monday – Saturday</p>
+            <h3 className="home1-checkout-card-title">Select a date</h3>
+            <p className="home1-checkout-card-sub">
+              {hasSchedules ? "Dates match this service schedule" : "Available Monday – Saturday"}
+            </p>
           </div>
           <button type="button" onClick={goToToday} className="home1-checkout-today-btn">
             Today
@@ -125,7 +133,7 @@ export default function CheckoutDateTimeStep({
             if (!date) {
               return <span key={`empty-${i}`} className="home1-checkout-cal-empty" />;
             }
-            const disabled = isPastDate(date) || !dateHasSlots(date);
+            const disabled = isPastDate(date) || !dateHasAvailableSlots(date, schedules);
             const selected = isSameDay(date, selectedDate);
             const todayCell = isToday(date);
             return (
@@ -147,49 +155,53 @@ export default function CheckoutDateTimeStep({
             );
           })}
         </div>
-
-        <ul className="home1-checkout-cal-legend list-none p-0 m-0" aria-hidden="true">
-          <li>
-            <span className="home1-checkout-legend-swatch is-today" /> Today
-          </li>
-          <li>
-            <span className="home1-checkout-legend-swatch is-selected" /> Selected
-          </li>
-          <li>
-            <span className="home1-checkout-legend-swatch is-disabled" /> Unavailable
-          </li>
-        </ul>
       </div>
 
       {selectedDate && !slotsAvailable ? (
         <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
-          No appointments available on this date. Please choose another day.
+          No time slots on this day. Please choose another date.
         </p>
       ) : null}
 
-      {selectedDate && slotsAvailable ? (
+      {selectedDate && slotsAvailable && timeSlots.length > 0 ? (
         <div className="home1-checkout-card home1-checkout-times-card">
           <div className="home1-checkout-card-head">
             <div>
-              <h2 className="home1-checkout-card-title">Select a time</h2>
+              <h3 className="home1-checkout-card-title">Select a time slot</h3>
               <p className="home1-checkout-card-sub">{formatLongDate(selectedDate)}</p>
             </div>
           </div>
 
-          <div className="home1-checkout-times" role="group" aria-label="Available times">
-            {CHECKOUT_TIME_SLOTS.map((slot) => (
-              <button
-                key={slot}
-                type="button"
-                onClick={() => onSelectTime(slot)}
-                className={`home1-checkout-time-slot${selectedTime === slot ? " is-selected" : ""}`}
-                aria-pressed={selectedTime === slot}
-              >
-                <span className="home1-checkout-time-slot-value">{slot}</span>
-              </button>
-            ))}
+          <div className="home1-checkout-schedule-grid" role="group" aria-label="Available time slots">
+            {timeSlots.map((slot) => {
+              const isSelected = selectedTime === slot.value;
+              return (
+                <button
+                  key={slot.id}
+                  type="button"
+                  onClick={() => onSelectTime(slot.value)}
+                  className={`home1-checkout-schedule-slot${isSelected ? " is-selected" : ""}`}
+                  aria-pressed={isSelected}
+                >
+                  <span className="home1-checkout-schedule-slot-label">Available</span>
+                  <span className="home1-checkout-schedule-slot-times">
+                    <span className="home1-checkout-schedule-slot-start">{slot.startTime}</span>
+                    <span className="home1-checkout-schedule-slot-sep" aria-hidden="true">
+                      to
+                    </span>
+                    <span className="home1-checkout-schedule-slot-end">{slot.endTime}</span>
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
+      ) : null}
+
+      {hasSchedules && !timeSlots.length && selectedDate && slotsAvailable ? (
+        <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
+          No slots listed for this date. Try another day.
+        </p>
       ) : null}
 
       {error ? (
@@ -198,7 +210,12 @@ export default function CheckoutDateTimeStep({
         </p>
       ) : null}
 
-      <button type="button" onClick={onContinue} className="home1-checkout-continue">
+      <button
+        type="button"
+        onClick={onContinue}
+        className="home1-checkout-continue"
+        disabled={!selectedDate || !selectedTime}
+      >
         <span>Continue to your details</span>
         <span className="home1-checkout-continue-arrow" aria-hidden="true">
           →

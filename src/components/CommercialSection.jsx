@@ -1,8 +1,5 @@
-import {
-  COMMERCIAL_BADGES,
-  COMMERCIAL_SERVICES,
-  COMMERCIAL_STATS,
-} from "@/data/commercialSection";
+import ServiceCategoriesGrid from "@/components/services/ServiceCategoriesGrid";
+import { COMMERCIAL_BADGES, COMMERCIAL_STATS } from "@/data/commercialSection";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 const RED = "#d32f2f";
@@ -162,19 +159,10 @@ export default function CommercialSection() {
         </div>
       </div>
 
-      {/* Band 2 — white service grid */}
+      {/* Band 2 — service categories from API */}
       <div className="bg-white">
-        <div className={`${SECTION_CONTAINER} max-lg:px-0`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-            {COMMERCIAL_SERVICES.map((service, index) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                index={index}
-                total={COMMERCIAL_SERVICES.length}
-              />
-            ))}
-          </div>
+        <div className={`${SECTION_CONTAINER} py-14 sm:py-16 lg:py-20`}>
+          <ServiceCategoriesGrid />
         </div>
       </div>
 

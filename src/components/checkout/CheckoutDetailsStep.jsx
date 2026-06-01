@@ -18,8 +18,8 @@ export default function CheckoutDetailsStep({
     <div className="home1-checkout-step-panel">
       <header className="home1-checkout-step-header">
         <p className="home1-checkout-step-eyebrow">Step 2 of 3</p>
-        <h1 className="home1-checkout-step-title font-playfair">Your details</h1>
-        <p className="home1-checkout-step-lead">Tell us who to contact and where the work will take place.</p>
+        <h2 className="home1-checkout-step-title">Your details</h2>
+        <p className="home1-checkout-step-lead">Contact details and job location.</p>
       </header>
 
       <form

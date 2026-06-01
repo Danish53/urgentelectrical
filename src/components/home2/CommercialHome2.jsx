@@ -1,5 +1,6 @@
 import Home2Image from "./Home2Image";
-import { COMMERCIAL_BADGES, COMMERCIAL_SERVICES, COMMERCIAL_STATS } from "@/data/commercialSection";
+import ServiceCategoriesGrid from "@/components/services/ServiceCategoriesGrid";
+import { COMMERCIAL_BADGES, COMMERCIAL_STATS } from "@/data/commercialSection";
 import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconCheck } from "./icons";
@@ -33,14 +34,7 @@ export default function CommercialHome2() {
               </span>
             ))}
           </div>
-          <div className="grid sm:grid-cols-2 gap-5">
-            {COMMERCIAL_SERVICES.map((s) => (
-              <article key={s.id} className="home2-card p-6 border-l-4 border-l-[var(--h2-red)]">
-                <h3 className="font-bold text-[var(--h2-navy)] mb-2">{s.title}</h3>
-                <p className="text-sm text-[var(--h2-muted)] leading-relaxed">{s.description}</p>
-              </article>
-            ))}
-          </div>
+          <ServiceCategoriesGrid />
         </div>
       </div>
 

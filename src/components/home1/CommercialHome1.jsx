@@ -1,8 +1,5 @@
-import {
-  COMMERCIAL_BADGES,
-  COMMERCIAL_SERVICES,
-  COMMERCIAL_STATS,
-} from "@/data/commercialSection";
+import { COMMERCIAL_BADGES, COMMERCIAL_STATS } from "@/data/commercialSection";
+import ServiceCategoriesGrid from "@/components/services/ServiceCategoriesGrid";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconCheck } from "./icons";
@@ -36,21 +33,7 @@ export default function CommercialHome1() {
 
       <div className={`home1-section-surface ${SECTION_PY}`}>
         <div className={CONTAINER}>
-          <div className="grid sm:grid-cols-2 gap-5 lg:gap-6">
-            {COMMERCIAL_SERVICES.map((s) => (
-              <article key={s.id} className="home1-card home1-card-shine p-6 sm:p-8 flex gap-5">
-                <span
-                  className="w-1 shrink-0 rounded-full self-stretch min-h-[80px]"
-                  style={{ background: "var(--home1-red)" }}
-                  aria-hidden="true"
-                />
-                <div>
-                  <h3 className="font-bold text-[var(--home1-text)] text-lg mb-2">{s.title}</h3>
-                  <p className="text-[var(--home1-muted)] text-[14px] leading-relaxed">{s.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          <ServiceCategoriesGrid />
         </div>
       </div>
 

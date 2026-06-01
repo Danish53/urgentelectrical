@@ -12,6 +12,8 @@ import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconArrow } from "./icons";
+import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
+import { getDisplayPrice, getVatSuffix } from "@/lib/pricing";
 
 const SLIDE_MS = 700;
 const HOME_LIMIT = 4;
@@ -38,7 +40,10 @@ function resolveHref(serviceName, bookable) {
 
 function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
   const [failed, setFailed] = useState(false);
-  const price = service.priceIncVat;
+  const { incVat } = useVatPreference();
+  const priceExc = service.priceExcVat ?? service.price;
+  const displayPrice = getDisplayPrice(priceExc, incVat);
+  const vatLabel = getVatSuffix(incVat);
   const alt = `${service.name} — electrical service Nottingham`;
 
   return (
@@ -73,9 +78,9 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
           </Link>
         </h3>
         <p className="text-2xl font-extrabold leading-none mb-0.5" style={{ color: "var(--home1-red)" }}>
-          £{price}
+          £{displayPrice}
         </p>
-        <p className="text-[var(--home1-muted)] text-xs font-medium mb-4">Inc. VAT · Fixed price</p>
+        <p className="text-[var(--home1-muted)] text-xs font-medium mb-4">{vatLabel} · Fixed price</p>
 
         <div className="home1-service-actions">
           <Link href={detailHref} className="home1-service-btn home1-service-btn--ghost">

@@ -7,6 +7,11 @@ const nextConfig = {
         hostname: "www.urgentelectrical.services",
         pathname: "/serviceImage/**",
       },
+      {
+        protocol: "https",
+        hostname: "www.urgentelectrical.services",
+        pathname: "/service-categories/**",
+      },
     ],
   },
 };

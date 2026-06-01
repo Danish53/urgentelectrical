@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { CONTAINER } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
+import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
 
 const NAV_MENU_ITEM =
@@ -184,7 +185,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileAccordion, setMobileAccordion] = useState("Domestic");
-  const [incVat, setIncVat] = useState(true);
+  const { incVat, toggleVat } = useVatPreference();
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -224,7 +225,7 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.85, ease: EASE_SMOOTH }}
       >
-        <NavTopUtilityBar incVat={incVat} onVatToggle={() => setIncVat((v) => !v)} />
+        <NavTopUtilityBar incVat={incVat} onVatToggle={toggleVat} />
 
         {!mobileOpen && (
           <div className={CONTAINER}>

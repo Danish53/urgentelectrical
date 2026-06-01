@@ -16,9 +16,9 @@ export default function CheckoutPaymentStep({
     <div className="home1-checkout-step-panel">
       <header className="home1-checkout-step-header">
         <p className="home1-checkout-step-eyebrow">Step 3 of 3</p>
-        <h1 className="home1-checkout-step-title font-playfair">Payment</h1>
+        <h2 className="home1-checkout-step-title">Payment</h2>
         <p className="home1-checkout-step-lead">
-          Secure checkout — total due today: <strong>{formatMoney(totalInc)}</strong> Inc. VAT
+          Total due today: <strong>{formatMoney(totalInc)}</strong> Inc. VAT
         </p>
       </header>
 

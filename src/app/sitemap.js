@@ -1,5 +1,5 @@
-import { BLOG_POSTS } from "@/data/blogs";
 import { ALL_LOCATIONS } from "@/data/locationDetails";
+import { getAllBlogPosts } from "@/lib/blogs/getBlogs";
 import { getBookableServices } from "@/lib/services/getServices";
 
 const SITE_URL = "https://www.urgentelectrical.services";
@@ -21,7 +21,8 @@ export default async function sitemap() {
     priority: 0.8,
   }));
 
-  const blogPages = BLOG_POSTS.map((p) => ({
+  const blogPosts = await getAllBlogPosts();
+  const blogPages = blogPosts.map((p) => ({
     url: p.canonicalUrl,
     lastModified: new Date(p.publishedISO),
     changeFrequency: "monthly",

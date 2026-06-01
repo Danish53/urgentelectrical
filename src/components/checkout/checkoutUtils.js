@@ -1,3 +1,5 @@
+import { dateHasScheduleSlots, getScheduleSlotsForDate } from "@/lib/schedules";
+
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function formatMoney(amount) {
@@ -78,3 +80,28 @@ export function getDefaultBookingDate() {
   }
   return getTodayStart();
 }
+
+/** Pick first date that has API schedule slots */
+export function getDefaultBookingDateForSchedules(schedules) {
+  if (!schedules?.length) return getDefaultBookingDate();
+
+  const cursor = getTodayStart();
+  for (let i = 0; i < 42; i++) {
+    if (dateHasScheduleSlots(schedules, cursor, isPastDate)) return new Date(cursor);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return null;
+}
+
+export function dateHasAvailableSlots(date, schedules) {
+  if (schedules?.length) return dateHasScheduleSlots(schedules, date, isPastDate);
+  return dateHasSlots(date);
+}
+
+export function getTimeSlotsForBooking(date, schedules) {
+  if (!date) return [];
+  if (schedules?.length) return getScheduleSlotsForDate(schedules, date);
+  return [];
+}
+
+export { getScheduleSlotsForDate };

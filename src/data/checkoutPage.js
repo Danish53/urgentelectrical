@@ -35,7 +35,7 @@ export function findServiceByName(name, services) {
   return services.find((s) => s.name === name) ?? services[0];
 }
 
-export function buildCheckoutLineItems(service, travelExc = TRAVEL_CHARGE_EXC) {
+export function buildCheckoutLineItems(service, travelExc = TRAVEL_CHARGE_EXC, variant = null) {
   if (!service) {
     return {
       service: { label: "Service", amountExc: "0.00", amountInc: "0.00" },
@@ -44,15 +44,20 @@ export function buildCheckoutLineItems(service, travelExc = TRAVEL_CHARGE_EXC) {
     };
   }
 
-  const serviceInc = parseFloat(service.priceIncVat ?? formatApiPrice(service.price));
-  const serviceExc = serviceInc;
+  const serviceInc = parseFloat(
+    variant?.priceIncVat ?? service.priceIncVat ?? formatApiPrice(variant?.price ?? service.price)
+  );
+  const serviceExc = parseFloat(
+    variant?.priceExcVat ?? variant?.price ?? service.priceExcVat ?? service.price ?? serviceInc
+  );
   const travelInc = parseFloat(priceIncVatFromString(String(travelExc)));
   const totalInc = (serviceInc + travelInc).toFixed(2);
+  const serviceLabel = variant?.label ? `${service.name} — ${variant.label}` : service.name;
 
   return {
     service: {
-      label: service.name,
-      amountExc: serviceExc.toFixed(2),
+      label: serviceLabel,
+      amountExc: Number(serviceExc).toFixed(2),
       amountInc: serviceInc.toFixed(2),
     },
     travel: {

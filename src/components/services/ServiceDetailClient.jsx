@@ -1,24 +1,28 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import MotionSection from "@/components/MotionSection.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
-import ServiceCard from "@/components/services/ServiceCard";
+import RelatedServicesSlider from "@/components/services/RelatedServicesSlider";
 import SectionHeader from "@/components/home1/SectionHeader";
 import { SECTION_PY, SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
+import { buildCheckoutHref } from "@/lib/checkoutHref";
+import { getVariantById } from "@/lib/services/buildBookableServiceFromDetail";
 import {
-  getStaticVariantById,
-  STATIC_SERVICE_VARIANTS,
-  STATIC_VARIANT_DEFAULT_ID,
-  buildStaticVariantPriceDisplay,
-} from "@/data/serviceVariantsStatic";
+  formatGbpDisplay,
+  formatGbpFromExc,
+  getDisplayPrice,
+  getVatSuffix,
+} from "@/lib/pricing";
 
 function ServiceProductImage({ service, fit = "cover" }) {
   const [failed, setFailed] = useState(false);
@@ -67,25 +71,43 @@ const SLIM_FOOTER_TRUST = ["Fully insured", "NICEIC approved", "Secure booking",
 
 const SLIM_ASIDE_TRUST_BADGES = ["Fully insured", "NICEIC certified", "~45 min ETA", "UK-wide cover"];
 
-function ServiceSlimPriceRibbon({ priceDisplay, selectedPrice, isEmergency }) {
-  const showSelected = selectedPrice != null && priceDisplay.type !== "fixed";
-  const rangeAmounts = priceDisplay.amounts ?? `£${priceDisplay.min ?? selectedPrice}`;
-  const amountText = showSelected ? `£${selectedPrice}` : rangeAmounts;
+function ServiceSlimPriceRibbon({ priceDisplay, incVat, isEmergency }) {
+  const vatLabel = getVatSuffix(incVat);
+
+  let startExc = priceDisplay.amount ?? priceDisplay.min;
+  let endExc = priceDisplay.max;
+
+  if (priceDisplay.type === "range" && priceDisplay.min != null && priceDisplay.max != null) {
+    startExc = priceDisplay.min;
+    endExc = priceDisplay.max;
+  }
+
+  const startText = formatGbpFromExc(startExc, incVat, { trimZeros: true });
+  const endText =
+    priceDisplay.type === "range" && endExc != null
+      ? formatGbpDisplay(getDisplayPrice(endExc, incVat))
+      : null;
+
+  const ariaLabel =
+    priceDisplay.type === "range" && endText
+      ? `FROM ${startText} – ${endText} ${vatLabel}`
+      : `${startText} ${vatLabel}`;
 
   return (
-    <div className="home1-service-slim-price-ribbon" role="status" aria-live="polite" aria-label={priceDisplay.label}>
+    <div className="home1-service-slim-price-ribbon" role="status" aria-live="polite" aria-label={ariaLabel}>
       <div className="home1-service-slim-price-ribbon-main">
-        <p className="home1-service-slim-price-line">
-          {!showSelected && priceDisplay.prefix ? (
-            <span className="home1-service-slim-price-from">{priceDisplay.prefix} </span>
-          ) : null}
-          <strong className="home1-service-slim-price-amount">{amountText}</strong>
-        </p>
-        <span className="home1-service-slim-price-vat">{priceDisplay.suffix ?? "Inc. VAT"}</span>
+        <span className="home1-service-slim-price-from-label">{priceDisplay.prefix ?? "FROM"}</span>
+        <div className="flex items-center gap-2">
+        <div className="home1-service-slim-price-line text-2xl font-bold">
+          <span className="home1-service-selected-price-vat text-2xl font-bold">{startText}</span>
+          {endText ? <span className="home1-service-selected-price-vat text-2xl font-bold"> – {endText}</span> : null}
+        </div>
+        <span className="home1-service-slim-price-vat">{vatLabel}</span>
+        </div>
       </div>
       <div className="home1-service-slim-price-ribbon-meta">
         <span className="home1-service-slim-eta-pill">{isEmergency ? "~45 min response" : "Same-day slots"}</span>
-        <span className="home1-service-slim-eta-note">No callout fee</span>
+        <span className="home1-service-slim-eta-pill">No callout fee</span>
       </div>
     </div>
   );
@@ -197,31 +219,37 @@ function ServiceTrustStrip({ theme = "light", className = "" }) {
   );
 }
 
-function ServiceSelectedPrice({ priceIncVat, theme = "light", variantLabel }) {
+function ServiceSelectedPrice({ priceExcVat, incVat, theme = "light", variantLabel, className = "" }) {
+  const displayAmount = getDisplayPrice(priceExcVat, incVat);
+
   return (
-    <div className={`home1-service-selected-price-card my-4 home1-service-selected-price-card--${theme}`} aria-live="polite">
-      <div className="home1-service-selected-price-card-top">
-        <span className="home1-service-selected-price-label">
-          {variantLabel ? `Selected · ${variantLabel}` : "Your price"}
-        </span>
-        <span className="home1-service-selected-price-vat">Inc. VAT</span>
-      </div>
-      <p className="home1-service-selected-price-value">
-        <strong>£{priceIncVat}</strong>
+    <div
+      aria-live="polite"
+    >
+      <p className="home1-service-selected-price-value flex items-end gap-2">
+        <strong>{formatGbpDisplay(displayAmount)}</strong>
+        <span className="home1-service-slim-price-vat">{getVatSuffix(incVat)}</span>
       </p>
     </div>
   );
 }
 
-function ServiceBookingButtons({ bookHref, compact = false, variant = "default" }) {
+function ServiceBookingButtons({ onBook, bookHref, compact = false, variant = "default" }) {
   return (
     <div
       className={`home1-service-product-actions${compact ? " home1-service-product-actions--compact" : ""}${variant === "hero" ? " home1-service-product-actions--hero" : ""}${variant === "slim" ? " home1-service-product-actions--slim" : ""}`}
     >
-      <Link href={bookHref} className="home1-service-product-btn home1-service-product-btn--book">
-        <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
-        Book Now
-      </Link>
+      {onBook ? (
+        <button type="button" onClick={onBook} className="home1-service-product-btn home1-service-product-btn--book">
+          <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
+          Book Now
+        </button>
+      ) : (
+        <Link href={bookHref} className="home1-service-product-btn home1-service-product-btn--book">
+          <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
+          Book Now
+        </Link>
+      )}
       <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-service-product-btn home1-service-product-btn--call">
         <IconPhone className="w-5 h-5 shrink-0" aria-hidden="true" />
         Call Now
@@ -232,38 +260,52 @@ function ServiceBookingButtons({ bookHref, compact = false, variant = "default" 
 
 function ServiceBookingBlock({
   service,
+  variants,
   selectedId,
   onSelectVariant,
   selectedVariant,
+  onBook,
+  variantError,
   idPrefix = "main",
   theme = "light",
-  showStaticVariants = true,
+  showVariants = true,
   showButtons = true,
   variantsScrollable = false,
 }) {
-  const price = selectedVariant?.priceIncVat ?? service.priceIncVat;
+  const { incVat } = useVatPreference();
+  const variantOptions = variants ?? service.variants ?? [];
 
   return (
     <div
       className={`home1-service-product-checkout${variantsScrollable ? " home1-service-product-checkout--scroll-variants" : ""}`}
     >
-      {showStaticVariants && (
+      {showVariants && variantOptions.length > 0 ? (
         <div className={variantsScrollable ? "home1-service-hero-variants-scroll" : undefined}>
           <ServiceVariantPicker
-            variants={STATIC_SERVICE_VARIANTS}
+            variants={variantOptions}
             selectedId={selectedId}
-            onSelect={onSelectVariant}
+            onSelect={(id) => {
+              onSelectVariant(id);
+            }}
             idPrefix={idPrefix}
             theme={theme}
           />
+          {variantError ? (
+            <p className="home1-service-variant-error" role="alert">
+              {variantError}
+            </p>
+          ) : null}
         </div>
-      )}
-      <ServiceSelectedPrice
-        priceIncVat={price}
-        theme={theme}
-        variantLabel={selectedVariant?.label}
-      />
-      {showButtons && <ServiceBookingButtons bookHref={service.bookHref} />}
+      ) : null}
+      {selectedVariant ? (
+        <ServiceSelectedPrice
+          priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
+          incVat={incVat}
+          theme={theme}
+          variantLabel={selectedVariant.label}
+        />
+      ) : null}
+      {showButtons && <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} />}
     </div>
   );
 }
@@ -275,25 +317,29 @@ function ServiceDetailSection({ id, number, title, subtitle, children, className
       className={`home1-service-detail-section ${className}`.trim()}
       aria-labelledby={id ? `${id}-heading` : undefined}
     >
-      <header className="home1-service-detail-section-head">
-        <span className="home1-service-detail-section-num" aria-hidden="true">
-          {number}
-        </span>
-        <div className="home1-service-detail-section-titles p-0 m-0">
-          <h2 id={id ? `${id}-heading` : undefined} className="home1-service-detail-section-title">
-            {title}
-          </h2>
-          {subtitle && <p className="home1-service-detail-section-subtitle">{subtitle}</p>}
-        </div>
-      </header>
       <div className="home1-service-detail-section-body">{children}</div>
     </section>
   );
 }
 
 function buildContentSections(service) {
-  const items = [
-    {
+  const items = [];
+
+  if (service.longDescriptionHtml) {
+    items.push({
+      id: "about",
+      title: "About this service",
+      subtitle: "What we do and who this is for",
+      className: "home1-service-detail-about",
+      render: () => (
+        <div
+          className="home1-service-detail-prose home1-service-detail-rich"
+          dangerouslySetInnerHTML={{ __html: service.longDescriptionHtml }}
+        />
+      ),
+    });
+  } else if (service.longDescription?.length) {
+    items.push({
       id: "about",
       title: "About this service",
       subtitle: "What we do and who this is for",
@@ -305,8 +351,8 @@ function buildContentSections(service) {
           ))}
         </div>
       ),
-    },
-  ];
+    });
+  }
 
   if (service.includes.length > 0) {
     items.push({
@@ -388,10 +434,21 @@ function ServiceDetailJumpNav({ sections }) {
   );
 }
 
-function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVariant }) {
-  const priceDisplay = service.priceDisplay ?? buildStaticVariantPriceDisplay();
-  const selectedPrice = selectedVariant?.priceIncVat ?? service.priceIncVat;
-  const isEmergency = service.category === "emergency";
+function ServiceDetailProduct({
+  service,
+  selectedId,
+  onSelectVariant,
+  selectedVariant,
+  onBook,
+  variantError,
+}) {
+  const { incVat } = useVatPreference();
+  const variants = service.variants ?? [];
+  const priceDisplay = service.priceDisplay;
+  const isEmergency =
+    service.category === "emergency" ||
+    service.name?.toLowerCase().includes("emergency") ||
+    service.slug?.includes("emergency");
   const dispatchNote = isEmergency ? "Immediate dispatch available" : "Book online — fixed pricing";
 
   return (
@@ -416,23 +473,37 @@ function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVa
 
             <p className="home1-service-slim-lead">{service.description}</p>
 
-            <ServiceSlimPriceRibbon
-              priceDisplay={priceDisplay}
-              selectedPrice={selectedPrice}
-              isEmergency={isEmergency}
-            />
+            <ServiceSlimPriceRibbon priceDisplay={priceDisplay} incVat={incVat} isEmergency={isEmergency} />
 
             <div className="home1-service-slim-book">
-              <ServiceVariantPicker
-                variants={STATIC_SERVICE_VARIANTS}
-                selectedId={selectedId}
-                onSelect={onSelectVariant}
-                idPrefix="slim"
-                theme="light"
-                label="Select a variant"
-                className="home1-service-slim-variants"
-              />
-              <ServiceBookingButtons bookHref={service.bookHref} variant="slim" />
+              {variants.length > 0 ? (
+                <>
+                  <ServiceVariantPicker
+                    variants={variants}
+                    selectedId={selectedId}
+                    onSelect={onSelectVariant}
+                    idPrefix="slim"
+                    theme="light"
+                    label="Select a variant"
+                    className="home1-service-slim-variants"
+                  />
+                  {variantError ? (
+                    <p className="home1-service-variant-error" role="alert">
+                      {variantError}
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
+              {selectedVariant ? (
+                <ServiceSelectedPrice
+                  priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
+                  incVat={incVat}
+                  variantLabel={selectedVariant.label}
+                  theme="light"
+                  className="home1-service-slim-selected-price"
+                />
+              ) : null}
+              <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} variant="slim" />
             </div>
 
             <p className="home1-service-slim-foot-trust">
@@ -450,7 +521,7 @@ function ServiceDetailProduct({ service, selectedId, onSelectVariant, selectedVa
   );
 }
 
-function PricingCard({ service, selectedVariant, selectedId, onSelectVariant }) {
+function PricingCard({ service, selectedVariant, selectedId, onSelectVariant, onBook, variantError }) {
   return (
     <aside className="home1-service-detail-sidebar home1-service-detail-sidebar--sticky" aria-label="Book this service">
       <div className="home1-service-sidebar-head">
@@ -462,9 +533,12 @@ function PricingCard({ service, selectedVariant, selectedId, onSelectVariant }) 
       <div className="home1-service-sidebar-panel">
         <ServiceBookingBlock
           service={service}
+          variants={service.variants}
           selectedId={selectedId}
           onSelectVariant={onSelectVariant}
           selectedVariant={selectedVariant}
+          onBook={onBook}
+          variantError={variantError}
           idPrefix="sidebar"
           theme="light"
           showButtons
@@ -513,12 +587,38 @@ function ServiceFaq({ faqs }) {
 }
 
 export default function ServiceDetailClient({ service, related }) {
-  const [selectedId, setSelectedId] = useState(STATIC_VARIANT_DEFAULT_ID);
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState("");
+  const [variantError, setVariantError] = useState("");
 
   const selectedVariant = useMemo(
-    () => getStaticVariantById(selectedId),
-    [selectedId]
+    () => getVariantById(service, selectedId),
+    [service, selectedId]
   );
+
+  const hasVariants = (service.variants?.length ?? 0) > 0;
+
+  const handleSelectVariant = useCallback((id) => {
+    setSelectedId(id);
+    setVariantError("");
+  }, []);
+
+  const handleBook = useCallback(() => {
+    if (hasVariants && !selectedId) {
+      setVariantError("Please select a variant to continue with your booking.");
+      return;
+    }
+
+    setVariantError("");
+    router.push(
+      buildCheckoutHref({
+        service: service.name,
+        slug: service.slug,
+        variantId: selectedId || undefined,
+        variantLabel: selectedVariant?.label,
+      })
+    );
+  }, [hasVariants, selectedId, selectedVariant, service.name, service.slug, router]);
 
   const contentSections = useMemo(() => buildContentSections(service), [service]);
 
@@ -529,8 +629,10 @@ export default function ServiceDetailClient({ service, related }) {
         <ServiceDetailProduct
           service={service}
           selectedId={selectedId}
-          onSelectVariant={setSelectedId}
+          onSelectVariant={handleSelectVariant}
           selectedVariant={selectedVariant}
+          onBook={handleBook}
+          variantError={variantError}
         />
 
         <section className="home1-service-detail-body p-0" aria-label="Service information">
@@ -559,7 +661,9 @@ export default function ServiceDetailClient({ service, related }) {
                   service={service}
                   selectedVariant={selectedVariant}
                   selectedId={selectedId}
-                  onSelectVariant={setSelectedId}
+                  onSelectVariant={handleSelectVariant}
+                  onBook={handleBook}
+                  variantError={variantError}
                 />
               </aside>
             </div>
@@ -568,16 +672,10 @@ export default function ServiceDetailClient({ service, related }) {
 
         {related.length > 0 && (
           <MotionSection variant="fade-up">
-            <section className={`${SECTION_PY} home1-section-surface pt-0`}>
+            <section className={`${SECTION_PY} home1-section-surface home1-related-section pt-0`}>
               <div className={SERVICE_DETAIL_CONTAINER}>
                 <SectionHeader eyebrow="Related" className="pb-3" title="You may also need" align="left" compact />
-                <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 list-none p-0 m-0">
-                  {related.map((s, i) => (
-                    <li key={s.slug}>
-                      <ServiceCard service={s} imagePriority={i === 0} />
-                    </li>
-                  ))}
-                </ul>
+                <RelatedServicesSlider services={related} />
               </div>
             </section>
           </MotionSection>

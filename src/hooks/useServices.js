@@ -2,10 +2,12 @@
 
 import { useMemo } from "react";
 import { useAppSelector } from "@/store/hooks";
+import { buildServiceCategoryFilters } from "@/lib/services/buildServiceCategory";
 import {
   selectBookableServices,
   selectBookingOptions,
   selectFeaturedFromApi,
+  selectServiceCategories,
   selectServicesStatus,
 } from "@/store/selectors/servicesSelectors";
 
@@ -64,4 +66,17 @@ export function useServiceByName(name) {
     () => bookable.find((s) => s.name === name) ?? bookable[0] ?? null,
     [bookable, name]
   );
+}
+
+export function useServiceCategories() {
+  const categories = useAppSelector(selectServiceCategories);
+  const status = useAppSelector(selectServicesStatus);
+  const filters = useMemo(() => buildServiceCategoryFilters(categories), [categories]);
+
+  return {
+    categories,
+    filters,
+    loading: status === "loading" || status === "idle",
+    failed: status === "failed",
+  };
 }

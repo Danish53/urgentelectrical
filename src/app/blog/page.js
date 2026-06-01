@@ -1,34 +1,37 @@
-"use client";
-
-import Navbar from "@/components/Navbar.jsx";
-import Footer from "@/components/Footer.jsx";
-import FloatingCTA from "@/components/FloatingCTA.jsx";
-import MotionSection from "@/components/MotionSection.jsx";
-import BlogHero from "@/components/blog/BlogHero";
-import BlogListing from "@/components/blog/BlogListing";
-import NewsletterHome1 from "@/components/home1/NewsletterHome1";
-import { BLOG_LISTING_JSON_LD } from "@/data/blogs";
+import BlogPageClient from "@/components/blog/BlogPageClient";
+import { BLOG_LISTING_JSON_LD, buildBlogListingJsonLd } from "@/data/blogs";
+import { getBlogCategories, getBlogPostsPage } from "@/lib/blogs/getBlogs";
 import "../home1/home1.css";
 
-export default function BlogPage() {
+export { metadata } from "./layout";
+
+export const revalidate = 3600;
+
+export default async function BlogPage() {
+  const categories = await getBlogCategories();
+  let initialPosts = [];
+  let initialMeta = null;
+
+  try {
+    const result = await getBlogPostsPage({ page: 1, category: "all", categories });
+    initialPosts = result.posts;
+    initialMeta = result.meta;
+  } catch {
+    initialPosts = [];
+  }
+
+  const jsonLd = initialPosts.length
+    ? buildBlogListingJsonLd(initialPosts)
+    : BLOG_LISTING_JSON_LD;
+
   return (
-    <div className="home1-page w-full min-w-0">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(BLOG_LISTING_JSON_LD) }}
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <BlogPageClient
+        categories={categories}
+        initialPosts={initialPosts}
+        initialMeta={initialMeta}
       />
-      <Navbar />
-      <main className="w-full min-w-0">
-        <BlogHero />
-        <BlogListing />
-        <MotionSection variant="fade-in">
-          <NewsletterHome1 />
-        </MotionSection>
-      </main>
-      <MotionSection variant="fade-up">
-        <Footer />
-      </MotionSection>
-      <FloatingCTA />
-    </div>
+    </>
   );
 }

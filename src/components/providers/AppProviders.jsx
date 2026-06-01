@@ -3,14 +3,16 @@
 import { Toaster } from "sonner";
 import AuthSessionHydrator from "@/components/providers/AuthSessionHydrator";
 import ServicesHydrator from "@/components/providers/ServicesHydrator";
+import { VatPreferenceProvider } from "@/components/providers/VatPreferenceProvider";
 import ReduxProvider from "@/store/provider";
 
 export default function AppProviders({ children }) {
   return (
     <ReduxProvider>
-      <AuthSessionHydrator />
-      <ServicesHydrator />
-      {children}
+      <VatPreferenceProvider>
+        <AuthSessionHydrator />
+        <ServicesHydrator />
+        {children}
       <Toaster
         position="top-right"
         richColors
@@ -22,6 +24,7 @@ export default function AppProviders({ children }) {
           },
         }}
       />
+      </VatPreferenceProvider>
     </ReduxProvider>
   );
 }

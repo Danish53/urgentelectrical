@@ -1,12 +1,3 @@
-import { serviceSlug } from "@/lib/slugs";
-
-export const FOOTER_SERVICES = [
-  { label: "Domestic", href: `/services#${serviceSlug("Domestic")}` },
-  { label: "Commercial", href: `/services#${serviceSlug("Commercial")}` },
-  { label: "Industrial", href: `/services#${serviceSlug("Industrial")}` },
-  { label: "Renewables", href: `/services#${serviceSlug("Renewables")}` },
-];
-
 export const FOOTER_COMPANY = [
   { label: "About us", href: "/about-us" },
   { label: "Contact us", href: "/contact-us" },

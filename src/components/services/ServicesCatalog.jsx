@@ -4,8 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
-import { SERVICE_CATEGORIES } from "@/data/servicesPage";
-import { useBookableServices } from "@/hooks/useServices";
+import { useBookableServices, useServiceCategories } from "@/hooks/useServices";
 import ServicesGridSkeleton from "@/components/skeletons/ServicesGridSkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
@@ -17,6 +16,7 @@ export default function ServicesCatalog() {
   const [active, setActive] = useState("all");
   const reduceMotion = useReducedMotion();
   const { bookable, loading, failed, error } = useBookableServices();
+  const { filters: categoryFilters } = useServiceCategories();
   const totalCount = useAppSelector((s) => s.services.meta?.total ?? bookable.length);
 
   const filtered = useMemo(
@@ -27,10 +27,10 @@ export default function ServicesCatalog() {
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
     if (!hash) return;
-    const matchCat = SERVICE_CATEGORIES.find((c) => c.id === hash);
+    const matchCat = categoryFilters.find((c) => c.id === hash);
     if (matchCat) setActive(matchCat.id);
     else document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+  }, [categoryFilters]);
 
   return (
     <section
@@ -56,7 +56,7 @@ export default function ServicesCatalog() {
           role="tablist"
           aria-label="Filter services by category"
         >
-          {SERVICE_CATEGORIES.map((cat) => {
+          {categoryFilters.map((cat) => {
             const isActive = active === cat.id;
             return (
               <button

@@ -1,15 +1,15 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildCheckoutHref } from "@/lib/checkoutHref";
-import { formatApiPrice, priceIncVatFromString } from "@/lib/pricing";
+import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { serviceSlug } from "@/lib/slugs";
 
 const SITE = "https://www.urgentelectrical.services";
 
+/** @deprecated Prefer API category labels via categoryMap */
 export const CATEGORY_LABELS = {
-  emergency: "Emergency",
-  testing: "Testing & Safety",
   domestic: "Domestic",
   commercial: "Commercial",
+  security: "Security",
 };
 
 const IMAGE_MAP = {
@@ -59,28 +59,25 @@ const SERVICE_DESCRIPTIONS = {
   "Socket Replacment": "Damaged or outdated socket replacement with safe isolation and testing.",
 };
 
-const SERVICE_CATEGORY_MAP = {
-  "Emergency Response - 24/7": "emergency",
-  "Electrical Installation Condition Report (EICR)": "testing",
-  "Portable Appliance Testing (PAT)": "testing",
-  "Fire Alarm Inspection & Testing": "commercial",
-  "Emergency Lighting Periodic Inspection & Testing": "commercial",
-  "Emergency Lighting Periodic Inspection & Testing Certificate": "commercial",
-  "Domestic Electrical Fault Investigation": "domestic",
-  "Fuse Box (Consumer Unit) Replacement": "domestic",
-  "Bathroom Extractor Fan Replacement": "domestic",
-  "Electrical Panel Heater": "domestic",
-  "Socket Replacement": "domestic",
-  "Socket Replacment": "domestic",
-};
+/** @param {{ slug: string, label: string, id: number } | undefined} category */
+function resolveServiceCategoryFields(category, serviceCategoryId) {
+  if (category) {
+    return {
+      category: category.slug,
+      categoryLabel: category.label,
+      serviceCategoryId: serviceCategoryId ?? category.id,
+    };
+  }
 
-const CATEGORY_BY_API_ID = {
-  1: "domestic",
-  2: "testing",
-};
+  return {
+    category: "domestic",
+    categoryLabel: "Domestic",
+    serviceCategoryId: serviceCategoryId ?? 1,
+  };
+}
 
-/** Map API slug variants to static detail content keys */
-const DETAIL_SLUG_ALIASES = {
+/** Map client-generated slug variants to API / static detail keys */
+export const DETAIL_SLUG_ALIASES = {
   "emergency-lighting-periodic-inspection-and-testing-certificate":
     "emergency-lighting-periodic-inspection-and-testing",
   "socket-replacment": "socket-replacement",
@@ -88,35 +85,16 @@ const DETAIL_SLUG_ALIASES = {
 
 function buildServiceVariants(extraVariants) {
   if (!extraVariants?.length) return null;
-  return extraVariants.map((v) => ({
-    ...v,
-    priceIncVat: priceIncVatFromString(String(v.priceExc)),
-  }));
+  return extraVariants.map((v) => {
+    const priceExcVat = formatPriceAmount(String(v.priceExc));
+    return {
+      ...v,
+      priceExcVat,
+      priceIncVat: priceIncVatFromString(priceExcVat),
+    };
+  });
 }
 
-function buildPriceDisplay(priceIncVat, variants) {
-  if (variants?.length) {
-    const amounts = variants.map((v) => parseFloat(v.priceIncVat));
-    const min = Math.min(...amounts).toFixed(2);
-    const max = Math.max(...amounts).toFixed(2);
-    return {
-      type: "range",
-      min,
-      max,
-      label: `FROM £${min} – £${max} Inc. VAT`,
-      prefix: "FROM",
-      amounts: `£${min} – £${max}`,
-      suffix: "Inc. VAT",
-    };
-  }
-  return {
-    type: "fixed",
-    amount: priceIncVat,
-    label: `£${priceIncVat} Inc. VAT`,
-    amounts: `£${priceIncVat}`,
-    suffix: "Inc. VAT",
-  };
-}
 
 function resolveDetailExtra(slug) {
   if (SERVICE_DETAIL_EXTRA[slug]) return SERVICE_DETAIL_EXTRA[slug];
@@ -126,19 +104,33 @@ function resolveDetailExtra(slug) {
 }
 
 /**
- * @param {{ id: number, service_category_id: number, title: string, price: string, description?: string | null, image?: string | null }} api
+ * Resolve canonical API slug (list links must match GET /services/{slug}).
+ * @param {{ slug?: string | null, title?: string | null }} api
  */
-export function buildBookableServiceFromApi(api) {
+export function resolveServiceSlugFromApi(api) {
+  const fromApi = String(api.slug ?? "").trim();
+  if (fromApi) return fromApi;
+  return serviceSlug(String(api.title ?? "").trim() || "Electrical service");
+}
+
+/**
+ * @param {{ id: number, service_category_id: number, title: string, price: string, slug?: string | null, description?: string | null, image?: string | null }} api
+ * @param {Record<number, import("@/lib/services/buildServiceCategory").ReturnType<import("@/lib/services/buildServiceCategory").buildServiceCategoryFromApi>>} [categoryMap]
+ */
+export function buildBookableServiceFromApi(api, categoryMap = {}) {
   const name = api.title?.trim() ?? "Electrical service";
   const price = String(api.price ?? "0");
-  const slug = serviceSlug(name);
+  const slug = resolveServiceSlugFromApi(api);
   const extra = resolveDetailExtra(slug);
   const meta = IMAGE_MAP[name] ?? { image: "/featured/pat.jpg", color: "#D3231F" };
-  const category =
-    SERVICE_CATEGORY_MAP[name] ?? CATEGORY_BY_API_ID[api.service_category_id] ?? "domestic";
-  const priceIncVat = formatApiPrice(price);
+  const { category, categoryLabel, serviceCategoryId } = resolveServiceCategoryFields(
+    categoryMap[api.service_category_id],
+    api.service_category_id
+  );
+  const priceExcVat = formatPriceAmount(price);
+  const priceIncVat = priceIncVatFromString(priceExcVat);
   const variants = buildServiceVariants(extra.variants);
-  const priceDisplay = buildPriceDisplay(priceIncVat, variants);
+  const priceDisplay = buildRangePriceDisplay(variants, priceExcVat);
   const image =
     api.image && (api.image.startsWith("http") || api.image.startsWith("/"))
       ? api.image
@@ -150,14 +142,15 @@ export function buildBookableServiceFromApi(api) {
 
   return {
     apiId: api.id,
-    serviceCategoryId: api.service_category_id,
+    serviceCategoryId,
     name,
     price,
+    priceExcVat,
     tag: name === "Emergency Response - 24/7" ? "Most Popular" : undefined,
     slug,
     id: String(api.id),
     category,
-    categoryLabel: CATEGORY_LABELS[category] ?? "Domestic",
+    categoryLabel,
     description,
     image,
     color: meta.color,
@@ -179,9 +172,10 @@ export function buildBookableServiceFromApi(api) {
 
 /**
  * @param {Array<{ id: number, service_category_id: number, title: string, price: string, description?: string | null, image?: string | null }>} list
+ * @param {Record<number, import("@/lib/services/buildServiceCategory").ReturnType<import("@/lib/services/buildServiceCategory").buildServiceCategoryFromApi>>} [categoryMap]
  */
-export function buildBookableServicesFromApi(list) {
-  return list.map(buildBookableServiceFromApi);
+export function buildBookableServicesFromApi(list, categoryMap = {}) {
+  return list.map((api) => buildBookableServiceFromApi(api, categoryMap));
 }
 
 /** Simple { name, price } for booking dropdowns */
