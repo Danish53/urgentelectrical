@@ -1,11 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { toastSuccess } from "@/lib/toast";
-import { useAppDispatch } from "@/store/hooks";
-import { logout } from "@/store/slices/authSlice";
+import NavUserMenu from "@/components/nav/NavUserMenu";
 
 const DESKTOP_CLASS =
   "flex items-center gap-[5px] text-[14px] font-[600] text-[#5A5856] py-2 px-[14px] rounded-xl whitespace-nowrap transition-all hover:text-[#3d3b39]";
@@ -25,16 +22,7 @@ function NavIconArrowRight() {
  * @param {{ variant?: "desktop" | "mobile", onNavigate?: () => void }} props
  */
 export default function NavAuthControl({ variant = "desktop", onNavigate }) {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
   const { ready, isLoggedIn } = useAuthSession();
-
-  function handleLogout() {
-    dispatch(logout());
-    toastSuccess("You have been signed out.");
-    onNavigate?.();
-    router.replace("/");
-  }
 
   if (!ready) {
     return variant === "mobile" ? null : (
@@ -45,20 +33,7 @@ export default function NavAuthControl({ variant = "desktop", onNavigate }) {
   }
 
   if (isLoggedIn) {
-    if (variant === "mobile") {
-      return (
-        <button type="button" onClick={handleLogout} className={MOBILE_CLASS}>
-          Logout
-          <NavIconArrowRight />
-        </button>
-      );
-    }
-
-    return (
-      <button type="button" onClick={handleLogout} className={DESKTOP_CLASS}>
-        Logout
-      </button>
-    );
+    return <NavUserMenu variant={variant} onNavigate={onNavigate} />;
   }
 
   if (variant === "mobile") {

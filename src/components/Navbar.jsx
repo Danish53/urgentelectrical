@@ -7,11 +7,9 @@ import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { CONTAINER } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
+import { NAV_MENU_ITEM } from "@/components/nav/navMenuStyles";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
-
-const NAV_MENU_ITEM =
-  "flex items-center gap-[5px] text-[14px] font-[600] text-[#5A5856] py-2 px-[14px] rounded-xl whitespace-nowrap transition-all";
 
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (

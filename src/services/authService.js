@@ -1,5 +1,12 @@
-import { AUTH_API } from "@/constants/authApi";
-import { apiRequest } from "@/lib/api/client";
+import { sameOriginJsonPost } from "@/lib/api/sameOriginPost";
+
+/** Same-origin proxies — avoids Laravel Sanctum CSRF 419 on cross-origin browser POST. */
+const AUTH_PROXY = {
+  login: "/api/auth/login",
+  forgotPassword: "/api/auth/forgot-password",
+  verifyOtp: "/api/auth/verify-otp",
+  resetPassword: "/api/auth/reset-password",
+};
 
 /**
  * @param {unknown} data
@@ -35,20 +42,20 @@ export function parseApiMessage(data) {
 
 /** @param {{ email: string, password: string }} payload */
 export function login(payload) {
-  return apiRequest(AUTH_API.login, { method: "POST", body: payload });
+  return sameOriginJsonPost(AUTH_PROXY.login, payload);
 }
 
 /** @param {{ email: string }} payload */
 export function forgotPassword(payload) {
-  return apiRequest(AUTH_API.forgotPassword, { method: "POST", body: payload });
+  return sameOriginJsonPost(AUTH_PROXY.forgotPassword, payload);
 }
 
 /** @param {{ email: string, otp: string }} payload */
 export function verifyOtp(payload) {
-  return apiRequest(AUTH_API.verifyOtp, { method: "POST", body: payload });
+  return sameOriginJsonPost(AUTH_PROXY.verifyOtp, payload);
 }
 
 /** @param {{ email: string, otp: string, password: string, password_confirmation: string }} payload */
 export function resetPassword(payload) {
-  return apiRequest(AUTH_API.resetPassword, { method: "POST", body: payload });
+  return sameOriginJsonPost(AUTH_PROXY.resetPassword, payload);
 }

@@ -6,6 +6,7 @@ import {
 } from "@/components/login/authFormStyles";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { clearAuthToken, getAuthToken, setAuthToken } from "@/lib/auth/tokenStorage";
+import { clearStoredAuthUser, getStoredAuthUser, setStoredAuthUser } from "@/lib/auth/userStorage";
 import * as authService from "@/services/authService";
 
 const idleOp = () => ({ status: "idle", error: null });
@@ -157,12 +158,15 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.login = idleOp();
       clearAuthToken();
+      clearStoredAuthUser();
     },
     hydrateAuthSession(state) {
       const token = getAuthToken();
       if (token) {
         state.token = token;
         state.isAuthenticated = true;
+        const storedUser = getStoredAuthUser();
+        if (storedUser) state.user = storedUser;
       }
     },
     hydrateResetFlow(state) {
@@ -181,7 +185,10 @@ const authSlice = createSlice({
         state.token = token;
         setAuthToken(token);
       }
-      if (user) state.user = user;
+      if (user) {
+        state.user = user;
+        setStoredAuthUser(user);
+      }
     });
 
     bindAsyncOp(builder, requestPasswordReset, "forgotPassword", (state, action) => {
