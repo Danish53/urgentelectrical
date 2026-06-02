@@ -38,15 +38,13 @@ export default function LocationsSearchMap() {
 
             <form
               onSubmit={handleSearch}
-              className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 sm:gap-4 items-stretch"
+              className="home1-locations-search-form"
               aria-label="Search services by postcode"
             >
-              <div className="min-w-0">
-                <label htmlFor="locations-service" className="sr-only">
-                  Service
-                </label>
+              <div className="home1-locations-search-field home1-locations-search-field--service">
+                <label htmlFor="locations-service">Service</label>
                 {servicesLoading ? (
-                  <FormFieldSkeleton className="min-h-[48px] rounded-lg" />
+                  <FormFieldSkeleton className="min-h-[50px] rounded-xl" />
                 ) : (
                   <select
                     id="locations-service"
@@ -54,7 +52,7 @@ export default function LocationsSearchMap() {
                     value={service}
                     onChange={(e) => setService(e.target.value)}
                     disabled={!options.length}
-                    className="home1-locations-search-input w-full h-full min-h-[48px] cursor-pointer appearance-none"
+                    className="home1-locations-search-input home1-locations-search-input--select w-full cursor-pointer"
                   >
                     {options.map((s) => (
                       <option key={s.name} value={s.name}>
@@ -64,25 +62,21 @@ export default function LocationsSearchMap() {
                   </select>
                 )}
               </div>
-              <div className="min-w-0">
-                <label htmlFor="locations-postcode" className="sr-only">
-                  Postcode
-                </label>
+              <div className="home1-locations-search-field home1-locations-search-field--postcode">
+                <label htmlFor="locations-postcode">Postcode</label>
                 <input
                   id="locations-postcode"
                   name="postcode"
                   type="text"
                   value={postcode}
                   onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                  placeholder="Enter postcode"
+                  placeholder="e.g. NG1 1AA"
                   autoComplete="postal-code"
-                  className="home1-locations-search-input w-full min-h-[48px]"
+                  maxLength={8}
+                  className="home1-locations-search-input home1-locations-search-input--postcode w-full"
                 />
               </div>
-              <button
-                type="submit"
-                className="home1-locations-search-btn min-h-[48px] px-8 sm:px-10 rounded-lg bg-[#d3231f] text-white text-[14px] font-extrabold uppercase tracking-wide transition-colors hover:bg-[#b71c1c]"
-              >
+              <button type="submit" className="home1-locations-search-submit">
                 Search
               </button>
             </form>

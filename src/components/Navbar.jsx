@@ -165,7 +165,7 @@ function NavMegaDropdown({ group, onNavigate }) {
         </ul>
         <div className="px-5 py-3 border-t border-[#1f1f1f]">
           <Link
-            href="/services"
+            href="/pages"
             onClick={onNavigate}
             className="inline-flex items-center gap-1 text-[#e11d48] text-[13px] font-medium hover:text-[#f87171] transition-colors"
           >
@@ -285,7 +285,7 @@ export default function Navbar() {
 
               <div className="flex items-center justify-end min-w-0">
                 <a
-                  href="/checkout"
+                  href="/services"
                   className="group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
                   Book Now
@@ -307,7 +307,7 @@ export default function Navbar() {
             <BrandLogo compact />
             <div className="flex items-center gap-2.5 shrink-0">
               <Link
-                href="/checkout"
+                href="/services"
                 onClick={closeMobile}
                 className="inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
               >

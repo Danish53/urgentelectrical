@@ -1,19 +1,13 @@
-import AccountPageShell from "@/components/account/AccountPageShell";
+import SitesPageClient from "@/components/account/SitesPageClient";
+import "../../home1/home1.css";
+import "../account.css";
 
 export const metadata = {
-  title: "Sites | Urgent Electrical",
+  title: "My Sites | Urgent Electrical",
+  description: "Manage saved service locations for faster booking.",
   robots: { index: false, follow: false },
 };
 
 export default function AccountSitesPage() {
-  return (
-    <AccountPageShell
-      title="Sites"
-      description="Manage your saved job sites and addresses for faster booking."
-    >
-      <div className="rounded-2xl border border-[#e8e8e8] bg-white p-6 text-[#6b7280] text-sm">
-        No sites saved yet.
-      </div>
-    </AccountPageShell>
-  );
+  return <SitesPageClient />;
 }

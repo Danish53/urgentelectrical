@@ -311,12 +311,27 @@ function ServiceBookingBlock({
 }
 
 function ServiceDetailSection({ id, number, title, subtitle, children, className = "" }) {
+  const headingId = id ? `${id}-heading` : undefined;
+
   return (
     <section
       id={id}
       className={`home1-service-detail-section ${className}`.trim()}
-      aria-labelledby={id ? `${id}-heading` : undefined}
+      aria-labelledby={headingId}
     >
+      <header className="home1-service-detail-section-head">
+        {number ? (
+          <span className="home1-service-detail-section-num" aria-hidden="true">
+            {number}
+          </span>
+        ) : null}
+        <div className="home1-service-detail-section-titles">
+          <h2 id={headingId} className="home1-service-detail-section-title">
+            {title}
+          </h2>
+          {subtitle ? <p className="home1-service-detail-section-subtitle">{subtitle}</p> : null}
+        </div>
+      </header>
       <div className="home1-service-detail-section-body">{children}</div>
     </section>
   );
@@ -325,20 +340,7 @@ function ServiceDetailSection({ id, number, title, subtitle, children, className
 function buildContentSections(service) {
   const items = [];
 
-  if (service.longDescriptionHtml) {
-    items.push({
-      id: "about",
-      title: "About this service",
-      subtitle: "What we do and who this is for",
-      className: "home1-service-detail-about",
-      render: () => (
-        <div
-          className="home1-service-detail-prose home1-service-detail-rich"
-          dangerouslySetInnerHTML={{ __html: service.longDescriptionHtml }}
-        />
-      ),
-    });
-  } else if (service.longDescription?.length) {
+  if (service.longDescription?.length) {
     items.push({
       id: "about",
       title: "About this service",

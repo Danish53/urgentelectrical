@@ -32,17 +32,19 @@ export function useBookingOptions() {
 
 export function useFeaturedServices({ limit } = {}) {
   const featured = useAppSelector(selectFeaturedFromApi);
-  const bookable = useAppSelector(selectBookableServices);
   const status = useAppSelector(selectServicesStatus);
 
   const services = useMemo(() => {
     const list = featured.map((s) => ({
       id: s.id,
       name: s.name,
+      price: s.price,
+      priceExcVat: s.priceExcVat,
       priceIncVat: s.priceIncVat,
       color: s.color,
       image: s.image,
       tag: s.tag,
+      href: s.href,
     }));
     return limit ? list.slice(0, limit) : list;
   }, [featured, limit]);

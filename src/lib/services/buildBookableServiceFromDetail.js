@@ -1,7 +1,10 @@
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { slugify } from "@/lib/slugs";
-import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
+import {
+  resolveDetailExtra,
+  resolveServiceSlugFromApi,
+} from "@/lib/services/buildBookableService";
 
 const SITE = "https://www.urgentelectrical.services";
 
@@ -76,7 +79,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const description =
     String(api.description ?? "").trim() ||
     "Fixed-price electrical service — book online with NICEIC approved engineers.";
-  const longDescriptionHtml = String(api.long_description ?? "").trim() || null;
+  const extra = resolveDetailExtra(slug);
   const meta = FALLBACK_META[name] ?? { color: "#D3231F" };
   const isEmergency =
     name.toLowerCase().includes("emergency") || slug.includes("emergency");
@@ -100,15 +103,15 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     priceIncVat,
     variants,
     priceDisplay,
-    longDescriptionHtml,
-    longDescription: longDescriptionHtml ? [] : [description],
-    includes: [],
-    features: [],
-    faqs: [],
+    longDescriptionHtml: null,
+    longDescription: extra.longDescription ?? [description],
+    includes: extra.includes ?? [],
+    features: extra.features ?? [],
+    faqs: extra.faqs ?? [],
     schedules: Array.isArray(api.schedules) ? api.schedules : [],
-    metaTitle: name,
-    metaDescription: description,
-    keywords: [],
+    metaTitle: extra.metaTitle ?? name,
+    metaDescription: extra.metaDescription ?? description,
+    keywords: extra.keywords ?? [],
     tag: isEmergency ? "Most Popular" : undefined,
   };
 }

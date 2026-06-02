@@ -1,4 +1,4 @@
-/** Nav label → bookable service detail slug (see src/data/services.js) */
+/** Nav label → other-services page slug (GET /pages/{slug}; falls back to /services data) */
 const SLUG = {
   emergency: "emergency-response-24-7",
   eicr: "electrical-installation-condition-report-eicr",
@@ -14,7 +14,7 @@ function navItem(label, slug) {
   return {
     label,
     slug: slug ?? null,
-    href: slug ? `/services/${slug}` : "/services",
+    href: slug ? `/pages/${slug}` : "/pages",
   };
 }
 

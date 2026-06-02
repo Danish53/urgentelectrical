@@ -4591,11 +4591,24 @@
   gap: 1rem;
 }
 
+@media (min-width: 1024px) {
+  .home1-blog-sidebar {
+    position: sticky;
+    top: calc(var(--site-header-height, 118px) + 1.25rem);
+    align-self: start;
+    z-index: 5;
+    overflow: visible;
+  }
+}
+
 @media (max-width: 1023px) {
   .home1-blog-sidebar {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 
   .home1-blog-sidebar-trust,
@@ -5296,16 +5309,100 @@
   }
 }
 
+.home1-locations-search-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: end;
+}
+
+@media (min-width: 640px) {
+  .home1-locations-search-form {
+    grid-template-columns: minmax(0, 1fr) minmax(11.5rem, 14rem) auto;
+    gap: 0.75rem 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .home1-locations-search-form {
+    grid-template-columns: minmax(0, 1.35fr) minmax(12.5rem, 15rem) auto;
+  }
+}
+
+.home1-locations-search-field label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.home1-locations-search-field--postcode {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .home1-locations-search-field--postcode {
+    min-width: 11.5rem;
+  }
+}
+
 .home1-locations-search-input {
   width: 100%;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  min-height: 50px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.08);
   color: #fff;
   padding: 12px 16px;
   font-size: 14px;
   font-weight: 500;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home1-locations-search-input--select {
+  padding-right: 2.25rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23ffffff' fill-opacity='0.7' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+}
+
+.home1-locations-search-input--postcode {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.home1-locations-search-submit {
+  min-height: 50px;
+  width: 100%;
+  padding: 0 1.75rem;
+  border: none;
+  border-radius: 12px;
+  background: #d3231f;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.home1-locations-search-submit:hover {
+  background: #b71c1c;
+}
+
+@media (min-width: 640px) {
+  .home1-locations-search-submit {
+    width: auto;
+    min-width: 7.5rem;
+  }
 }
 
 .home1-locations-search-input::placeholder {
@@ -5325,65 +5422,95 @@
 
 .home1-locations-areas-grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.65rem 1.5rem;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+  width: 100%;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 640px) {
   .home1-locations-areas-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 768px) {
-  .home1-locations-areas-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem 2rem;
+    gap: 1rem;
   }
 }
 
 @media (min-width: 1024px) {
   .home1-locations-areas-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.15rem;
   }
 }
 
 .home1-locations-area-item {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
   min-width: 0;
+  display: flex;
 }
 
-.home1-locations-area-marker {
-  width: 10px;
-  height: 3px;
-  border-radius: 1px;
-  background: var(--home1-red);
-  flex-shrink: 0;
-}
-
-.home1-locations-area-link {
+.home1-locations-area-card {
   display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-width: 0;
-  color: inherit;
+  align-items: flex-start;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 100%;
+  padding: 1rem 1.05rem;
+  border: 1px solid var(--home1-border);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--home1-text);
   text-decoration: none;
-  transition: color 0.2s ease;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
-.home1-locations-area-link:hover {
+.home1-locations-area-card:hover {
+  border-color: rgba(211, 35, 31, 0.35);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+  transform: translateY(-2px);
+}
+
+.home1-locations-area-card:focus-visible {
+  outline: 2px solid var(--home1-red);
+  outline-offset: 2px;
+}
+
+.home1-locations-area-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  background: var(--home1-red-soft);
   color: var(--home1-red);
 }
 
-.home1-locations-area-link:focus-visible {
-  outline: 2px solid var(--home1-red);
-  outline-offset: 2px;
-  border-radius: 4px;
+.home1-locations-area-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.home1-locations-area-name {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--home1-text);
+}
+
+.home1-locations-area-cta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--home1-muted);
+  transition: color 0.2s ease;
+}
+
+.home1-locations-area-card:hover .home1-locations-area-cta {
+  color: var(--home1-red);
 }
 
 /* Location detail page */

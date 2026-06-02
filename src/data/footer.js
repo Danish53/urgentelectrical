@@ -3,8 +3,8 @@ export const FOOTER_COMPANY = [
   { label: "Contact us", href: "/contact-us" },
   { label: "Blog & news", href: "/blog" },
   { label: "Locations", href: "/locations" },
-  { label: "Other Services", href: "/services" },
-  { label: "Company Policies", href: "#" },
+  { label: "Other Services", href: "/pages" },
+  { label: "Company Policies", href: "/policies" },
 ];
 
 export const FOOTER_AREAS = [

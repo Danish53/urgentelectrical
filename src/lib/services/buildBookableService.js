@@ -96,7 +96,8 @@ function buildServiceVariants(extraVariants) {
 }
 
 
-function resolveDetailExtra(slug) {
+/** Static detail copy (about, includes, FAQs) keyed by service slug. */
+export function resolveDetailExtra(slug) {
   if (SERVICE_DETAIL_EXTRA[slug]) return SERVICE_DETAIL_EXTRA[slug];
   const alias = DETAIL_SLUG_ALIASES[slug];
   if (alias && SERVICE_DETAIL_EXTRA[alias]) return SERVICE_DETAIL_EXTRA[alias];
@@ -188,9 +189,12 @@ export function toFeaturedCard(service) {
   return {
     id: service.slug,
     name: service.name,
+    price: service.price,
+    priceExcVat: service.priceExcVat,
     priceIncVat: service.priceIncVat,
     color: service.color,
     image: service.image,
     tag: service.tag,
+    href: service.href,
   };
 }

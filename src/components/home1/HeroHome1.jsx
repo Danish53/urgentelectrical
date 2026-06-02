@@ -173,7 +173,7 @@ export default function HeroHome1() {
                 <IconPhone className="text-[#D3231F] w-5 h-5"  />
                 {FOOTER_PHONE}
               </a>
-              <a href="/checkout" className="home1-btn-primary text-sm py-3 px-5">
+              <a href="/services" className="home1-btn-primary text-sm py-3 px-5">
                 Book online
                 <IconArrow className="w-4 h-4" />
               </a>

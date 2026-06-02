@@ -83,6 +83,7 @@ function SliderNavButton({ direction, onClick, disabled }) {
 
 function ServiceCard({ service }) {
   const price = service.priceIncVat;
+  const detailHref = service.href ?? "/services";
 
   return (
     <article className="featured-service-card group relative flex h-full min-h-[400px] flex-col rounded-2xl border border-[#E32B2B] bg-white p-4 sm:p-5 cursor-pointer overflow-hidden transition-all duration-500 ease-out delay-0 hover:delay-150 hover:scale-[1.02] hover:shadow-[0_14px_36px_rgba(227,43,43,0.14)]">
@@ -109,13 +110,13 @@ function ServiceCard({ service }) {
 
       <div className="mt-auto flex gap-2 items-stretch">
         <a
-          href="/checkout"
+          href={detailHref}
           className="featured-btn-select flex-1 flex items-center justify-center bg-[#E32B2B] hover:bg-[#c42424] text-white font-semibold text-sm rounded-lg transition-colors duration-300"
         >
-          Select Option
+          View Details
         </a>
         <a
-          href="/checkout"
+          href={detailHref}
           className="featured-btn-cart w-12 shrink-0 flex items-center justify-center bg-[#E32B2B] hover:bg-[#c42424] rounded-lg transition-colors duration-300"
           aria-label={`Add ${service.name} to booking`}
         >

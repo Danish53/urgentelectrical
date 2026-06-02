@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { buildCheckoutHref } from "@/lib/checkoutHref";
 import Image from "next/image";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
@@ -33,8 +32,9 @@ function useSlidesPerView() {
   return n;
 }
 
-function resolveHref(serviceName, bookable) {
-  const match = bookable.find((s) => s.name === serviceName);
+function resolveHref(featuredService, bookable) {
+  if (featuredService.href) return featuredService.href;
+  const match = bookable.find((s) => s.name === featuredService.name);
   return match?.href ?? "/services";
 }
 
@@ -86,7 +86,7 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
           <Link href={detailHref} className="home1-service-btn home1-service-btn--ghost">
             Details
           </Link>
-          <Link href={buildCheckoutHref({ service: service.name })} className="home1-service-btn home1-service-btn--primary">
+          <Link href={detailHref} className="home1-service-btn home1-service-btn--primary">
             Book now
             <IconArrow className="w-4 h-4 shrink-0" />
           </Link>
@@ -163,7 +163,7 @@ export default function FeaturedServicesHome1({ compact = false }) {
               <ServiceCardHome1
                 key={s.id}
                 service={s}
-                detailHref={resolveHref(s.name, bookable)}
+                detailHref={resolveHref(s, bookable)}
                 imagePriority={i < 2}
               />
             ))}
@@ -176,7 +176,7 @@ export default function FeaturedServicesHome1({ compact = false }) {
             >
               {services.map((s, i) => (
                 <div key={s.id} className="shrink-0 px-2.5" style={{ width: `${slidePct}%` }}>
-                  <ServiceCardHome1 service={s} detailHref={resolveHref(s.name, bookable)} imagePriority={i === 0} />
+                  <ServiceCardHome1 service={s} detailHref={resolveHref(s, bookable)} imagePriority={i === 0} />
                 </div>
               ))}
             </div>

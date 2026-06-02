@@ -66,10 +66,17 @@ export default function LocationsAreasList() {
             <li key={`${activeFilter}-${area}`} className="home1-locations-area-item">
               <Link
                 href={`/locations/${slugify(area)}`}
-                className="home1-locations-area-link"
+                className="home1-locations-area-card"
               >
-                <span className="home1-locations-area-marker" aria-hidden="true" />
-                <span>{area}</span>
+                <span className="home1-locations-area-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
+                  </svg>
+                </span>
+                <span className="home1-locations-area-body">
+                  <span className="home1-locations-area-name">{area}</span>
+                  <span className="home1-locations-area-cta">View local electricians →</span>
+                </span>
               </Link>
             </li>
           ))}

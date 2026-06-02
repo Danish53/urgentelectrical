@@ -73,7 +73,7 @@ export default function ServiceCard({ service, imagePriority = false }) {
           <Link href={service.href} className="home1-service-btn home1-service-btn--ghost">
             Details
           </Link>
-          <Link href={service.bookHref} className="home1-service-btn home1-service-btn--primary">
+          <Link href={service.href} className="home1-service-btn home1-service-btn--primary">
             Book now
             <IconArrow className="w-4 h-4 shrink-0" />
           </Link>
