@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from "react";
 import { AUTH_INPUT_CLASS, AUTH_LABEL_CLASS } from "@/components/login/authFormStyles";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { EMPTY_SITE_FORM } from "@/lib/sites/siteForm";
 
 const INPUT = `${AUTH_INPUT_CLASS} home1-sites-input`;
@@ -29,6 +30,7 @@ function Field({ id, label, optional, children }) {
  *   saving?: boolean,
  *   mode?: "create" | "edit",
  *   initialForm?: import("@/lib/sites/siteForm").SiteFormValues,
+ *   siteName?: string,
  * }} props
  */
 export default function CreateSiteModal({
@@ -38,6 +40,7 @@ export default function CreateSiteModal({
   saving = false,
   mode = "create",
   initialForm,
+  siteName = "",
 }) {
   const titleId = useId();
   const [form, setForm] = useState(EMPTY_SITE_FORM);
@@ -91,7 +94,7 @@ export default function CreateSiteModal({
           <div>
             <p className="home1-sites-modal-eyebrow">{isEdit ? "Update location" : "Add location"}</p>
             <h2 id={titleId} className="home1-sites-modal-title">
-              {isEdit ? "Edit site address" : "New site address"}
+              {isEdit ? `Update: ${siteName || "site address"}` : "New site address"}
             </h2>
           </div>
           <button
@@ -282,8 +285,13 @@ export default function CreateSiteModal({
             >
               Cancel
             </button>
-            <button type="submit" className="home1-btn-primary home1-sites-modal-btn" disabled={saving}>
-              {saving ? "Saving…" : isEdit ? "Save changes" : "Add site"}
+            <button
+              type="submit"
+              className="home1-btn-primary home1-sites-modal-btn inline-flex items-center justify-center gap-2"
+              disabled={saving}
+            >
+              {saving ? <ButtonSpinner /> : null}
+              {saving ? "Updating…" : isEdit ? "Update site" : "Add site"}
             </button>
           </footer>
         </form>

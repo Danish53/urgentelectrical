@@ -1,20 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import AccountLayout from "@/components/account/AccountLayout";
+import OrderDetailModal from "@/components/account/OrderDetailModal";
+import OrdersListSkeleton from "@/components/skeletons/OrdersListSkeleton";
+import BlogPagination from "@/components/blog/BlogPagination";
 import { formatMoney, formatLongDate } from "@/components/checkout/checkoutUtils";
-import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import {
-  getOrderStats,
-  MOCK_ORDERS,
   ORDER_FILTERS,
   ORDER_STATUS_META,
+  getOrderStats,
   orderMatchesFilter,
-} from "@/data/ordersMock";
+} from "@/lib/orders/orderFilters";
+import { toastError } from "@/lib/toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { clearOrderDetail, loadOrderDetail, loadOrders } from "@/store/slices/ordersSlice";
+import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
+import "@/components/skeletons/skeleton.css";
 
 function formatShortDate(isoDate) {
+  if (!isoDate) return "—";
   const d = new Date(isoDate.includes("T") ? isoDate : `${isoDate}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return "—";
   return d.toLocaleDateString("en-GB", {
     day: "numeric",
     month: "short",
@@ -22,63 +31,109 @@ function formatShortDate(isoDate) {
   });
 }
 
-function OrderStatusBadge({ status }) {
-  const meta = ORDER_STATUS_META[status];
+function formatBookedAt(isoDate) {
+  if (!isoDate) return "—";
+  const d = new Date(isoDate);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * @param {import("@/lib/orders/orderTypes").OrderSummary} order
+ */
+function OrderStatusBadge({ order }) {
+  const meta = ORDER_STATUS_META[order.status];
+  const label = order.statusLabel || meta.label;
   return (
     <span className={`home1-orders-status home1-orders-status--${meta.tone}`}>
-      {meta.label}
+      {label}
     </span>
   );
 }
 
 /**
- * @param {{ order: import("@/data/ordersMock").Order }} props
+ * @param {{
+ *   order: import("@/lib/orders/orderTypes").OrderSummary,
+ *   onViewDetails: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
+ *   detailLoading?: boolean,
+ * }} props
  */
-function OrderCard({ order }) {
-  const visitDate = new Date(`${order.visitDate}T12:00:00`);
+function OrderCard({ order, onViewDetails, detailLoading = false }) {
+  const visitDate = order.visitDate
+    ? new Date(`${order.visitDate}T12:00:00`)
+  : null;
+  const displayRef = order.reference || order.id;
 
   return (
     <article className="home1-orders-card home1-card">
       <div className="home1-orders-card-top">
         <div className="min-w-0">
-          <p className="home1-orders-card-ref">Order {order.id}</p>
+          <p className="home1-orders-card-ref">{displayRef}</p>
           <h2 className="home1-orders-card-title">{order.serviceName}</h2>
-          <p className="home1-orders-card-category">{order.category}</p>
+          {order.paymentMethod || order.paymentStatus ? (
+            <p className="home1-orders-card-category">
+              {[order.paymentMethod, order.paymentStatus]
+                .filter(Boolean)
+                .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(" · ")}
+            </p>
+          ) : null}
         </div>
-        <OrderStatusBadge status={order.status} />
+        <OrderStatusBadge order={order} />
       </div>
 
       <dl className="home1-orders-card-meta">
+        {visitDate && !Number.isNaN(visitDate.getTime()) ? (
+          <div className="home1-orders-card-meta-row">
+            <dt>
+              <IconCalendar className="w-4 h-4 shrink-0" aria-hidden="true" />
+              Visit
+            </dt>
+            <dd>
+              {formatLongDate(visitDate)}
+              <span className="home1-orders-card-meta-sub">{order.visitTime}</span>
+            </dd>
+          </div>
+        ) : null}
+        {order.address ? (
+          <div className="home1-orders-card-meta-row">
+            <dt>Address</dt>
+            <dd>{order.address}</dd>
+          </div>
+        ) : null}
         <div className="home1-orders-card-meta-row">
-          <dt>
-            <IconCalendar className="w-4 h-4 shrink-0" aria-hidden="true" />
-            Visit
-          </dt>
-          <dd>
-            {formatLongDate(visitDate)}
-            <span className="home1-orders-card-meta-sub">{order.visitTime}</span>
-          </dd>
-        </div>
-        <div className="home1-orders-card-meta-row">
-          <dt>Address</dt>
-          <dd>{order.address}</dd>
-        </div>
-        <div className="home1-orders-card-meta-row">
-          <dt>Booked</dt>
-          <dd>{formatShortDate(order.bookedAt)}</dd>
+          <dt>Placed</dt>
+          <dd>{formatBookedAt(order.bookedAt)}</dd>
         </div>
         <div className="home1-orders-card-meta-row home1-orders-card-meta-row--total">
-          <dt>Total</dt>
+          <dt>Paid</dt>
           <dd>
             {formatMoney(order.totalInc)}
-            <span className="home1-orders-card-meta-sub">Inc. VAT</span>
+            {order.totalExc > 0 && order.totalExc !== order.totalInc ? (
+              <span className="home1-orders-card-meta-sub">
+                Subtotal {formatMoney(order.totalExc)}
+              </span>
+            ) : null}
           </dd>
         </div>
       </dl>
 
       <div className="home1-orders-card-actions">
-        <button type="button" className="home1-btn-outline home1-orders-card-btn">
-          View details
+        <button
+          type="button"
+          className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--detail inline-flex items-center justify-center gap-2"
+          onClick={() => onViewDetails(order)}
+          disabled={detailLoading}
+          aria-busy={detailLoading}
+        >
+          {detailLoading ? <ButtonSpinner /> : null}
+          {detailLoading ? "Loading…" : "Order details"}
         </button>
         {order.status === "completed" || order.status === "cancelled" ? (
           <Link href="/checkout" className="home1-btn-primary home1-orders-card-btn">
@@ -115,16 +170,75 @@ function OrdersEmpty({ filterLabel }) {
 }
 
 export default function OrdersPageClient() {
+  const dispatch = useAppDispatch();
+  const {
+    orders,
+    status,
+    error,
+    pagination,
+    detail,
+    detailOrderId,
+    detailStatus,
+    detailError,
+  } = useAppSelector((state) => state.orders);
+
   const [activeFilter, setActiveFilter] = useState("all");
-  const stats = useMemo(() => getOrderStats(MOCK_ORDERS), []);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const listAnchorRef = useRef(null);
+
+  const initialLoading = (status === "loading" || status === "idle") && orders.length === 0;
+  const pageLoading = status === "loading" && orders.length > 0;
+  const detailLoading = detailStatus === "loading";
+
+  const stats = useMemo(() => getOrderStats(orders), [orders]);
 
   const filteredOrders = useMemo(
-    () => MOCK_ORDERS.filter((order) => orderMatchesFilter(order, activeFilter)),
-    [activeFilter]
+    () => orders.filter((order) => orderMatchesFilter(order, activeFilter)),
+    [orders, activeFilter]
   );
 
   const activeFilterLabel =
     ORDER_FILTERS.find((f) => f.id === activeFilter)?.label ?? "All orders";
+
+  const totalCount = pagination?.total ?? orders.length;
+
+  useEffect(() => {
+    dispatch(loadOrders({ page: 1 }));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (activeFilter === "all") return;
+    dispatch(loadOrders({ page: 1 }));
+  }, [activeFilter, dispatch]);
+
+  function openOrderDetail(order) {
+    if (!order.id) {
+      toastError("This order cannot be opened (missing ID).");
+      return;
+    }
+
+    setDetailOpen(true);
+    dispatch(clearOrderDetail());
+    dispatch(loadOrderDetail(order.id))
+      .unwrap()
+      .catch((err) => {
+        toastError(err, "Could not load order details.");
+      });
+  }
+
+  function closeOrderDetail() {
+    if (detailLoading) return;
+    setDetailOpen(false);
+    dispatch(clearOrderDetail());
+  }
+
+  function goToPage(page) {
+    if (!pagination || pageLoading) return;
+    if (page < 1 || page > pagination.lastPage || page === pagination.currentPage) return;
+
+    dispatch(loadOrders({ page }));
+    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <AccountLayout
@@ -134,24 +248,20 @@ export default function OrdersPageClient() {
     >
       <div className="home1-orders-stats">
         <div className="home1-orders-stat home1-card">
-          <p className="home1-orders-stat-value">{stats.total}</p>
+          <p className="home1-orders-stat-value">{initialLoading ? "—" : totalCount}</p>
           <p className="home1-orders-stat-label">Total orders</p>
         </div>
         <div className="home1-orders-stat home1-card home1-orders-stat--accent">
-          <p className="home1-orders-stat-value">{stats.upcoming}</p>
+          <p className="home1-orders-stat-value">{initialLoading ? "—" : stats.upcoming}</p>
           <p className="home1-orders-stat-label">Upcoming</p>
         </div>
         <div className="home1-orders-stat home1-card">
-          <p className="home1-orders-stat-value">{stats.completed}</p>
+          <p className="home1-orders-stat-value">{initialLoading ? "—" : stats.completed}</p>
           <p className="home1-orders-stat-label">Completed</p>
         </div>
       </div>
 
-      <div
-        className="home1-orders-filters"
-        role="tablist"
-        aria-label="Filter orders"
-      >
+      <div className="home1-orders-filters" role="tablist" aria-label="Filter orders">
         {ORDER_FILTERS.map((filter) => {
           const isActive = activeFilter === filter.id;
           return (
@@ -169,17 +279,76 @@ export default function OrdersPageClient() {
         })}
       </div>
 
-      {filteredOrders.length === 0 ? (
-        <OrdersEmpty filterLabel={activeFilterLabel} />
-      ) : (
-        <ul className="home1-orders-list list-none p-0 m-0">
+      {initialLoading ? <OrdersListSkeleton count={3} /> : null}
+
+      {!initialLoading && status === "failed" ? (
+        <div className="home1-orders-empty home1-card">
+          <p className="text-sm text-[#9f1239]">{error}</p>
+          <button
+            type="button"
+            className="home1-btn-outline mt-4"
+            onClick={() => dispatch(loadOrders({ page: 1 }))}
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
+
+      <div ref={listAnchorRef} className="home1-orders-list-anchor" />
+
+      {!initialLoading && status !== "failed" && filteredOrders.length === 0 ? (
+        <OrdersEmpty
+          filterLabel={
+            activeFilter !== "all" && orders.length > 0
+              ? `${activeFilterLabel} on this page`
+              : activeFilterLabel
+          }
+        />
+      ) : null}
+
+      {pageLoading && orders.length > 0 ? (
+        <div className="home1-orders-list-loading" aria-live="polite">
+          <ButtonSpinner className="h-6 w-6 text-[var(--home1-red)]" />
+        </div>
+      ) : null}
+
+      {!initialLoading && status !== "failed" && filteredOrders.length > 0 ? (
+        <ul
+          className={`home1-orders-list list-none p-0 m-0${pageLoading ? " home1-orders-list--busy" : ""}`}
+        >
           {filteredOrders.map((order) => (
             <li key={order.id}>
-              <OrderCard order={order} />
+              <OrderCard
+                order={order}
+                onViewDetails={openOrderDetail}
+                detailLoading={detailLoading && detailOrderId === order.id}
+              />
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
+
+      {!initialLoading && status !== "failed" && pagination && pagination.lastPage > 1 ? (
+        <div className="home1-orders-pagination">
+          {pagination.from && pagination.to ? (
+            <p className="home1-orders-pagination-summary">
+              Showing {pagination.from}–{pagination.to} of {totalCount} orders
+            </p>
+          ) : (
+            <p className="home1-orders-pagination-summary">
+              Page {pagination.currentPage} of {pagination.lastPage} ({totalCount} orders)
+            </p>
+          )}
+          <BlogPagination
+            ariaLabel="Orders pagination"
+            className="home1-orders-pagination-nav mt-0"
+            currentPage={pagination.currentPage}
+            lastPage={pagination.lastPage}
+            loading={pageLoading}
+            onPageChange={goToPage}
+          />
+        </div>
+      ) : null}
 
       <div className="home1-orders-trust home1-card">
         <IconCheck className="w-5 h-5 text-[var(--home1-red)] shrink-0" aria-hidden="true" />
@@ -192,6 +361,14 @@ export default function OrdersPageClient() {
           </p>
         </div>
       </div>
+
+      <OrderDetailModal
+        open={detailOpen}
+        onClose={closeOrderDetail}
+        order={detail}
+        loading={detailLoading}
+        error={detailError}
+      />
     </AccountLayout>
   );
 }

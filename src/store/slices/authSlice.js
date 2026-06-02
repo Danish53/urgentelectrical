@@ -172,6 +172,13 @@ const authSlice = createSlice({
     hydrateResetFlow(state) {
       state.resetFlow = readResetFlow();
     },
+    /** Merge profile API fields into session user (after GET/POST profile). */
+    setAuthUser(state, action) {
+      const next = action.payload;
+      if (!next || typeof next !== "object") return;
+      state.user = { ...(state.user ?? {}), ...next };
+      setStoredAuthUser(state.user);
+    },
     clearResetFlow(state) {
       state.resetFlow = { email: null, otp: null, otpVerified: false };
       clearResetFlowStorage();
@@ -224,6 +231,7 @@ export const {
   logout,
   hydrateAuthSession,
   hydrateResetFlow,
+  setAuthUser,
   clearResetFlow,
 } = authSlice.actions;
 

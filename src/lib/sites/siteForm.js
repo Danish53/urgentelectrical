@@ -84,6 +84,9 @@ export function siteFromForm(form, id) {
     addressLine2: form.addressLine2.trim(),
     townCity: town,
     county: form.county.trim(),
+    title: form.title.trim(),
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
   };
 }
 
@@ -111,9 +114,9 @@ export function siteToForm(site) {
     townCity: site.townCity || "",
     county: site.county || "",
     isDefault: Boolean(site.primary),
-    title: "",
-    firstName: "",
-    lastName: "",
+    title: site.title ?? "",
+    firstName: site.firstName ?? "",
+    lastName: site.lastName ?? "",
     mobile: site.phone && site.phone !== "—" ? site.phone : "",
     email: site.email || "",
     description: site.notes || "",

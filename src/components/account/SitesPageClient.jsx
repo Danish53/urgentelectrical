@@ -1,65 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AccountLayout from "@/components/account/AccountLayout";
 import CreateSiteModal from "@/components/account/CreateSiteModal";
-import { toastSuccess } from "@/lib/toast";
+import BlogPagination from "@/components/blog/BlogPagination";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
+import { siteToForm } from "@/lib/sites/siteForm";
+import { toastError, toastSuccess } from "@/lib/toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  applyNewSite,
-  applyUpdatedSite,
-  removeSite,
-  siteFromForm,
-  siteToForm,
-} from "@/lib/sites/siteForm";
+  clearSitesSaveError,
+  createSite,
+  fetchSiteById,
+  fetchSites,
+  updateSite,
+} from "@/store/slices/sitesSlice";
+import SitesListSkeleton from "@/components/skeletons/SitesListSkeleton";
 import { IconArrow, IconCalendar } from "@/components/home1/icons";
-
-/** @type {import("@/lib/sites/siteTypes").SavedSite[]} */
-const INITIAL_SITES = [
-  {
-    id: "site-1",
-    name: "Head Office",
-    contact: "Israr Munir",
-    phone: "0115 778 0622",
-    address: "42 Mapperley Road, Nottingham NG3 5FS",
-    notes: "Main office reception. Parking available at rear.",
-    jobs: 6,
-    lastVisit: "12 May 2026",
-    primary: true,
-    addressLine1: "42 Mapperley Road",
-    townCity: "Nottingham",
-    postcode: "NG3 5FS",
-  },
-  {
-    id: "site-2",
-    name: "Warehouse Unit",
-    contact: "Operations Team",
-    phone: "0115 778 0622",
-    address: "Unit 4 Riverside Park, Derby DE1 2AY",
-    notes: "Call site manager 20 mins before arrival.",
-    jobs: 3,
-    lastVisit: "21 Apr 2026",
-    primary: false,
-    addressLine1: "Unit 4 Riverside Park",
-    townCity: "Derby",
-    postcode: "DE1 2AY",
-  },
-];
+import "@/components/skeletons/skeleton.css";
 
 /**
  * @param {{
  *   site: import("@/lib/sites/siteTypes").SavedSite,
- *   onEdit: (id: string) => void,
- *   onDelete: (id: string) => void,
+ *   onUpdate: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
+ *   busy?: boolean,
  * }} props
  */
-function SiteCard({ site, onEdit, onDelete }) {
+function SiteCard({ site, onUpdate, busy = false }) {
   return (
-    <article className="home1-sites-card home1-card">
+    <article
+      className={`home1-sites-card home1-card${site.primary ? " home1-sites-card--default" : ""}`}
+    >
       <div className="home1-sites-card-head">
         <div className="min-w-0">
           <h2 className="home1-sites-card-title">
             {site.name}
-            {site.primary ? <span className="home1-sites-primary-badge">Default</span> : null}
+            {site.primary ? (
+              <span className="home1-sites-primary-badge" title="Default site address">
+                Default site
+              </span>
+            ) : null}
           </h2>
           <p className="home1-sites-card-contact">{site.contact}</p>
         </div>
@@ -94,24 +74,19 @@ function SiteCard({ site, onEdit, onDelete }) {
       <div className="home1-sites-card-actions">
         <button
           type="button"
-          className="home1-btn-outline home1-sites-btn"
-          onClick={() => onEdit(site.id)}
+          className="home1-btn-primary home1-sites-btn home1-sites-btn--update"
+          onClick={() => onUpdate(site)}
+          disabled={busy || !site.id}
+          aria-label={`Update ${site.name}`}
         >
-          Edit
-        </button>
-        <button
-          type="button"
-          className="home1-btn-outline home1-sites-btn home1-sites-btn--danger"
-          onClick={() => onDelete(site.id)}
-        >
-          Delete
+          Update
         </button>
       </div>
     </article>
   );
 }
 
-function SitesEmpty({ onCreate }) {
+function SitesEmpty({ onCreate, disabled }) {
   return (
     <div className="home1-sites-empty home1-card">
       <div className="home1-sites-empty-icon" aria-hidden="true">
@@ -121,7 +96,12 @@ function SitesEmpty({ onCreate }) {
       <p className="home1-sites-empty-text">
         Add your first job location to speed up checkout and keep visit notes in one place.
       </p>
-      <button type="button" className="home1-btn-primary inline-flex items-center gap-2" onClick={onCreate}>
+      <button
+        type="button"
+        className="home1-btn-primary inline-flex items-center gap-2"
+        onClick={onCreate}
+        disabled={disabled}
+      >
         Create site
         <IconArrow className="w-4 h-4" aria-hidden="true" />
       </button>
@@ -130,71 +110,94 @@ function SitesEmpty({ onCreate }) {
 }
 
 export default function SitesPageClient() {
-  const [sites, setSites] = useState(INITIAL_SITES);
+  const dispatch = useAppDispatch();
+  const { sites, status, error, pagination, saving, saveError } = useAppSelector((state) => state.sites);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState(null);
+  const listAnchorRef = useRef(null);
+
+  const initialLoading = (status === "loading" || status === "idle") && sites.length === 0;
+  const pageLoading = status === "loading" && sites.length > 0;
+  const busy = saving;
 
   const editingSite = editingId ? sites.find((s) => s.id === editingId) : null;
   const modalMode = editingId ? "edit" : "create";
-  const modalInitialForm = editingSite ? siteToForm(editingSite) : undefined;
+  const modalInitialForm = editForm ?? (editingSite ? siteToForm(editingSite) : undefined);
+
+  const totalCount = pagination?.total ?? sites.length;
+  const defaultSite = sites.find((s) => s.primary);
 
   const stats = useMemo(
     () => ({
-      total: sites.length,
-      primary: sites.filter((s) => s.primary).length,
+      total: totalCount,
+      hasDefault: Boolean(defaultSite),
       jobs: sites.reduce((sum, s) => sum + s.jobs, 0),
     }),
-    [sites]
+    [totalCount, defaultSite, sites]
   );
+
+  useEffect(() => {
+    dispatch(fetchSites({ page: 1 }));
+  }, [dispatch]);
 
   function openCreateModal() {
     setEditingId(null);
+    setEditForm(null);
     setModalOpen(true);
   }
 
-  function openEditModal(id) {
+  function openUpdateModal(site) {
+    const id = String(site.id ?? "").trim();
+    if (!id) {
+      toastError("This site cannot be updated (missing ID).");
+      return;
+    }
+
     setEditingId(id);
+    setEditForm(siteToForm(site));
     setModalOpen(true);
+
+    dispatch(fetchSiteById(id))
+      .unwrap()
+      .then((fresh) => setEditForm(siteToForm(fresh)))
+      .catch((err) => toastError(err, "Could not refresh site details."));
   }
 
   function closeModal() {
     if (saving) return;
     setModalOpen(false);
     setEditingId(null);
+    setEditForm(null);
+    dispatch(clearSitesSaveError());
   }
 
   async function handleSubmitSite(form) {
-    setSaving(true);
-    await new Promise((r) => setTimeout(r, 500));
+    dispatch(clearSitesSaveError());
 
-    if (editingId) {
-      const existing = sites.find((s) => s.id === editingId);
-      const updated = siteFromForm(form, editingId);
-      if (existing) {
-        updated.jobs = existing.jobs;
-        updated.lastVisit = existing.lastVisit;
+    try {
+      if (editingId) {
+        await dispatch(updateSite({ id: editingId, form })).unwrap();
+        toastSuccess(form.isDefault ? "Default site updated." : "Site updated successfully.");
+      } else {
+        await dispatch(createSite(form)).unwrap();
+        toastSuccess(form.isDefault ? "Default site saved." : "Site added successfully.");
       }
-      setSites((prev) => applyUpdatedSite(prev, updated));
-      toastSuccess(updated.primary ? "Default site updated." : "Site updated successfully.");
-    } else {
-      const added = siteFromForm(form);
-      setSites((prev) => applyNewSite(prev, added));
-      toastSuccess(added.primary ? "Default site saved." : "Site added successfully.");
+      setModalOpen(false);
+      setEditingId(null);
+      setEditForm(null);
+    } catch (err) {
+      toastError(err, "Could not save site.");
     }
-
-    setSaving(false);
-    setModalOpen(false);
-    setEditingId(null);
   }
 
-  function handleDeleteSite(id) {
-    const site = sites.find((s) => s.id === id);
-    if (!site) return;
-    const confirmed = window.confirm(`Delete "${site.name}"? This cannot be undone.`);
-    if (!confirmed) return;
-    setSites((prev) => removeSite(prev, id));
-    toastSuccess("Site deleted.");
+  function goToPage(page) {
+    if (!pagination || pageLoading) return;
+    if (page < 1 || page > pagination.lastPage || page === pagination.currentPage) return;
+
+    dispatch(fetchSites({ page }));
+    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -205,18 +208,25 @@ export default function SitesPageClient() {
     >
       <div className="home1-sites-stats">
         <div className="home1-sites-stat home1-card">
-          <p className="home1-sites-stat-value">{stats.total}</p>
+          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.total}</p>
           <p className="home1-sites-stat-label">Saved sites</p>
         </div>
         <div className="home1-sites-stat home1-card home1-sites-stat--accent">
-          <p className="home1-sites-stat-value">{stats.primary}</p>
-          <p className="home1-sites-stat-label">Default address</p>
+          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.hasDefault ? "Yes" : "No"}</p>
+          <p className="home1-sites-stat-label">Default set</p>
         </div>
         <div className="home1-sites-stat home1-card">
-          <p className="home1-sites-stat-value">{stats.jobs}</p>
-          <p className="home1-sites-stat-label">Jobs completed</p>
+          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.jobs}</p>
+          <p className="home1-sites-stat-label">Jobs on this page</p>
         </div>
       </div>
+
+      {defaultSite && !initialLoading ? (
+        <p className="home1-sites-default-hint">
+          Default address: <strong>{defaultSite.name}</strong>
+          {defaultSite.address ? ` · ${defaultSite.address}` : ""}
+        </p>
+      ) : null}
 
       <section className="home1-sites-panel home1-card w-full">
         <header className="home1-sites-panel-head home1-sites-panel-head--row">
@@ -228,31 +238,89 @@ export default function SitesPageClient() {
             type="button"
             className="home1-btn-primary home1-sites-create-btn"
             onClick={openCreateModal}
+            disabled={busy}
           >
             Create site
           </button>
         </header>
 
-        {sites.length === 0 ? (
-          <SitesEmpty onCreate={openCreateModal} />
-        ) : (
-          <ul className="home1-sites-list p-0 m-0">
+        <div ref={listAnchorRef} className="home1-sites-list-anchor" />
+
+        {initialLoading ? <SitesListSkeleton count={3} /> : null}
+
+        {!initialLoading && status === "failed" ? (
+          <div className="home1-sites-error px-4 py-6">
+            <p className="text-sm text-[#9f1239]">{error}</p>
+            <button
+              type="button"
+              className="home1-btn-outline home1-sites-btn mt-3"
+              onClick={() => dispatch(fetchSites({ page: 1 }))}
+            >
+              Try again
+            </button>
+          </div>
+        ) : null}
+
+        {!initialLoading && status !== "failed" && sites.length === 0 ? (
+          <SitesEmpty onCreate={openCreateModal} disabled={saving} />
+        ) : null}
+
+        {pageLoading ? (
+          <div className="home1-sites-list-loading" aria-live="polite">
+            <ButtonSpinner className="h-6 w-6 text-[var(--home1-red)]" />
+          </div>
+        ) : null}
+
+        {!initialLoading && status !== "failed" && sites.length > 0 ? (
+          <ul className={`home1-sites-list p-0 m-0${pageLoading ? " home1-sites-list--busy" : ""}`}>
             {sites.map((site) => (
               <li key={site.id}>
-                <SiteCard site={site} onEdit={openEditModal} onDelete={handleDeleteSite} />
+                <SiteCard site={site} onUpdate={openUpdateModal} busy={saving} />
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
+
+        {!initialLoading && status !== "failed" && pagination && sites.length > 0 ? (
+          <div className="home1-sites-pagination">
+            {pagination.from && pagination.to ? (
+              <p className="home1-sites-pagination-summary">
+                Showing {pagination.from}–{pagination.to} of {totalCount} sites
+              </p>
+            ) : (
+              <p className="home1-sites-pagination-summary">
+                {totalCount} saved {totalCount === 1 ? "site" : "sites"}
+              </p>
+            )}
+            {pagination.lastPage > 1 ? (
+              <BlogPagination
+                ariaLabel="Sites pagination"
+                className="home1-sites-pagination-nav mt-0"
+                currentPage={pagination.currentPage}
+                lastPage={pagination.lastPage}
+                loading={pageLoading}
+                onPageChange={goToPage}
+              />
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
+      {saveError ? (
+        <p className="mt-4 text-sm text-[#9f1239]" role="alert">
+          {saveError}
+        </p>
+      ) : null}
+
       <CreateSiteModal
+        key={editingId ? `edit-${editingId}` : "create"}
         open={modalOpen}
         onClose={closeModal}
         onSubmit={handleSubmitSite}
         saving={saving}
         mode={modalMode}
         initialForm={modalInitialForm}
+        siteName={editingSite?.name}
       />
     </AccountLayout>
   );

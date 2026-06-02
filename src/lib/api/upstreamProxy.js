@@ -6,11 +6,12 @@ export function getApiBaseUrl() {
 }
 
 /**
- * Server-side POST to Laravel API (no browser CSRF).
- * @param {string} upstreamPath - e.g. `/auth/login`
- * @param {Record<string, unknown>} body
+ * Server-side request to Laravel API (no browser CSRF).
+ * @param {string} method
+ * @param {string} upstreamPath
+ * @param {{ body?: Record<string, unknown>, authorization?: string | null }} [options]
  */
-export async function upstreamJsonPost(upstreamPath, body) {
+export async function upstreamJsonRequest(method, upstreamPath, options = {}) {
   const apiBase = getApiBaseUrl();
   if (!apiBase) {
     return {
@@ -21,15 +22,19 @@ export async function upstreamJsonPost(upstreamPath, body) {
   }
 
   const path = upstreamPath.startsWith("/") ? upstreamPath : `/${upstreamPath}`;
+  const { body, authorization } = options;
+
+  const headers = {
+    Accept: "application/json",
+    ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+    ...(authorization ? { Authorization: authorization } : {}),
+  };
 
   try {
     const upstream = await fetch(`${apiBase}${path}`, {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
+      method,
+      headers,
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       cache: "no-store",
     });
 
@@ -46,7 +51,9 @@ export async function upstreamJsonPost(upstreamPath, body) {
     return {
       ok: upstream.ok,
       status: upstream.status,
-      data: data ?? (upstream.ok ? { success: true } : { message: `Request failed (${upstream.status})` }),
+      data:
+        data ??
+        (upstream.ok ? { success: true } : { message: `Request failed (${upstream.status})` }),
     };
   } catch {
     return {
@@ -55,4 +62,22 @@ export async function upstreamJsonPost(upstreamPath, body) {
       data: { message: "Unable to reach the server. Please try again." },
     };
   }
+}
+
+/**
+ * Server-side POST to Laravel API (no browser CSRF).
+ * @param {string} upstreamPath - e.g. `/auth/login`
+ * @param {Record<string, unknown>} body
+ */
+export async function upstreamJsonPost(upstreamPath, body) {
+  const apiBase = getApiBaseUrl();
+  if (!apiBase) {
+    return {
+      ok: false,
+      status: 500,
+      data: { message: "API base URL is not configured." },
+    };
+  }
+
+  return upstreamJsonRequest("POST", upstreamPath, { body });
 }

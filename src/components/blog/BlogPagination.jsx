@@ -21,15 +21,22 @@ function buildPageNumbers(current, last) {
   return result;
 }
 
-export default function BlogPagination({ currentPage, lastPage, loading, onPageChange }) {
+export default function BlogPagination({
+  currentPage,
+  lastPage,
+  loading,
+  onPageChange,
+  ariaLabel = "Pagination",
+  className = "",
+}) {
   if (lastPage <= 1) return null;
 
   const pages = buildPageNumbers(currentPage, lastPage);
 
   return (
     <nav
-      className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-10 sm:mt-12"
-      aria-label="Blog pagination"
+      className={`flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 ${className}`.trim()}
+      aria-label={ariaLabel}
     >
       <button
         type="button"

@@ -39,7 +39,7 @@ export default function AccountSidebar({ active }) {
         <a href="tel:01157780622" className="home1-account-sidebar-help-phone">
           0115 778 0622
         </a>
-        <Link href="/checkout" className="home1-btn-primary home1-account-sidebar-cta">
+        <Link href="/services" className="home1-btn-primary home1-account-sidebar-cta">
           Book online
         </Link>
       </div>
