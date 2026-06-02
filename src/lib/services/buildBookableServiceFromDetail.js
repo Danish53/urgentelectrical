@@ -1,10 +1,11 @@
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { slugify } from "@/lib/slugs";
+import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
 import {
+  getServiceLongDescription,
   resolveDetailExtra,
-  resolveServiceSlugFromApi,
-} from "@/lib/services/buildBookableService";
+} from "@/lib/services/resolveServiceDetailSlug";
 
 const SITE = "https://www.urgentelectrical.services";
 
@@ -79,7 +80,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const description =
     String(api.description ?? "").trim() ||
     "Fixed-price electrical service — book online with NICEIC approved engineers.";
-  const extra = resolveDetailExtra(slug);
+  const extra = resolveDetailExtra(slug, name);
   const meta = FALLBACK_META[name] ?? { color: "#D3231F" };
   const isEmergency =
     name.toLowerCase().includes("emergency") || slug.includes("emergency");
@@ -104,7 +105,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     variants,
     priceDisplay,
     longDescriptionHtml: null,
-    longDescription: extra.longDescription ?? [description],
+    longDescription: getServiceLongDescription(extra, description, name),
     includes: extra.includes ?? [],
     features: extra.features ?? [],
     faqs: extra.faqs ?? [],

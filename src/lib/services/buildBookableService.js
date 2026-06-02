@@ -1,7 +1,13 @@
-import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { serviceSlug } from "@/lib/slugs";
+import {
+  DETAIL_SLUG_ALIASES,
+  getServiceLongDescription,
+  resolveDetailExtra,
+} from "@/lib/services/resolveServiceDetailSlug";
+
+export { DETAIL_SLUG_ALIASES };
 
 const SITE = "https://www.urgentelectrical.services";
 
@@ -76,13 +82,6 @@ function resolveServiceCategoryFields(category, serviceCategoryId) {
   };
 }
 
-/** Map client-generated slug variants to API / static detail keys */
-export const DETAIL_SLUG_ALIASES = {
-  "emergency-lighting-periodic-inspection-and-testing-certificate":
-    "emergency-lighting-periodic-inspection-and-testing",
-  "socket-replacment": "socket-replacement",
-};
-
 function buildServiceVariants(extraVariants) {
   if (!extraVariants?.length) return null;
   return extraVariants.map((v) => {
@@ -95,14 +94,6 @@ function buildServiceVariants(extraVariants) {
   });
 }
 
-
-/** Static detail copy (about, includes, FAQs) keyed by service slug. */
-export function resolveDetailExtra(slug) {
-  if (SERVICE_DETAIL_EXTRA[slug]) return SERVICE_DETAIL_EXTRA[slug];
-  const alias = DETAIL_SLUG_ALIASES[slug];
-  if (alias && SERVICE_DETAIL_EXTRA[alias]) return SERVICE_DETAIL_EXTRA[alias];
-  return {};
-}
 
 /**
  * Resolve canonical API slug (list links must match GET /services/{slug}).
@@ -122,7 +113,7 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
   const name = api.title?.trim() ?? "Electrical service";
   const price = String(api.price ?? "0");
   const slug = resolveServiceSlugFromApi(api);
-  const extra = resolveDetailExtra(slug);
+  const extra = resolveDetailExtra(slug, name);
   const meta = IMAGE_MAP[name] ?? { image: "/featured/pat.jpg", color: "#D3231F" };
   const { category, categoryLabel, serviceCategoryId } = resolveServiceCategoryFields(
     categoryMap[api.service_category_id],
@@ -161,7 +152,7 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     priceIncVat,
     variants,
     priceDisplay,
-    longDescription: extra.longDescription ?? [description],
+    longDescription: getServiceLongDescription(extra, description, name),
     features: extra.features ?? [],
     includes: extra.includes ?? [],
     faqs: extra.faqs ?? [],

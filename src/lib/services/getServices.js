@@ -5,6 +5,7 @@ import {
 } from "@/lib/services/buildBookableService";
 import { buildBookableServiceFromDetailApi } from "@/lib/services/buildBookableServiceFromDetail";
 import { getServiceCategories } from "@/lib/services/getServiceCategories";
+import { resolveServiceDetailSlug } from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 
@@ -99,6 +100,15 @@ export async function getServiceDetailBySlug(slug) {
     }
   } catch {
     /* no match */
+  }
+
+  const detailSlug = resolveServiceDetailSlug(normalized);
+  if (detailSlug && detailSlug !== normalized) {
+    try {
+      return await loadServiceDetail(detailSlug);
+    } catch {
+      /* no match */
+    }
   }
 
   return null;
