@@ -648,6 +648,19 @@
   box-shadow: 0 2px 12px rgba(17, 24, 39, 0.04);
 }
 
+.stripe-card-box {
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: white;
+  transition: 0.2s ease;
+}
+
+.stripe-card-box:focus-within {
+  border-color: #635bff;
+  box-shadow: 0 0 0 3px rgba(99, 91, 255, 0.15);
+}
+
 @media (min-width: 640px) {
   .home1-checkout-card {
     padding: 1rem 1.15rem;

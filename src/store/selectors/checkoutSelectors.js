@@ -1,0 +1,14 @@
+export const selectCheckoutStep = (s) => s.checkout.step;
+export const selectSelectedDate = (s) => s.checkout.selectedDate;
+export const selectSelectedTime = (s) => s.checkout.selectedTime;
+export const selectCheckoutDetails = (s) => s.checkout.details;
+export const selectValidateStatus = (s) => s.checkout.validateStatus;
+export const selectValidateError = (s) => s.checkout.validateError;
+export const selectValidatedOrderData = (s) => s.checkout.validatedOrderData;
+export const selectPaymentIntentId = (s) => s.checkout.paymentIntentId;
+export const selectClientSecret = (s) => s.checkout.clientSecret;
+export const selectPaymentIntentStatus = (s) => s.checkout.paymentIntentStatus;
+export const selectPaymentIntentError = (s) => s.checkout.paymentIntentError;
+export const selectPaymentStatus = (s) => s.checkout.paymentStatus;
+export const selectPaymentStatusError = (s) => s.checkout.paymentStatusError;
+export const selectPaymentVerified = (s) => s.checkout.paymentVerified;

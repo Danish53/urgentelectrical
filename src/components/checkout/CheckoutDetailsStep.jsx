@@ -9,6 +9,7 @@ export default function CheckoutDetailsStep({
   onBack,
   onContinue,
   error,
+  submitting = false,
 }) {
   function set(field, value) {
     onChange({ ...details, [field]: value });
@@ -79,6 +80,42 @@ export default function CheckoutDetailsStep({
             required
           />
         </div>
+
+        <div className="home1-checkout-form-grid">
+          <div>
+            <label htmlFor="checkout-password" className={labelClass}>
+              Password<span className="text-[#d3231f]">*</span>
+            </label>
+            <input
+              id="checkout-password"
+              type="password"
+              value={details.password ?? ""}
+              onChange={(e) => set("password", e.target.value)}
+              className={inputClass}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="checkout-password-confirm" className={labelClass}>
+              Confirm password<span className="text-[#d3231f]">*</span>
+            </label>
+            <input
+              id="checkout-password-confirm"
+              type="password"
+              value={details.passwordConfirmation ?? ""}
+              onChange={(e) => set("passwordConfirmation", e.target.value)}
+              className={inputClass}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+        </div>
+        <p className="text-[var(--home1-muted)] text-xs leading-relaxed -mt-1">
+          Create a password to manage bookings in your account.
+        </p>
 
         <div>
           <label htmlFor="checkout-phone" className={labelClass}>
@@ -154,9 +191,9 @@ export default function CheckoutDetailsStep({
           <button type="button" onClick={onBack} className="home1-checkout-back-btn">
             ← Back
           </button>
-          <button type="submit" className="home1-checkout-continue">
-            <span>Continue to payment</span>
-            <span className="home1-checkout-continue-arrow" aria-hidden="true">→</span>
+          <button type="submit" className="home1-checkout-continue" disabled={submitting}>
+            <span>{submitting ? "Validating…" : "Continue to payment"}</span>
+            {!submitting ? <span className="home1-checkout-continue-arrow" aria-hidden="true">→</span> : null}
           </button>
         </div>
       </form>

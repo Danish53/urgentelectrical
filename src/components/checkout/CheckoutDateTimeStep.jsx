@@ -34,13 +34,17 @@ function CalNavIcon({ direction }) {
 }
 
 export default function CheckoutDateTimeStep({
-  schedules = [],
   selectedDate,
   selectedTime,
   onSelectDate,
   onSelectTime,
   onContinue,
   error,
+  timeSlots = [],
+  slotsLoading = false,
+  slotsError = null,
+  useDynamicSchedule = false,
+  schedules = [],
 }) {
   const today = useMemo(() => getTodayStart(), []);
   const [viewYear, setViewYear] = useState(
@@ -49,12 +53,21 @@ export default function CheckoutDateTimeStep({
   const [viewMonth, setViewMonth] = useState(selectedDate?.getMonth() ?? today.getMonth());
 
   const cells = useMemo(() => getCalendarCells(viewYear, viewMonth), [viewYear, viewMonth]);
-  const hasSchedules = schedules.length > 0;
-  const slotsAvailable = selectedDate ? dateHasAvailableSlots(selectedDate, schedules) : false;
-  const timeSlots = useMemo(
-    () => getTimeSlotsForBooking(selectedDate, schedules),
-    [selectedDate, schedules]
-  );
+  const hasStaticSchedules = !useDynamicSchedule && schedules.length > 0;
+  const slotsAvailable = useDynamicSchedule
+    ? Boolean(selectedDate) && !slotsLoading && timeSlots.length > 0
+    : selectedDate
+      ? dateHasAvailableSlots(selectedDate, schedules)
+      : false;
+  const displaySlots = useDynamicSchedule
+    ? timeSlots
+    : getTimeSlotsForBooking(selectedDate, schedules);
+
+  function isDateDisabled(date) {
+    if (isPastDate(date)) return true;
+    if (useDynamicSchedule) return false;
+    return !dateHasAvailableSlots(date, schedules);
+  }
 
   function prevMonth() {
     const d = new Date(viewYear, viewMonth - 1, 1);
@@ -71,7 +84,7 @@ export default function CheckoutDateTimeStep({
   function goToToday() {
     setViewYear(today.getFullYear());
     setViewMonth(today.getMonth());
-    if (dateHasAvailableSlots(today, schedules)) onSelectDate(new Date(today));
+    if (useDynamicSchedule || dateHasAvailableSlots(today, schedules)) onSelectDate(new Date(today));
   }
 
   return (
@@ -99,7 +112,11 @@ export default function CheckoutDateTimeStep({
           <div>
             <h3 className="home1-checkout-card-title">Select a date</h3>
             <p className="home1-checkout-card-sub">
-              {hasSchedules ? "Dates match this service schedule" : "Available Monday – Saturday"}
+              {useDynamicSchedule
+                ? "Choose a date to see available slots"
+                : hasStaticSchedules
+                  ? "Dates match this service schedule"
+                  : "Available Monday – Saturday"}
             </p>
           </div>
           <button type="button" onClick={goToToday} className="home1-checkout-today-btn">
@@ -133,7 +150,7 @@ export default function CheckoutDateTimeStep({
             if (!date) {
               return <span key={`empty-${i}`} className="home1-checkout-cal-empty" />;
             }
-            const disabled = isPastDate(date) || !dateHasAvailableSlots(date, schedules);
+            const disabled = isDateDisabled(date);
             const selected = isSameDay(date, selectedDate);
             const todayCell = isToday(date);
             return (
@@ -157,13 +174,25 @@ export default function CheckoutDateTimeStep({
         </div>
       </div>
 
-      {selectedDate && !slotsAvailable ? (
+      {selectedDate && useDynamicSchedule && slotsLoading ? (
+        <p className="home1-checkout-alert home1-checkout-card-sub" role="status">
+          Loading available time slots…
+        </p>
+      ) : null}
+
+      {slotsError ? (
+        <p className="home1-checkout-alert home1-checkout-alert--error" role="alert">
+          {slotsError}
+        </p>
+      ) : null}
+
+      {selectedDate && !slotsLoading && !slotsAvailable && !slotsError ? (
         <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
           No time slots on this day. Please choose another date.
         </p>
       ) : null}
 
-      {selectedDate && slotsAvailable && timeSlots.length > 0 ? (
+      {selectedDate && slotsAvailable && displaySlots.length > 0 ? (
         <div className="home1-checkout-card home1-checkout-times-card">
           <div className="home1-checkout-card-head">
             <div>
@@ -173,7 +202,7 @@ export default function CheckoutDateTimeStep({
           </div>
 
           <div className="home1-checkout-schedule-grid" role="group" aria-label="Available time slots">
-            {timeSlots.map((slot) => {
+            {displaySlots.map((slot) => {
               const isSelected = selectedTime === slot.value;
               return (
                 <button
@@ -198,7 +227,7 @@ export default function CheckoutDateTimeStep({
         </div>
       ) : null}
 
-      {hasSchedules && !timeSlots.length && selectedDate && slotsAvailable ? (
+      {hasStaticSchedules && !displaySlots.length && selectedDate && slotsAvailable ? (
         <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
           No slots listed for this date. Try another day.
         </p>
@@ -214,7 +243,7 @@ export default function CheckoutDateTimeStep({
         type="button"
         onClick={onContinue}
         className="home1-checkout-continue"
-        disabled={!selectedDate || !selectedTime}
+        disabled={!selectedDate || !selectedTime || slotsLoading}
       >
         <span>Continue to your details</span>
         <span className="home1-checkout-continue-arrow" aria-hidden="true">

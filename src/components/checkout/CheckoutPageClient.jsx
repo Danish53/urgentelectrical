@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -21,22 +20,41 @@ import {
   getDefaultCheckoutService,
 } from "@/data/checkoutPage";
 import { useCheckoutSessionTimer } from "@/hooks/useCheckoutSessionTimer";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
+import {
+  validateOrderData,
+  createPaymentIntent,
+  checkPaymentStatus,
+} from "@/store/slices/Checkoutslice";
+import {
+  selectClientSecret,
+  selectPaymentIntentId,
+  selectValidateStatus,
+  selectValidateError,
+  selectPaymentIntentStatus,
+  selectPaymentIntentError,
+  selectPaymentStatusError,
+} from "@/store/selectors/checkoutSelectors";
 import { useBookableServices } from "@/hooks/useServices";
 import { useCheckoutServiceDetail } from "@/hooks/useCheckoutServiceDetail";
+import { useServiceScheduleSlots } from "@/hooks/useServiceScheduleSlots";
 import CheckoutMainSkeleton from "@/components/skeletons/CheckoutMainSkeleton";
 import CheckoutSummarySkeleton from "@/components/skeletons/CheckoutSummarySkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
-import {
-  dateHasAvailableSlots,
-  getDefaultBookingDateForSchedules,
-} from "@/components/checkout/checkoutUtils";
+import { getTodayStart } from "@/components/checkout/checkoutUtils";
+
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
 const EMPTY_DETAILS = {
   firstName: "",
   lastName: "",
   email: "",
+  password: "",
+  passwordConfirmation: "",
   phone: "",
   address: "",
   city: "",
@@ -60,9 +78,16 @@ export default function CheckoutPageClient() {
   const [complete, setComplete] = useState(false);
 
   const dispatch = useAppDispatch();
+  const clientSecret = useAppSelector(selectClientSecret);
+  const paymentIntentId = useAppSelector(selectPaymentIntentId);
+  const validateStatus = useAppSelector(selectValidateStatus);
+  const validateError = useAppSelector(selectValidateError);
+  const paymentIntentStatus = useAppSelector(selectPaymentIntentStatus);
+  const paymentIntentError = useAppSelector(selectPaymentIntentError);
+  const paymentStatusError = useAppSelector(selectPaymentStatusError);
   const { bookable, loading: servicesLoading, failed: servicesFailed, error: servicesError } =
     useBookableServices();
-  const { service: detailService, schedules, loading: detailLoading, failed: detailFailed } =
+  const { service: detailService, loading: detailLoading, failed: detailFailed } =
     useCheckoutServiceDetail(slug);
 
   const bookingList = useMemo(
@@ -79,6 +104,13 @@ export default function CheckoutPageClient() {
     }
     return getDefaultCheckoutService(bookingList);
   }, [searchParams, detailService, bookable, bookingList]);
+
+  const useDynamicSchedule = Boolean(service?.apiId);
+  const {
+    slots: scheduleSlots,
+    loading: scheduleSlotsLoading,
+    error: scheduleSlotsError,
+  } = useServiceScheduleSlots(useDynamicSchedule ? service?.apiId : null, selectedDate);
 
   const selectedVariant = useMemo(() => {
     if (!service?.variants?.length) return null;
@@ -106,10 +138,9 @@ export default function CheckoutPageClient() {
   }, [initialPostcode]);
 
   useEffect(() => {
-    if (!schedules.length) return;
-    const next = getDefaultBookingDateForSchedules(schedules);
-    if (next) setSelectedDate(next);
-  }, [schedules]);
+    if (!service?.apiId || selectedDate) return;
+    setSelectedDate(getTodayStart());
+  }, [service?.apiId, selectedDate]);
 
   function handleSelectDate(date) {
     setSelectedDate(date);
@@ -118,11 +149,20 @@ export default function CheckoutPageClient() {
   }
 
   function validateStep1() {
-    if (!selectedDate || !dateHasAvailableSlots(selectedDate, schedules)) {
+    if (!selectedDate) {
       setStepError("Please select an available date.");
       return false;
     }
-    if (!selectedTime) {
+    if (useDynamicSchedule) {
+      if (scheduleSlotsLoading) {
+        setStepError("Loading time slots. Please wait.");
+        return false;
+      }
+      if (!selectedTime || !scheduleSlots.length) {
+        setStepError("Please select a time slot to continue.");
+        return false;
+      }
+    } else if (!selectedTime) {
       setStepError("Please select a time slot to continue.");
       return false;
     }
@@ -131,8 +171,18 @@ export default function CheckoutPageClient() {
   }
 
   function validateStep2() {
-    const { firstName, lastName, email, phone, address, postcode } = details;
-    if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !address.trim() || !postcode.trim()) {
+    const { firstName, lastName, email, phone, address, postcode, password, passwordConfirmation } =
+      details;
+    if (
+      !firstName.trim() ||
+      !lastName.trim() ||
+      !email.trim() ||
+      !phone.trim() ||
+      !address.trim() ||
+      !postcode.trim() ||
+      !String(password ?? "").trim() ||
+      !String(passwordConfirmation ?? "").trim()
+    ) {
       setStepError("Please complete all required fields.");
       return false;
     }
@@ -140,17 +190,71 @@ export default function CheckoutPageClient() {
       setStepError("Please enter a valid email address.");
       return false;
     }
+    if (String(password).trim().length < 8) {
+      setStepError("Password must be at least 8 characters.");
+      return false;
+    }
+    if (String(password).trim() !== String(passwordConfirmation).trim()) {
+      setStepError("Passwords do not match.");
+      return false;
+    }
     setStepError("");
     return true;
   }
 
+  async function handleContinueToPayment() {
+    if (!validateStep2()) return;
+
+    const amount = parseFloat(lineItems.totalInc) || 0;
+    if (!service?.apiId) {
+      setStepError("Service is not available for booking. Please choose a service and try again.");
+      return;
+    }
+
+    setStepError("");
+
+    const intentResult = await dispatch(createPaymentIntent(amount));
+    if (createPaymentIntent.rejected.match(intentResult)) {
+      setStepError(intentResult.payload ?? paymentIntentError ?? "Could not start payment.");
+      return;
+    }
+
+    const intentId = intentResult.payload?.paymentIntentId ?? paymentIntentId;
+
+    const validateResult = await dispatch(
+      validateOrderData({
+        service,
+        variant: selectedVariant,
+        selectedDate,
+        selectedTime,
+        schedules: scheduleSlots,
+        details,
+        lineItems,
+        paymentIntentId: intentId,
+      })
+    );
+
+    if (validateOrderData.rejected.match(validateResult)) {
+      setStepError(validateResult.payload ?? validateError ?? "Could not validate your booking.");
+      return;
+    }
+
+    setStep(3);
+  }
+
+  async function handleCheckPaymentStatus(intentId) {
+    const result = await dispatch(checkPaymentStatus(intentId));
+    if (checkPaymentStatus.rejected.match(result)) {
+      // Stripe already confirmed payment — don't block success if backend auth fails.
+      return false;
+    }
+    return true;
+  }
+
   function handlePaymentComplete() {
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      setComplete(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 900);
+    setProcessing(false);
+    setComplete(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   const summaryPostcode = details.postcode || initialPostcode;
@@ -206,7 +310,6 @@ export default function CheckoutPageClient() {
                     <div className="home1-checkout-main-col min-w-0">
                       {step === 1 ? (
                         <CheckoutDateTimeStep
-                          schedules={schedules}
                           selectedDate={selectedDate}
                           selectedTime={selectedTime}
                           onSelectDate={handleSelectDate}
@@ -218,6 +321,10 @@ export default function CheckoutPageClient() {
                             if (validateStep1()) setStep(2);
                           }}
                           error={stepError}
+                          useDynamicSchedule={useDynamicSchedule}
+                          timeSlots={scheduleSlots}
+                          slotsLoading={scheduleSlotsLoading}
+                          slotsError={scheduleSlotsError}
                         />
                       ) : step === 2 ? (
                         <CheckoutDetailsStep
@@ -227,22 +334,48 @@ export default function CheckoutPageClient() {
                             setStep(1);
                             setStepError("");
                           }}
-                          onContinue={() => {
-                            if (validateStep2()) setStep(3);
-                          }}
-                          error={stepError}
+                          onContinue={handleContinueToPayment}
+                          error={stepError || (validateStatus === "failed" ? validateError : "")}
+                          submitting={
+                            validateStatus === "loading" || paymentIntentStatus === "loading"
+                          }
                         />
+                      ) : clientSecret ? (
+                        <Elements stripe={stripePromise} options={{ clientSecret }}>
+                          <CheckoutPaymentStep
+                            totalInc={lineItems.totalInc}
+                            clientSecret={clientSecret}
+                            paymentIntentId={paymentIntentId}
+                            onBack={() => {
+                              setStep(2);
+                              setStepError("");
+                            }}
+                            onCheckPaymentStatus={handleCheckPaymentStatus}
+                            onComplete={handlePaymentComplete}
+                            error={
+                              stepError ||
+                              paymentIntentError ||
+                              paymentStatusError ||
+                              ""
+                            }
+                            processing={processing}
+                          />
+                        </Elements>
                       ) : (
-                        <CheckoutPaymentStep
-                          totalInc={lineItems.totalInc}
-                          onBack={() => {
-                            setStep(2);
-                            setStepError("");
-                          }}
-                          onComplete={handlePaymentComplete}
-                          error={stepError}
-                          processing={processing}
-                        />
+                        <div className="home1-checkout-step-panel">
+                          <p className="home1-checkout-alert home1-checkout-alert--error" role="alert">
+                            {paymentIntentError ||
+                              validateError ||
+                              "Payment session is not ready. Go back and try again."}
+                          </p>
+                          <button
+                            type="button"
+                            className="home1-checkout-back-btn mt-4"
+                            onClick={() => setStep(2)}
+                          >
+                            ← Back
+                          </button>
+                        </div>
                       )}
                     </div>
 

@@ -1,0 +1,152 @@
+import { getScheduleSlotsForDate } from "@/lib/schedules";
+
+/**
+ * @param {Date} date
+ */
+export function formatCheckoutApiDate(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+/**
+ * Resolve CRM schedule key from selected slot label/value.
+ * @param {Date | null} selectedDate
+ * @param {string | null} selectedTime
+ * @param {import("@/lib/schedules").ScheduleSlot[]} schedules
+ */
+export function resolveCrmScheduleKey(selectedDate, selectedTime, schedules) {
+  if (!selectedTime || !schedules?.length) return null;
+
+  const slot = schedules.find(
+    (s) => s.value === selectedTime || s.label === selectedTime
+  );
+  if (slot?.crmScheduleKey) return slot.crmScheduleKey;
+
+  if (!selectedDate) return null;
+  return (
+    getScheduleSlotsForDate(schedules, selectedDate).find(
+      (s) => s.value === selectedTime || s.label === selectedTime
+    )?.crmScheduleKey ?? null
+  );
+}
+
+/**
+ * @param {{
+ *   service: { apiId?: number | string } | null,
+ *   variant: { apiVariantId?: number | string } | null,
+ *   selectedDate: Date | null,
+ *   selectedTime: string | null,
+ *   schedules?: import("@/lib/schedules").ScheduleSlot[],
+ *   details: Record<string, unknown>,
+ *   lineItems: { totalInc: string },
+ *   paymentIntentId: string | null,
+ *   crmScheduleKey?: string | null,
+ *   sameAddress?: boolean,
+ * }} params
+ */
+export function buildValidateOrderPayload({
+  service,
+  variant,
+  selectedDate,
+  selectedTime,
+  schedules = [],
+  details,
+  lineItems,
+  paymentIntentId,
+  crmScheduleKey: crmOverride,
+  sameAddress = true,
+}) {
+  const amount = parseFloat(lineItems.totalInc) || 0;
+  const subTotal = amount;
+  const deliveryFee = 0;
+
+  const address1 = String(details.address ?? "").trim();
+  const address2 = String(details.addressLine2 ?? "").trim() || null;
+  const town = String(details.city ?? "").trim();
+  const postcode = String(details.postcode ?? "").trim().toUpperCase();
+  const country = String(details.country ?? "GB").trim() || "GB";
+
+  const crmScheduleKey =
+    crmOverride ?? resolveCrmScheduleKey(selectedDate, selectedTime, schedules) ?? "CRM-1";
+
+  const payload = {
+    service_id: Number(service?.apiId),
+    variant_id:
+      variant?.apiVariantId != null
+        ? Number(variant.apiVariantId)
+        : variant?.id != null && !Number.isNaN(Number(variant.id))
+          ? Number(variant.id)
+          : null,
+    same_address: sameAddress,
+    amount,
+    delivery_fee: deliveryFee,
+    sub_total: subTotal,
+    selected_date: selectedDate ? formatCheckoutApiDate(selectedDate) : null,
+    selected_time: selectedTime || null,
+    discount_amount: 0,
+    discount_value: null,
+    discount_type: null,
+    crm_schedule_key: crmScheduleKey,
+    payment_intent_id: paymentIntentId,
+    site_country: country,
+    site_post_code: postcode,
+    site_address_line_1: address1,
+    site_address_line_2: address2,
+    site_town: town,
+    site_county: details.county ?? null,
+    is_guest: details.isGuest !== false,
+    country,
+    post_code: postcode,
+    address_line_1: address1,
+    address_line_2: address2,
+    town,
+    county: details.county ?? null,
+    title: String(details.title ?? "Mr").trim() || "Mr",
+    first_name: String(details.firstName ?? "").trim(),
+    last_name: String(details.lastName ?? "").trim(),
+    mobile_number: String(details.phone ?? "").trim(),
+    email: String(details.email ?? "").trim(),
+    company: details.company ?? null,
+  };
+
+  const password = String(details.password ?? "").trim();
+  const passwordConfirmation = String(details.passwordConfirmation ?? password).trim();
+  if (password) {
+    payload.password = password;
+    payload.password_confirmation = passwordConfirmation;
+  }
+
+  return payload;
+}
+
+/**
+ * @param {unknown} data
+ */
+export function parsePaymentIntentResponse(data) {
+  const root = /** @type {Record<string, unknown>} */ (data ?? {});
+  const nested = /** @type {Record<string, unknown>} */ (root.data ?? {});
+
+  const clientSecret =
+    String(
+      root.client_secret ??
+        root.clientSecret ??
+        nested.client_secret ??
+        nested.clientSecret ??
+        ""
+    ).trim() || null;
+
+  const paymentIntentId =
+    String(
+      root.payment_intent_id ??
+        root.paymentIntentId ??
+        root.id ??
+        nested.payment_intent_id ??
+        nested.paymentIntentId ??
+        nested.id ??
+        ""
+    ).trim() || null;
+
+  return { clientSecret, paymentIntentId, raw: data };
+}
