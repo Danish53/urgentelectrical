@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import ServiceCard from "@/components/services/ServiceCard";
+import { useCarouselSwipe } from "@/hooks/useCarouselSwipe";
 
 const SLIDE_MS = 600;
 const DESKTOP_BP = 1024;
@@ -73,6 +74,12 @@ export default function RelatedServicesSlider({ services }) {
     setIndex((i) => Math.min(maxIndex, i + 1));
   }, [maxIndex]);
 
+  const { onTouchStart, onTouchEnd } = useCarouselSwipe({
+    onPrev: goPrev,
+    onNext: goNext,
+    enabled: canSlide,
+  });
+
   if (!services?.length) return null;
 
   return (
@@ -85,7 +92,11 @@ export default function RelatedServicesSlider({ services }) {
           </>
         ) : null}
 
-        <div className="home1-related-slider__viewport">
+        <div
+          className="home1-related-slider__viewport home1-featured-slider__viewport"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
           <ul
             className="home1-related-slider__track"
             style={{

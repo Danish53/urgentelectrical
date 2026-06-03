@@ -100,12 +100,16 @@ function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true }) {
             <span className="tracking-wide">0115 778 0622</span>
           </a>
           {showDesktopExtras && <span className="hidden lg:block w-px h-[14px] bg-[#d4d4d4]" aria-hidden />}
-          <span className="flex items-center gap-2 text-[#2e7d32] font-normal shrink-0">
+          <span className="hidden lg:flex items-center gap-2 text-[#2e7d32] font-normal shrink-0">
             <span className="w-2 h-2 rounded-full bg-[#43a047] shrink-0" aria-hidden />
-            <span className="lg:hidden">Available now</span>
-            <span className="hidden lg:inline">Engineers available now</span>
+            <span>Engineers available now</span>
           </span>
         </div>
+
+        <span className="flex lg:hidden items-center gap-2 text-[#2e7d32] font-normal shrink-0">
+          <span className="w-2 h-2 rounded-full bg-[#43a047] shrink-0" aria-hidden />
+          <span>Available now</span>
+        </span>
 
         {showDesktopExtras && (
           <div className="hidden lg:flex items-center gap-2.5 shrink-0">
@@ -230,16 +234,25 @@ export default function Navbar() {
             {/* Mobile */}
             <div className="flex lg:hidden items-center justify-between min-h-[68px] py-3 gap-4">
               <BrandLogo compact />
-              <button
-                type="button"
-                className="flex flex-col justify-center items-center w-11 h-11 rounded-lg border border-[#e0e0e0] hover:bg-[#fafafa] transition-colors shrink-0"
-                onClick={() => setMobileOpen(true)}
-                aria-label="Open menu"
-              >
-                <span className="block w-[20px] h-[2.5px] bg-[#111827] mb-[5px] rounded-full" />
-                <span className="block w-[20px] h-[2.5px] bg-[#111827] mb-[5px] rounded-full" />
-                <span className="block w-[20px] h-[2.5px] bg-[#111827] rounded-full" />
-              </button>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Link
+                  href="/services"
+                  className="inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
+                >
+                  <NavIconCalendar />
+                  Book
+                </Link>
+                <button
+                  type="button"
+                  className="flex flex-col justify-center items-center w-11 h-11 rounded-lg border border-[#e0e0e0] hover:bg-[#fafafa] transition-colors shrink-0"
+                  onClick={() => setMobileOpen(true)}
+                  aria-label="Open menu"
+                >
+                  <span className="block w-[20px] h-[2.5px] bg-[#111827] mb-[5px] rounded-full" />
+                  <span className="block w-[20px] h-[2.5px] bg-[#111827] mb-[5px] rounded-full" />
+                  <span className="block w-[20px] h-[2.5px] bg-[#111827] rounded-full" />
+                </button>
+              </div>
             </div>
 
             {/* Desktop: equal left/right space — logo | menu center | Book Now */}
@@ -301,7 +314,7 @@ export default function Navbar() {
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col lg:hidden">
-          <NavTopUtilityBar incVat={incVat} onVatToggle={() => setIncVat((v) => !v)} showDesktopExtras={false} />
+          <NavTopUtilityBar incVat={incVat} onVatToggle={toggleVat} showDesktopExtras={false} />
 
           <div className="flex items-center justify-between px-5 min-h-[68px] py-3 border-b border-[#e8e8e8] shrink-0">
             <BrandLogo compact />

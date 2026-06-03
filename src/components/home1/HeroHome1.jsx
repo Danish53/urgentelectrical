@@ -167,15 +167,21 @@ export default function HeroHome1() {
 
             <motion.div
               variants={reduceMotion ? undefined : HERO_ITEM}
-              className="flex flex-col sm:flex-row flex-wrap items-center justify-center lg:justify-start gap-3 mb-8"
+              className="flex flex-row flex-nowrap items-center justify-center lg:justify-start gap-2 sm:gap-3 mb-8"
             >
-              <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-hero-phone">
-                <IconPhone className="text-[#D3231F] w-5 h-5"  />
+              <a
+                href={`tel:${FOOTER_PHONE_TEL}`}
+                className="home1-hero-phone text-[13px] sm:text-[15px] px-3 py-2.5 sm:px-5 sm:py-3 whitespace-nowrap shrink-0"
+              >
+                <IconPhone className="text-[#D3231F] w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 {FOOTER_PHONE}
               </a>
-              <a href="/services" className="home1-btn-primary text-sm py-3 px-5">
+              <a
+                href="/services"
+                className="home1-btn-primary text-[13px] sm:text-sm py-2.5 px-3 sm:py-3 sm:px-5 whitespace-nowrap shrink-0"
+              >
                 Book online
-                <IconArrow className="w-4 h-4" />
+                <IconArrow className="w-4 h-4 shrink-0" />
               </a>
             </motion.div>
 
@@ -266,17 +272,19 @@ export default function HeroHome1() {
                 />
               </div>
 
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-4-4" strokeLinecap="round" />
-                </svg>
-                Check Availability &amp; Book Now
-                <IconArrow className="w-5 h-5" />
-              </button>
+              <div className="px-3 sm:px-0">
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[14px] sm:text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-4-4" strokeLinecap="round" />
+                  </svg>
+                  Check Availability &amp; Book Now
+                  <IconArrow className="w-5 h-5 shrink-0" />
+                </button>
+              </div>
             </form>
 
             <p className="mt-5 text-center text-white/45 text-[11px] font-medium">

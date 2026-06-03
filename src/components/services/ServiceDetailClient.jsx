@@ -98,11 +98,11 @@ function ServiceSlimPriceRibbon({ priceDisplay, incVat, isEmergency }) {
       <div className="home1-service-slim-price-ribbon-main">
         <span className="home1-service-slim-price-from-label">{priceDisplay.prefix ?? "FROM"}</span>
         <div className="flex items-center gap-2">
-        <div className="home1-service-slim-price-line text-2xl font-bold">
-          <span className="home1-service-selected-price-vat text-2xl font-bold">{startText}</span>
-          {endText ? <span className="home1-service-selected-price-vat text-2xl font-bold"> – {endText}</span> : null}
-        </div>
-        <span className="home1-service-slim-price-vat">{vatLabel}</span>
+          <div className="home1-service-slim-price-line text-2xl font-bold">
+            <span className="home1-service-selected-price-vat text-2xl font-bold">{startText}</span>
+            {endText ? <span className="home1-service-selected-price-vat text-2xl font-bold"> – {endText}</span> : null}
+          </div>
+          <span className="home1-service-slim-price-vat">{vatLabel}</span>
         </div>
       </div>
       <div className="home1-service-slim-price-ribbon-meta">
@@ -158,7 +158,7 @@ function ServiceSlimAsideFill() {
 
 function ServiceSlimHeroAside({ service }) {
   return (
-    <div className="home1-service-slim-aside" style={{paddingRight: '0px'}}>
+    <div className="home1-service-slim-aside" style={{ paddingRight: '0px' }}>
       <div className="home1-service-slim-media-box">
         <ServiceSlimHeroImage service={service} />
       </div>
@@ -496,15 +496,21 @@ function ServiceDetailProduct({
                   ) : null}
                 </>
               ) : null}
-              {selectedVariant ? (
-                <ServiceSelectedPrice
-                  priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
-                  incVat={incVat}
-                  variantLabel={selectedVariant.label}
-                  theme="light"
-                  className="home1-service-slim-selected-price"
-                />
-              ) : null}
+              <div className="home1-service-slim-selected-price-wrapper">
+  {selectedVariant ? (
+    <ServiceSelectedPrice
+      priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
+      incVat={incVat}
+      variantLabel={selectedVariant.label}
+      theme="light"
+      className="home1-service-slim-selected-price"
+    />
+  ) : (
+    <div className="home1-service-price-placeholder">
+      &nbsp;
+    </div>
+  )}
+</div>
               <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} variant="slim" />
             </div>
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
 import { useBookableServices, useFeaturedServices } from "@/hooks/useServices";
+import { useCarouselSwipe } from "@/hooks/useCarouselSwipe";
 import FeaturedServicesSkeleton from "@/components/skeletons/FeaturedServicesSkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { CONTAINER, SECTION_PY } from "./constants";
@@ -14,22 +15,130 @@ import { IconArrow } from "./icons";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { getDisplayPrice, getVatSuffix } from "@/lib/pricing";
 
-const SLIDE_MS = 700;
-const HOME_LIMIT = 4;
+const SLIDE_MS = 600;
+const DESKTOP_BP = 1024;
 
-function useSlidesPerView() {
+function ChevronLeft({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+      <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ChevronRight({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+      <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function useSlidesPerView(compact) {
   const [n, setN] = useState(1);
   useEffect(() => {
     const u = () => {
-      if (window.innerWidth >= 1280) setN(3);
+      if (compact) {
+        if (window.innerWidth >= 1280) setN(4);
+        else if (window.innerWidth >= DESKTOP_BP) setN(3);
+        else if (window.innerWidth >= 768) setN(2);
+        else setN(1);
+      } else if (window.innerWidth >= 1280) setN(3);
       else if (window.innerWidth >= 768) setN(2);
       else setN(1);
     };
     u();
     window.addEventListener("resize", u);
     return () => window.removeEventListener("resize", u);
-  }, []);
+  }, [compact]);
   return n;
+}
+
+function SliderArrow({ direction, onClick, disabled }) {
+  const label = direction === "prev" ? "Previous service" : "Next service";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`home1-related-slider__btn home1-related-slider__btn--${direction}`}
+      aria-label={label}
+    >
+      {direction === "prev" ? <ChevronLeft /> : <ChevronRight />}
+    </button>
+  );
+}
+
+function FeaturedServicesSlider({ services, bookable }) {
+  const slidesPerView = useSlidesPerView(true);
+  const [index, setIndex] = useState(0);
+
+  const maxIndex = Math.max(0, services.length - slidesPerView);
+  const slidePct = 100 / slidesPerView;
+  const canSlide = services.length > slidesPerView;
+
+  useEffect(() => setIndex((i) => Math.min(i, maxIndex)), [maxIndex]);
+
+  const goPrev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), []);
+  const goNext = useCallback(() => setIndex((i) => Math.min(maxIndex, i + 1)), [maxIndex]);
+
+  const { onTouchStart, onTouchEnd } = useCarouselSwipe({
+    onPrev: goPrev,
+    onNext: goNext,
+    enabled: canSlide,
+  });
+
+  return (
+    <div className="home1-related-slider" aria-roledescription="carousel" aria-label="Our services">
+      <div className="home1-related-slider__stage">
+        {canSlide ? (
+          <>
+            <SliderArrow direction="prev" onClick={goPrev} disabled={index === 0} />
+            <SliderArrow direction="next" onClick={goNext} disabled={index >= maxIndex} />
+          </>
+        ) : null}
+
+        <div
+          className="home1-related-slider__viewport home1-featured-slider__viewport"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+        >
+          <ul
+            className="home1-related-slider__track"
+            style={{
+              transform: `translateX(-${index * slidePct}%)`,
+              transitionDuration: `${SLIDE_MS}ms`,
+            }}
+          >
+            {services.map((s, i) => (
+              <li key={s.id} className="home1-related-slider__slide" style={{ width: `${slidePct}%` }}>
+                <ServiceCardHome1
+                  service={s}
+                  detailHref={resolveHref(s, bookable)}
+                  imagePriority={i < slidesPerView}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {canSlide && maxIndex > 0 ? (
+        <div className="home1-related-slider__dots" role="tablist" aria-label="Service slides">
+          {Array.from({ length: maxIndex + 1 }).map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => setIndex(i)}
+              className={`home1-related-slider__dot${i === index ? " is-active" : ""}`}
+              aria-label={`Go to slide ${i + 1}`}
+              aria-selected={i === index}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
 }
 
 function resolveHref(featuredService, bookable) {
@@ -97,13 +206,11 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
 }
 
 export default function FeaturedServicesHome1({ compact = false }) {
-  const slidesPerView = useSlidesPerView();
+  const slidesPerView = useSlidesPerView(compact);
   const [index, setIndex] = useState(0);
   const { bookable } = useBookableServices();
   const dispatch = useAppDispatch();
-  const { services: featuredList, loading, failed } = useFeaturedServices({
-    limit: compact ? HOME_LIMIT : undefined,
-  });
+  const { services: featuredList, loading, failed } = useFeaturedServices();
 
   const services = featuredList;
 
@@ -152,22 +259,13 @@ export default function FeaturedServicesHome1({ compact = false }) {
         </div>
 
         {loading ? (
-          <FeaturedServicesSkeleton compact={compact} count={compact ? HOME_LIMIT : 3} />
+          <FeaturedServicesSkeleton compact={compact} count={compact ? 4 : 3} />
         ) : failed ? (
           <ServicesLoadError onRetry={() => dispatch(fetchServices())} />
         ) : services.length === 0 ? (
           <p className="text-center text-[var(--home1-muted)] py-10">No services available right now.</p>
         ) : compact ? (
-          <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-5">
-            {services.map((s, i) => (
-              <ServiceCardHome1
-                key={s.id}
-                service={s}
-                detailHref={resolveHref(s, bookable)}
-                imagePriority={i < 2}
-              />
-            ))}
-          </div>
+          <FeaturedServicesSlider services={services} bookable={bookable} />
         ) : (
           <div className="overflow-hidden rounded-2xl">
             <div
