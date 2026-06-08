@@ -1,0 +1,84 @@
+import {
+  CONTACT_ADDRESS,
+  CONTACT_BUSINESS_NAME,
+  CONTACT_MAP_DIRECTIONS,
+  CONTACT_MAP_EMBED,
+  CONTACT_MAP_LINK,
+  CONTACT_MAP_RATING,
+} from "@/data/contactPage";
+
+export default function ContactMap() {
+  return (
+    <section className="home1-contact-map-section bg-[#eef0f2]" aria-label="Office location map">
+      <div className="w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
+        <div className="home1-contact-map-card">
+          <div className="home1-contact-map-frame">
+            <iframe
+              title={`Map showing ${CONTACT_BUSINESS_NAME} at ${CONTACT_ADDRESS.full}`}
+              src={CONTACT_MAP_EMBED}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              allowFullScreen
+              className="home1-contact-map-iframe"
+            />
+
+            <div className="home1-contact-map-place-card">
+              <a
+                href={CONTACT_MAP_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="home1-contact-map-place-link"
+              >
+                <strong className="home1-contact-map-place-name">{CONTACT_BUSINESS_NAME}</strong>
+                <span className="home1-contact-map-place-address">{CONTACT_ADDRESS.full}</span>
+              </a>
+
+              <div
+                className="home1-contact-map-place-rating"
+                aria-label={`${CONTACT_MAP_RATING.score} out of 5 from ${CONTACT_MAP_RATING.count} reviews`}
+              >
+                <span className="home1-contact-map-place-stars" aria-hidden="true">
+                  ★
+                </span>
+                <span className="home1-contact-map-place-score">{CONTACT_MAP_RATING.score}</span>
+                <a
+                  href={CONTACT_MAP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home1-contact-map-place-reviews"
+                >
+                  ({CONTACT_MAP_RATING.count})
+                </a>
+              </div>
+
+              <div className="home1-contact-map-place-actions">
+                <a
+                  href={CONTACT_MAP_LINK}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home1-contact-map-place-action"
+                >
+                  <span className="home1-contact-map-place-action-icon" aria-hidden="true">
+                    ↗
+                  </span>
+                  View larger map
+                </a>
+                <a
+                  href={CONTACT_MAP_DIRECTIONS}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home1-contact-map-place-action home1-contact-map-place-action--directions"
+                >
+                  <span className="home1-contact-map-place-action-icon" aria-hidden="true">
+                    ➤
+                  </span>
+                  Directions
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

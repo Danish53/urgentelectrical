@@ -148,5 +148,15 @@ export function parsePaymentIntentResponse(data) {
         ""
     ).trim() || null;
 
-  return { clientSecret, paymentIntentId, raw: data };
+  const stripePublishableKey =
+    String(root.stripe_key ?? root.stripeKey ?? nested.stripe_key ?? nested.stripeKey ?? "").trim() ||
+    null;
+
+  const paymentMethodTypes = Array.isArray(root.payment_method_types)
+    ? root.payment_method_types
+    : Array.isArray(nested.payment_method_types)
+      ? nested.payment_method_types
+      : null;
+
+  return { clientSecret, paymentIntentId, stripePublishableKey, paymentMethodTypes, raw: data };
 }

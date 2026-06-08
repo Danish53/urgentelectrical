@@ -19,11 +19,22 @@ export const CONTACT_GEO = {
   longitude: -1.1504,
 };
 
+export const CONTACT_BUSINESS_NAME = "Urgent Electrical Services Limited";
+
+/** Google listing — shown on contact map card */
+export const CONTACT_MAP_RATING = {
+  score: 4.6,
+  count: 97,
+};
+
 export const CONTACT_MAP_EMBED =
-  "https://maps.google.com/maps?q=17+Regent+Street,+Nottingham+NG1+5BQ&hl=en&z=16&ie=UTF8&iwloc=&output=embed";
+  "https://maps.google.com/maps?q=Urgent+Electrical+Services+Limited,+17+Regent+Street,+Nottingham+NG1+5BQ&hl=en&z=18&t=h&ie=UTF8&iwloc=near&output=embed";
 
 export const CONTACT_MAP_LINK =
-  "https://www.google.com/maps/search/?api=1&query=17+Regent+Street,+Nottingham+NG1+5BQ";
+  "https://www.google.com/maps/search/?api=1&query=Urgent+Electrical+Services+Limited,+17+Regent+Street,+Nottingham+NG1+5BQ";
+
+export const CONTACT_MAP_DIRECTIONS =
+  "https://www.google.com/maps/dir/?api=1&destination=17+Regent+Street,+Nottingham+NG1+5BQ";
 
 export const CONTACT_HOURS = "Open 24 hours, 7 days a week";
 

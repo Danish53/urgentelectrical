@@ -73,7 +73,7 @@ function FAQAccordionItem({ item, isOpen, onToggle }) {
 }
 
 export default function FAQSection() {
-  const [openId, setOpenId] = useState(FAQ_ITEMS[0]?.id ?? null);
+  const [openId, setOpenId] = useState(null);
 
   return (
     <section className="faq-section bg-white py-14 sm:py-16 lg:py-20 overflow-x-clip" aria-labelledby="faq-section-heading">

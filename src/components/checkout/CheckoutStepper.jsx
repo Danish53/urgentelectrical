@@ -8,7 +8,13 @@ function StepCheckIcon() {
   );
 }
 
-export default function CheckoutStepper({ currentStep }) {
+/**
+ * @param {{
+ *   currentStep: number,
+ *   onStepClick?: (stepId: number) => void,
+ * }} props
+ */
+export default function CheckoutStepper({ currentStep, onStepClick }) {
   const items = [];
 
   CHECKOUT_STEPS.forEach((step, index) => {
@@ -25,6 +31,7 @@ export default function CheckoutStepper({ currentStep }) {
 
     const isActive = step.id === currentStep;
     const isDone = step.id < currentStep;
+    const isClickable = Boolean(onStepClick) && step.id <= currentStep;
 
     items.push(
       <li
@@ -32,12 +39,18 @@ export default function CheckoutStepper({ currentStep }) {
         className={`home1-checkout-stepper-item${isActive ? " is-active" : ""}${isDone ? " is-done" : ""}`}
         aria-current={isActive ? "step" : undefined}
       >
-        <span className="home1-checkout-stepper-pill">
+        <button
+          type="button"
+          className="home1-checkout-stepper-pill home1-checkout-stepper-btn"
+          onClick={() => onStepClick?.(step.id)}
+          disabled={!isClickable}
+          aria-label={`${step.label}${isActive ? " (current step)" : isDone ? " (completed)" : ""}`}
+        >
           <span className="home1-checkout-stepper-num" aria-hidden="true">
             {isDone ? <StepCheckIcon /> : step.id}
           </span>
           <span className="home1-checkout-stepper-label">{step.label}</span>
-        </span>
+        </button>
       </li>
     );
   });

@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import AuthSessionHydrator from "@/components/providers/AuthSessionHydrator";
 import ServicesHydrator from "@/components/providers/ServicesHydrator";
 import { VatPreferenceProvider } from "@/components/providers/VatPreferenceProvider";
+import CookieConsentBanner from "@/components/common/CookieConsentBanner";
 import ReduxProvider from "@/store/provider";
 
 export default function AppProviders({ children }) {
@@ -13,6 +14,7 @@ export default function AppProviders({ children }) {
         <AuthSessionHydrator />
         <ServicesHydrator />
         {children}
+        <CookieConsentBanner />
       <Toaster
         position="top-right"
         richColors

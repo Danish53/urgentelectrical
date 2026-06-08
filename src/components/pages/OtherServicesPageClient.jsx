@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 import CTAHome1 from "@/components/home1/CTAHome1";
+import ListSearchBar from "@/components/common/ListSearchBar";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
+import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
 import { getPageImageUrl } from "@/services/pagesApiService";
 
 /**
@@ -50,8 +52,27 @@ const INITIAL_VISIBLE = 4;
 
 export default function OtherServicesPageClient({ pages, loadError = "" }) {
   const [showAll, setShowAll] = useState(false);
-  const visible = showAll ? pages : pages.slice(0, INITIAL_VISIBLE);
-  const hasMore = pages.length > INITIAL_VISIBLE && !showAll;
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredPages = useMemo(() => {
+    if (!normalizeSearchQuery(searchQuery)) return pages;
+
+    return pages.filter((page) =>
+      matchesListSearch(
+        searchQuery,
+        page.title,
+        page.short_description || page.description
+      )
+    );
+  }, [pages, searchQuery]);
+
+  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
+  const visible = searchActive
+    ? filteredPages
+    : showAll
+      ? pages
+      : pages.slice(0, INITIAL_VISIBLE);
+  const hasMore = !searchActive && pages.length > INITIAL_VISIBLE && !showAll;
 
   return (
     <div className="home1-page w-full min-w-0">
@@ -81,6 +102,21 @@ export default function OtherServicesPageClient({ pages, loadError = "" }) {
 
         <section className="py-10 sm:py-14 lg:py-16 bg-[#f8fafc]">
           <div className={SERVICES_PAGE_CONTAINER}>
+            <ListSearchBar
+              id="other-services-list-search"
+              label="Search other services"
+              placeholder="Search guides by title or description…"
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+
+            {searchActive ? (
+              <p className="home1-list-search-results" aria-live="polite">
+                {filteredPages.length} result{filteredPages.length === 1 ? "" : "s"} for &ldquo;
+                {searchQuery.trim()}&rdquo;
+              </p>
+            ) : null}
+
             {loadError ? (
               <div className="rounded-2xl border border-[#fecaca] bg-[#fff1f2] p-5 text-[#9f1239]">
                 <h2 className="text-[16px] font-extrabold">Could not load services</h2>
@@ -90,6 +126,12 @@ export default function OtherServicesPageClient({ pages, loadError = "" }) {
 
             {!loadError && pages.length === 0 ? (
               <p className="text-center text-[var(--home1-muted)] py-12">No services available right now.</p>
+            ) : null}
+
+            {!loadError && pages.length > 0 && searchActive && filteredPages.length === 0 ? (
+              <p className="text-center text-[var(--home1-muted)] py-12">
+                No services found for &ldquo;{searchQuery.trim()}&rdquo;. Try another search term.
+              </p>
             ) : null}
 
             {!loadError && visible.length > 0 ? (

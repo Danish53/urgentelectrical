@@ -1,19 +1,49 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { formatMoney } from "@/components/checkout/checkoutUtils";
 import {
-  CardNumberElement,
-  CardExpiryElement,
-  CardCvcElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+  formatPaymentIntentForLog,
+  logPaymentIntentDebug,
+} from "@/lib/checkout/logPaymentIntentDebug";
+import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+function getCheckoutReturnUrl() {
+  if (typeof window === "undefined") return "/checkout";
+  const url = new URL(window.location.href);
+  url.searchParams.delete("payment_intent");
+  url.searchParams.delete("payment_intent_client_secret");
+  url.searchParams.delete("redirect_status");
+  return url.toString();
+}
+
+function TermsAgreement({ checked, onChange }) {
+  return (
+    <label className="home1-checkout-payment-terms">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="home1-checkout-payment-terms-checkbox"
+      />
+      <span>
+        I agree to Urgent Electrical&apos;s{" "}
+        <Link href="/policies" target="_blank" rel="noopener noreferrer">
+          Terms &amp; Conditions
+        </Link>
+      </span>
+    </label>
+  );
+}
 
 export default function CheckoutPaymentStep({
   totalInc,
   clientSecret,
   paymentIntentId,
+  billingName = "",
+  billingEmail = "",
+  billingPhone = "",
   onBack,
   onComplete,
   onCheckPaymentStatus,
@@ -24,9 +54,107 @@ export default function CheckoutPaymentStep({
   const elements = useElements();
   const [localError, setLocalError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [stripeElementReady, setStripeElementReady] = useState(false);
+  const [allowedMethods, setAllowedMethods] = useState(null);
 
   const displayError = error || localError;
   const busy = loading || processing;
+
+  const paymentElementOptions = useMemo(
+    () => ({
+      layout: {
+        type: "tabs",
+        defaultCollapsed: false,
+      },
+      defaultValues: {
+        billingDetails: {
+          name: billingName || undefined,
+          email: billingEmail || undefined,
+          phone: billingPhone || undefined,
+          address: {
+            country: "GB",
+          },
+        },
+      },
+      fields: {
+        billingDetails: {
+          name: "never",
+          email: "never",
+          phone: "never",
+          address: {
+            country: "auto",
+          },
+        },
+      },
+    }),
+    [billingName, billingEmail, billingPhone]
+  );
+
+  useEffect(() => {
+    logPaymentIntentDebug("Step 3 props", {
+      paymentIntentId,
+      hasClientSecret: Boolean(clientSecret),
+      clientSecretPreview: clientSecret ? `${clientSecret.slice(0, 24)}…` : null,
+    });
+  }, [paymentIntentId, clientSecret]);
+
+  async function finalizePayment(intentId) {
+    if (!intentId) {
+      setLocalError("Payment could not be confirmed. Please contact support.");
+      return;
+    }
+
+    if (onCheckPaymentStatus) {
+      await onCheckPaymentStatus(intentId);
+    }
+
+    onComplete({ paymentIntentId: intentId });
+  }
+
+  async function confirmStripePaymentFlow() {
+    if (!termsAccepted) {
+      setLocalError("Please agree to the Terms & Conditions to continue.");
+      return;
+    }
+
+    const paymentElement = elements?.getElement(PaymentElement);
+    if (!paymentElement) {
+      setLocalError("Payment methods could not load. Please refresh and try again.");
+      return;
+    }
+
+    const { error: submitError } = await elements.submit();
+    if (submitError) {
+      setLocalError(submitError.message ?? "Could not start payment.");
+      return;
+    }
+
+    const { error: stripeError, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      clientSecret,
+      confirmParams: {
+        return_url: getCheckoutReturnUrl(),
+        payment_method_data: {
+          billing_details: {
+            name: billingName || undefined,
+            email: billingEmail || undefined,
+            phone: billingPhone || undefined,
+          },
+        },
+      },
+      redirect: "if_required",
+    });
+
+    if (stripeError) {
+      setLocalError(stripeError.message ?? "Payment failed. Please try again.");
+      return;
+    }
+
+    if (paymentIntent?.status === "succeeded" || paymentIntent?.status === "processing") {
+      await finalizePayment(paymentIntent.id ?? paymentIntentId);
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,40 +170,10 @@ export default function CheckoutPaymentStep({
       return;
     }
 
-    const card = elements.getElement(CardNumberElement);
-    if (!card) {
-      setLocalError("Enter your card details to continue.");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: { card },
-      });
-
-      if (stripeError) {
-        setLocalError(stripeError.message ?? "Payment failed. Please try again.");
-        return;
-      }
-
-      if (paymentIntent?.status !== "succeeded") {
-        setLocalError("Payment was not completed. Please try again.");
-        return;
-      }
-
-      const intentId = paymentIntent?.id ?? paymentIntentId;
-      if (!intentId) {
-        setLocalError("Payment could not be confirmed. Please contact support.");
-        return;
-      }
-
-      if (onCheckPaymentStatus) {
-        await onCheckPaymentStatus(intentId);
-      }
-
-      onComplete({ paymentIntentId: intentId });
+      await confirmStripePaymentFlow();
     } catch (err) {
       setLocalError(err?.message ?? "Payment failed. Please try again.");
     } finally {
@@ -95,7 +193,7 @@ export default function CheckoutPaymentStep({
 
       <form
         onSubmit={handleSubmit}
-        className="home1-checkout-card home1-checkout-form-card home1-checkout-form"
+        className="home1-checkout-card home1-checkout-form-card home1-checkout-form home1-checkout-payment-form"
         noValidate
       >
         {displayError ? (
@@ -104,31 +202,61 @@ export default function CheckoutPaymentStep({
           </p>
         ) : null}
 
-        <div>
-          <label className="home1-checkout-label">CARD NUMBER *</label>
-          <div className="stripe-field">
-            <CardNumberElement options={stripeStyle} className="home1-checkout-input" />
+        <div className="home1-checkout-payment-stripe-panel">
+          <div className="home1-checkout-payment-element-wrap">
+            <PaymentElement
+              options={paymentElementOptions}
+              onReady={async () => {
+                setStripeElementReady(true);
+
+                if (!stripe || !clientSecret) return;
+
+                try {
+                  const { paymentIntent, error } = await stripe.retrievePaymentIntent(clientSecret);
+
+                  if (error) {
+                    logPaymentIntentDebug("Stripe retrieve error", { message: error.message, type: error.type });
+                    setAllowedMethods(null);
+                    return;
+                  }
+
+                  const methods = paymentIntent?.payment_method_types ?? [];
+                  setAllowedMethods(methods);
+
+                  logPaymentIntentDebug("Stripe Payment Intent (full)", formatPaymentIntentForLog(paymentIntent));
+                  logPaymentIntentDebug("Allowed payment methods", {
+                    payment_method_types: methods,
+                    tabCountExpected: methods.length,
+                    note:
+                      methods.length > 1
+                        ? "Multiple tabs should appear in Stripe PaymentElement."
+                        : "Only one method — Stripe will not show method tabs.",
+                  });
+                } catch (err) {
+                  logPaymentIntentDebug("Stripe retrieve failed", {
+                    message: err?.message ?? "Unknown error",
+                  });
+                  setAllowedMethods(null);
+                }
+              }}
+              onLoadError={(event) => {
+                setStripeElementReady(false);
+                setLocalError(event.error?.message ?? "Payment methods could not load.");
+              }}
+            />
           </div>
         </div>
 
-        <div className="home1-checkout-form-grid mt-3">
-          <div>
-            <label className="home1-checkout-label">EXPIRY *</label>
-            <div className="stripe-field">
-              <CardExpiryElement options={stripeStyle} className="home1-checkout-input" />
-            </div>
-          </div>
-          <div>
-            <label className="home1-checkout-label">CVC *</label>
-            <div className="stripe-field">
-              <CardCvcElement options={stripeStyle} className="home1-checkout-input" />
-            </div>
-          </div>
-        </div>
+        {allowedMethods?.length === 1 && allowedMethods[0] === "card" ? (
+          <p className="home1-checkout-payment-methods-hint" role="status">
+            Only card is available on this payment session. Pay by Bank, Revolut Pay and Billie must
+            be enabled when Laravel creates the Stripe Payment Intent.
+          </p>
+        ) : null}
 
-        <p className="home1-checkout-secure-note">
-          Payments are processed securely. Your card details are encrypted in transit.
-        </p>
+        <TermsAgreement checked={termsAccepted} onChange={setTermsAccepted} />
+
+        <p className="home1-checkout-secure-note">Payments are processed securely through Stripe.</p>
 
         <div className="home1-checkout-step-actions">
           <button type="button" onClick={onBack} className="home1-checkout-back-btn" disabled={busy}>
@@ -136,7 +264,7 @@ export default function CheckoutPaymentStep({
           </button>
           <button
             type="submit"
-            disabled={busy || !stripe || !clientSecret}
+            disabled={busy || !stripe || !clientSecret || !stripeElementReady}
             className="home1-checkout-continue"
           >
             <span>{busy ? "Processing…" : `Pay ${formatMoney(totalInc)}`}</span>
@@ -147,15 +275,3 @@ export default function CheckoutPaymentStep({
     </div>
   );
 }
-
-const stripeStyle = {
-  style: {
-    base: {
-      fontSize: "14px",
-      color: "#111",
-      fontFamily: "Inter, sans-serif",
-      "::placeholder": { color: "#9ca3af" },
-    },
-    invalid: { color: "#ef4444" },
-  },
-};

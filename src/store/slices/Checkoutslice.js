@@ -80,6 +80,8 @@ const initialState = {
   crmScheduleKey: null,
   paymentIntentId: null,
   clientSecret: null,
+  stripePublishableKey: null,
+  paymentMethodTypes: null,
   siteCountry: "GB",
   sitePostCode: "",
   siteAddressLine1: "",
@@ -201,6 +203,8 @@ const checkoutSlice = createSlice({
       .addCase(createPaymentIntent.fulfilled, (state, action) => {
         state.paymentIntentStatus = "succeeded";
         state.clientSecret = action.payload.clientSecret;
+        state.stripePublishableKey = action.payload.stripePublishableKey ?? null;
+        state.paymentMethodTypes = action.payload.paymentMethodTypes ?? null;
         if (action.payload.paymentIntentId) {
           state.paymentIntentId = action.payload.paymentIntentId;
         }

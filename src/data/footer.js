@@ -8,20 +8,20 @@ export const FOOTER_COMPANY = [
 ];
 
 export const FOOTER_AREAS = [
-  { label: "Nottingham", href: "/locations" },
+  { label: "Nottingham", href: "/about-us" },
   { label: "Derby", href: "/locations" },
-  { label: "Leicester", href: "/locations" },
-  { label: "Loughborough", href: "/locations" },
-  { label: "Newark-on-Trent", href: "/locations" },
-  { label: "East Midlands", href: "/locations" },
+  { label: "Leicester", href: "/pages" },
+  { label: "Loughborough", href: "/policies" },
+  { label: "Newark-on-Trent", href: "/policies" },
+  { label: "East Midlands", href: "/policies" },
 ];
 
 export const FOOTER_BADGES = ["NICEIC Approved", "Fully Insured", "Est. 2014"];
 
 export const FOOTER_LEGAL = [
-  { label: "Privacy policy", href: "#" },
-  { label: "Terms & conditions", href: "#" },
-  { label: "Cookie policy", href: "#" },
+  { label: "Privacy policy", match: ["privacy"], fallbackHref: "/policies" },
+  { label: "Terms & conditions", match: ["terms", "condition"], fallbackHref: "/policies" },
+  { label: "Cookie policy", match: ["cookie"], fallbackHref: "/policies" },
 ];
 
 export const FOOTER_PHONE = "0115 778 0622";

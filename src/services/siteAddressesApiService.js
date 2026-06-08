@@ -5,6 +5,7 @@ import {
   sameOriginAuthRequest,
 } from "@/lib/api/sameOriginPost";
 import {
+  apiRecordToSavedSite,
   parseSiteDetailResponse,
   parseSitesListPayload,
 } from "@/lib/sites/siteApiMapper";
@@ -46,4 +47,21 @@ export async function updateSiteAddress(id, body) {
 /** DELETE /site-addresses/{id} */
 export async function deleteSiteAddress(id) {
   await sameOriginAuthRequest(SITE_ADDRESSES_PROXY.detail(id), "DELETE");
+}
+
+/** Fetch all saved site pages for pickers (checkout, etc.) */
+export async function fetchAllSiteAddresses() {
+  /** @type {import("@/lib/sites/siteTypes").SavedSite[]} */
+  const all = [];
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const result = await fetchSiteAddresses(page);
+    all.push(...result.sites.map((row) => apiRecordToSavedSite(row)));
+    lastPage = Math.max(1, Number(result.pagination?.lastPage) || 1);
+    page += 1;
+  } while (page <= lastPage);
+
+  return all.sort((a, b) => Number(b.primary) - Number(a.primary));
 }

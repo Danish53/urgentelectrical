@@ -497,20 +497,20 @@ function ServiceDetailProduct({
                 </>
               ) : null}
               <div className="home1-service-slim-selected-price-wrapper">
-  {selectedVariant ? (
-    <ServiceSelectedPrice
-      priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
-      incVat={incVat}
-      variantLabel={selectedVariant.label}
-      theme="light"
-      className="home1-service-slim-selected-price"
-    />
-  ) : (
-    <div className="home1-service-price-placeholder">
-      &nbsp;
-    </div>
-  )}
-</div>
+                {selectedVariant ? (
+                  <ServiceSelectedPrice
+                    priceExcVat={selectedVariant.priceExcVat ?? selectedVariant.price}
+                    incVat={incVat}
+                    variantLabel={selectedVariant.label}
+                    theme="light"
+                    className="home1-service-slim-selected-price"
+                  />
+                ) : (
+                  <div className="home1-service-price-placeholder">
+                    &nbsp;
+                  </div>
+                )}
+              </div>
               <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} variant="slim" />
             </div>
 
@@ -559,7 +559,7 @@ function PricingCard({ service, selectedVariant, selectedId, onSelectVariant, on
 }
 
 function ServiceFaq({ faqs }) {
-  const [openId, setOpenId] = useState(faqs[0]?.q ? 0 : -1);
+  const [openId, setOpenId] = useState(-1);
   if (!faqs.length) return null;
 
   return (

@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import CheckoutSiteAddressModal from "@/components/checkout/CheckoutSiteAddressModal";
+import { mapSavedSiteToCheckoutDetails } from "@/lib/checkout/mapSavedSiteToCheckoutDetails";
+
 const labelClass = "home1-checkout-label";
 const inputClass = "home1-checkout-input";
 
@@ -10,9 +14,18 @@ export default function CheckoutDetailsStep({
   onContinue,
   error,
   submitting = false,
+  isLoggedIn = false,
 }) {
+  const [siteModalOpen, setSiteModalOpen] = useState(false);
+  const [selectedSiteLabel, setSelectedSiteLabel] = useState("");
+
   function set(field, value) {
     onChange({ ...details, [field]: value });
+  }
+
+  function handleSiteSelect(site) {
+    onChange(mapSavedSiteToCheckoutDetails(site, details));
+    setSelectedSiteLabel(site.name || site.address);
   }
 
   return (
@@ -81,41 +94,45 @@ export default function CheckoutDetailsStep({
           />
         </div>
 
-        <div className="home1-checkout-form-grid">
-          <div>
-            <label htmlFor="checkout-password" className={labelClass}>
-              Password<span className="text-[#d3231f]">*</span>
-            </label>
-            <input
-              id="checkout-password"
-              type="password"
-              value={details.password ?? ""}
-              onChange={(e) => set("password", e.target.value)}
-              className={inputClass}
-              autoComplete="new-password"
-              minLength={8}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="checkout-password-confirm" className={labelClass}>
-              Confirm password<span className="text-[#d3231f]">*</span>
-            </label>
-            <input
-              id="checkout-password-confirm"
-              type="password"
-              value={details.passwordConfirmation ?? ""}
-              onChange={(e) => set("passwordConfirmation", e.target.value)}
-              className={inputClass}
-              autoComplete="new-password"
-              minLength={8}
-              required
-            />
-          </div>
-        </div>
-        <p className="text-[var(--home1-muted)] text-xs leading-relaxed -mt-1">
-          Create a password to manage bookings in your account.
-        </p>
+        {!isLoggedIn ? (
+          <>
+            <div className="home1-checkout-form-grid">
+              <div>
+                <label htmlFor="checkout-password" className={labelClass}>
+                  Password<span className="text-[#d3231f]">*</span>
+                </label>
+                <input
+                  id="checkout-password"
+                  type="password"
+                  value={details.password ?? ""}
+                  onChange={(e) => set("password", e.target.value)}
+                  className={inputClass}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="checkout-password-confirm" className={labelClass}>
+                  Confirm password<span className="text-[#d3231f]">*</span>
+                </label>
+                <input
+                  id="checkout-password-confirm"
+                  type="password"
+                  value={details.passwordConfirmation ?? ""}
+                  onChange={(e) => set("passwordConfirmation", e.target.value)}
+                  className={inputClass}
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-[var(--home1-muted)] text-xs leading-relaxed -mt-1">
+              Create a password to manage bookings in your account.
+            </p>
+          </>
+        ) : null}
 
         <div>
           <label htmlFor="checkout-phone" className={labelClass}>
@@ -132,14 +149,39 @@ export default function CheckoutDetailsStep({
           />
         </div>
 
-        <div>
-          <label htmlFor="checkout-address" className={labelClass}>
-            Address<span className="text-[#d3231f]">*</span>
-          </label>
+        <div className="home1-checkout-address-section">
+          <div className="home1-checkout-address-head">
+            <label htmlFor="checkout-address" className={labelClass}>
+              Address<span className="text-[#d3231f]">*</span>
+            </label>
+            {isLoggedIn ? (
+              <button
+                type="button"
+                className="home1-checkout-address-search-btn"
+                onClick={() => setSiteModalOpen(true)}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+                </svg>
+                Search saved addresses
+              </button>
+            ) : null}
+          </div>
+
+          {selectedSiteLabel ? (
+            <p className="home1-checkout-address-selected" role="status">
+              Using saved address: <strong>{selectedSiteLabel}</strong>
+            </p>
+          ) : null}
+
           <input
             id="checkout-address"
             value={details.address}
-            onChange={(e) => set("address", e.target.value)}
+            onChange={(e) => {
+              setSelectedSiteLabel("");
+              set("address", e.target.value);
+            }}
             className={inputClass}
             autoComplete="street-address"
             required
@@ -197,6 +239,14 @@ export default function CheckoutDetailsStep({
           </button>
         </div>
       </form>
+
+      {isLoggedIn ? (
+        <CheckoutSiteAddressModal
+          open={siteModalOpen}
+          onClose={() => setSiteModalOpen(false)}
+          onSelect={handleSiteSelect}
+        />
+      ) : null}
     </div>
   );
 }

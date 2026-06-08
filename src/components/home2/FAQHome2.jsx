@@ -6,7 +6,7 @@ import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 
 export default function FAQHome2() {
-  const [openId, setOpenId] = useState(FAQ_ITEMS[0]?.id ?? null);
+  const [openId, setOpenId] = useState(null);
 
   return (
     <section className="home2-section home2-section--surface overflow-x-clip" aria-labelledby="home2-faq-heading">

@@ -61,11 +61,16 @@ export async function validateOrderData(payload) {
 
 /**
  * @param {number} amount
+ * @param {{ currency?: string }} [options]
  */
-export async function createPaymentIntent(amount) {
+export async function createPaymentIntent(amount, options = {}) {
   return checkoutFetch(CHECKOUT_PROXY.createPaymentIntent, {
     method: "POST",
-    body: { amount },
+    body: {
+      amount,
+      currency: options.currency ?? "gbp",
+      automatic_payment_methods: true,
+    },
   });
 }
 

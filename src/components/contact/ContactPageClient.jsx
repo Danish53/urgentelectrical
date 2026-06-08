@@ -7,8 +7,8 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import ContactHero from "@/components/contact/ContactHero";
 import ContactInfoPanel from "@/components/contact/ContactInfoPanel";
 import ContactForm from "@/components/contact/ContactForm";
+import ContactMap from "@/components/contact/ContactMap";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
-import { CONTACT_MAP_EMBED } from "@/data/contactPage";
 
 export default function ContactPageClient() {
   return (
@@ -33,20 +33,7 @@ export default function ContactPageClient() {
           </div>
         </section>
 
-        <section className="bg-[#eef0f2] pb-10 sm:pb-14 lg:pb-16" aria-label="Office location map">
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <div className="rounded-xl overflow-hidden border border-[#e8eaed] shadow-[0_4px_24px_rgba(17,24,39,0.08)] bg-white">
-              <iframe
-                title="Map showing Urgent Electrical at 17 Regent Street, Nottingham NG1 5BQ"
-                src={CONTACT_MAP_EMBED}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-                className="block w-full h-[280px] sm:h-[360px] md:h-[420px] lg:h-[460px] border-0"
-              />
-            </div>
-          </div>
-        </section>
+        <ContactMap />
 
         <CTAHome1 />
       </main>

@@ -1,11 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import FooterServicesLinks from "@/components/footer/FooterServicesLinks";
+import FooterLegalLinks from "@/components/footer/FooterLegalLinks";
 import {
   FOOTER_COMPANY,
   FOOTER_AREAS,
   FOOTER_BADGES,
-  FOOTER_LEGAL,
   FOOTER_PHONE,
   FOOTER_PHONE_TEL,
   SOCIAL_LINKS,
@@ -76,6 +76,8 @@ function FooterLinkList({ title, links }) {
 }
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="border-t-[3px]" style={{ backgroundColor: BG, borderColor: RED }}>
       <div className={`${SECTION_CONTAINER} pt-12 sm:pt-14 pb-8 sm:pb-10`}>
@@ -148,19 +150,10 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
           <p className="text-[#666666] text-[11px] sm:text-xs leading-relaxed">
-            © 2025 Urgent Electrical Services Limited. All Rights Reserved | Company No: 08956007 | VAT: 208 755 592
+            © {currentYear} Urgent Electrical Services Limited. All Rights Reserved | Company No: 08956007 | VAT: 208
+            755 592
           </p>
-          <div className="flex flex-wrap gap-4 sm:gap-6">
-            {FOOTER_LEGAL.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="text-[#666666] text-[11px] sm:text-xs hover:text-[#999999] transition-colors"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
+          <FooterLegalLinks />
         </div>
       </div>
     </footer>

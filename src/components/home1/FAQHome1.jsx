@@ -6,7 +6,7 @@ import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 
 export default function FAQHome1({ items = HOME_FAQ_ITEMS }) {
-  const [openId, setOpenId] = useState(items[0]?.id ?? null);
+  const [openId, setOpenId] = useState(null);
 
   return (
     <section

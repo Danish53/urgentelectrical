@@ -12,7 +12,7 @@ import { SERVICE_AREAS } from "@/data/areas";
 import { IconCheck, IconPhone } from "@/components/home1/icons";
 
 function PageDetailFaq({ faqs }) {
-  const [openId, setOpenId] = useState(0);
+  const [openId, setOpenId] = useState(-1);
   if (!faqs?.length) return null;
 
   return (
@@ -55,7 +55,7 @@ export default function OtherServiceDetailRich({ layout, loadError = "", imageUr
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
     layout.process.length ? { id: "process", label: "How it works" } : null,
     layout.symptoms.length ? { id: "symptoms", label: "Common signs" } : null,
-    layout.includes.length ? { id: "included", label: "Included" } : null,
+    // layout.includes.length ? { id: "included", label: "Included" } : null,
     layout.faqs.length ? { id: "faqs", label: "FAQs" } : null,
   ].filter(Boolean);
 
@@ -97,11 +97,18 @@ export default function OtherServiceDetailRich({ layout, loadError = "", imageUr
             {heroImage ? (
               <figure className="home1-page-detail-hero-media">
                 <img src={heroImage} alt={layout.title} className="home1-page-detail-hero-img" loading="eager" />
-                <figcaption className="home1-page-detail-hero-caption">
+                {/* <figcaption className="home1-page-detail-hero-caption">
                   NICEIC approved fault finding across Nottingham &amp; the East Midlands
-                </figcaption>
+                </figcaption> */}
               </figure>
             ) : null}
+
+            <p className="home1-service-slim-foot-trust-caption">
+              <span>
+                NICEIC approved fault finding across Nottingham &amp; the East Midlands
+              </span>
+            </p>
+
 
             <div className="home1-page-detail-layout">
               <div className="home1-page-detail-main">
@@ -200,7 +207,7 @@ export default function OtherServiceDetailRich({ layout, loadError = "", imageUr
                   </section>
                 ) : null}
 
-                {layout.includes.length ? (
+                {/* {layout.includes.length ? (
                   <section className="home1-page-detail-card" id="included">
                     <header className="home1-page-detail-card-head">
                       <span className="home1-page-detail-card-num">05</span>
@@ -218,7 +225,7 @@ export default function OtherServiceDetailRich({ layout, loadError = "", imageUr
                       ))}
                     </ul>
                   </section>
-                ) : null}
+                ) : null} */}
 
                 <section className="home1-page-detail-card home1-page-detail-card--areas" id="areas">
                   <header className="home1-page-detail-card-head">

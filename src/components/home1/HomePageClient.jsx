@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import MotionSection from "@/components/MotionSection.jsx";
-import HeroHome1 from "@/components/home1/HeroHome1";
+import Hero from "@/components/Hero.jsx";
 import TrustedCertificationsHome1 from "@/components/home1/TrustedCertificationsHome1";
 import CompanyStatsHome1 from "@/components/home1/CompanyStatsHome1";
 import FeaturedServicesHome1 from "@/components/home1/FeaturedServicesHome1";
@@ -23,7 +23,7 @@ export default function HomePageClient() {
     <div className="home1-page w-full min-w-0">
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
-        <HeroHome1 />
+        <Hero />
         <MotionSection variant="fade-up">
           <TrustedCertificationsHome1 />
         </MotionSection>

@@ -22,18 +22,37 @@ export function formatMonthYear(year, month) {
   });
 }
 
-/** Monday-based calendar grid for a month */
+/** Monday-based calendar grid; adjacent month dates fill empty cells */
 export function getCalendarCells(year, month) {
   const first = new Date(year, month, 1);
   const startPad = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cells = [];
 
-  for (let i = 0; i < startPad; i++) cells.push(null);
+  const prevMonthEnd = new Date(year, month, 0);
+  const prevYear = prevMonthEnd.getFullYear();
+  const prevMonth = prevMonthEnd.getMonth();
+  const daysInPrevMonth = prevMonthEnd.getDate();
+
+  for (let i = startPad - 1; i >= 0; i--) {
+    cells.push(new Date(prevYear, prevMonth, daysInPrevMonth - i));
+  }
+
   for (let d = 1; d <= daysInMonth; d++) {
     cells.push(new Date(year, month, d));
   }
+
+  let nextDay = 1;
+  while (cells.length % 7 !== 0) {
+    cells.push(new Date(year, month + 1, nextDay));
+    nextDay += 1;
+  }
+
   return cells;
+}
+
+export function isOutsideViewMonth(date, viewYear, viewMonth) {
+  return date.getFullYear() !== viewYear || date.getMonth() !== viewMonth;
 }
 
 export { WEEKDAY_LABELS };

@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import SectionHeader from "@/components/home1/SectionHeader";
+import ListSearchBar from "@/components/common/ListSearchBar";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { buildBlogPostFromListItem } from "@/lib/blogs/buildBlogPost";
-import { fetchBlogsPage } from "@/services/blogApiService";
+import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
+import { fetchAllBlogs, fetchBlogsPage } from "@/services/blogApiService";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import BlogCard from "./BlogCard";
+import CategoryTabsSlider from "@/components/common/CategoryTabsSlider";
 import BlogPagination from "./BlogPagination";
 
 function SubmitSpinner() {
@@ -36,7 +38,31 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
   const [meta, setMeta] = useState(initialMeta ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const reduceMotion = useReducedMotion();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchPool, setSearchPool] = useState(/** @type {typeof posts | null} */ (null));
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [searchRetryKey, setSearchRetryKey] = useState(0);
+
+  const categoryLabelFor = useCallback(
+    (categorySlug) =>
+      categorySlug === "all"
+        ? "Article"
+        : categories.find((category) => category.id === categorySlug)?.label ?? "Article",
+    [categories]
+  );
+
+  const mapBlogItems = useCallback(
+    (items, categorySlug, includeFeatured = false) =>
+      items.map((item, index) =>
+        buildBlogPostFromListItem(item, {
+          categorySlug,
+          categoryLabel: categoryLabelFor(categorySlug),
+          featured: includeFeatured && categorySlug === "all" && index === 0,
+        })
+      ),
+    [categoryLabelFor]
+  );
 
   const loadPage = useCallback(
     async (nextCategory, nextPage) => {
@@ -50,10 +76,7 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
         const mapped = result.blogs.map((item, index) =>
           buildBlogPostFromListItem(item, {
             categorySlug: nextCategory,
-            categoryLabel:
-              nextCategory === "all"
-                ? "Article"
-                : categories.find((c) => c.slug === nextCategory)?.label ?? "Article",
+            categoryLabel: categoryLabelFor(nextCategory),
             featured: nextCategory === "all" && nextPage === 1 && index === 0,
           })
         );
@@ -65,13 +88,52 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
         setLoading(false);
       }
     },
-    [categories]
+    [categoryLabelFor]
   );
+
+  useEffect(() => {
+    if (!normalizeSearchQuery(searchQuery)) {
+      setSearchPool(null);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    setSearchError(null);
+
+    fetchAllBlogs({ category: active === "all" ? "" : active })
+      .then((result) => {
+        if (cancelled) return;
+        setSearchPool(mapBlogItems(result.blogs, active));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSearchPool([]);
+        setSearchError(getApiErrorMessage(err, "Could not search articles."));
+      })
+      .finally(() => {
+        if (!cancelled) setSearchLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [active, mapBlogItems, searchQuery, searchRetryKey]);
+
+  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
+
+  const filteredSearchPosts = useMemo(() => {
+    if (!searchActive || !searchPool) return [];
+    return searchPool.filter((post) => matchesListSearch(searchQuery, post.title, post.excerpt));
+  }, [searchActive, searchPool, searchQuery]);
 
   function handleCategoryChange(catId) {
     if (catId === active) return;
     setActive(catId);
     setPage(1);
+    setSearchQuery("");
     loadPage(catId, 1);
   }
 
@@ -84,11 +146,16 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const featured = active === "all" && page === 1 ? posts.find((p) => p.featured) : null;
-  const gridPosts = featured ? posts.filter((p) => p.slug !== featured.slug) : posts;
+  const featured = !searchActive && active === "all" && page === 1 ? posts.find((p) => p.featured) : null;
+  const gridPosts = searchActive
+    ? filteredSearchPosts
+    : featured
+      ? posts.filter((p) => p.slug !== featured.slug)
+      : posts;
 
   const lastPage = meta?.last_page ?? 1;
   const currentPage = meta?.current_page ?? page;
+  const listLoading = loading || (searchActive && searchLoading);
 
   return (
     <section
@@ -104,71 +171,74 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
           align="center"
         />
 
-        <div
-          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10"
-          role="tablist"
-          aria-label="Filter articles by category"
-        >
-          {categories.map((cat) => {
-            const isActive = active === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                disabled={loading}
-                onClick={() => handleCategoryChange(cat.id)}
-                className={`relative shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[13px] font-bold transition-colors disabled:opacity-60 ${
-                  isActive
-                    ? "text-white"
-                    : "text-[var(--home1-muted)] hover:text-[var(--home1-text)] bg-[var(--home1-surface)]"
-                }`}
-              >
-                {isActive && !reduceMotion && (
-                  <motion.span
-                    layoutId="blog-tab-pill"
-                    className="absolute inset-0 rounded-xl bg-[var(--home1-red)]"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    aria-hidden="true"
-                  />
-                )}
-                {isActive && reduceMotion && (
-                  <span className="absolute inset-0 rounded-xl bg-[var(--home1-red)]" aria-hidden="true" />
-                )}
-                <span className="relative z-10">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <ListSearchBar
+          id="blog-list-search"
+          label="Search articles"
+          placeholder="Search articles by title or description…"
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+
+        {searchActive && !searchLoading ? (
+          <p className="home1-list-search-results" aria-live="polite">
+            {filteredSearchPosts.length} result{filteredSearchPosts.length === 1 ? "" : "s"} for &ldquo;
+            {searchQuery.trim()}&rdquo;
+          </p>
+        ) : null}
+
+        <CategoryTabsSlider
+          categories={categories}
+          active={active}
+          disabled={loading || searchLoading}
+          onChange={handleCategoryChange}
+          layoutId="blog-tab-pill"
+          ariaLabel="Filter articles by category"
+        />
 
         {error ? (
           <ServicesLoadError message={error} onRetry={() => loadPage(active, page)} />
         ) : null}
 
-        {loading ? (
+        {searchError ? (
+          <ServicesLoadError
+            message={searchError}
+            onRetry={() => {
+              setSearchError(null);
+              setSearchPool(null);
+              setSearchRetryKey((key) => key + 1);
+            }}
+          />
+        ) : null}
+
+        {listLoading ? (
           <div className="flex justify-center py-16 text-[var(--home1-muted)]" aria-live="polite">
             <SubmitSpinner />
-            <span className="ml-2 text-sm font-semibold">Loading articles…</span>
+            <span className="ml-2 text-sm font-semibold">
+              {searchActive ? "Searching articles…" : "Loading articles…"}
+            </span>
           </div>
         ) : null}
 
-        {!loading && !error && featured ? (
+        {!listLoading && !error && !searchError && featured ? (
           <div className="mb-6 sm:mb-8">
             <BlogCard post={featured} featured />
           </div>
         ) : null}
 
-        {!loading && !error && posts.length > 0 && gridPosts.length === 0 ? (
-          <p className="text-center text-[var(--home1-muted)] py-16">No articles in this category yet.</p>
+        {!listLoading && !error && !searchError && posts.length > 0 && gridPosts.length === 0 ? (
+          <p className="text-center text-[var(--home1-muted)] py-16">
+            {searchActive
+              ? `No articles found for "${searchQuery.trim()}". Try another search term.`
+              : "No articles in this category yet."}
+          </p>
         ) : null}
 
-        {!error && gridPosts.length > 0 ? (
+        {!error && !searchError && gridPosts.length > 0 ? (
           <div
-            className={`relative transition-opacity duration-200${loading ? " opacity-50 pointer-events-none" : ""}`}
-            aria-busy={loading}
+            className={`relative transition-opacity duration-200${listLoading ? " opacity-50 pointer-events-none" : ""}`}
+            aria-busy={listLoading}
           >
-            {loading ? (
+            {listLoading ? (
               <div
                 className="absolute inset-0 z-10 flex items-center justify-center"
                 aria-live="polite"
@@ -189,7 +259,7 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
           </div>
         ) : null}
 
-        {!error ? (
+        {!searchActive && !error ? (
           <BlogPagination
             currentPage={currentPage}
             lastPage={lastPage}
@@ -198,7 +268,7 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
           />
         ) : null}
 
-        {!error && meta?.total ? (
+        {!searchActive && !error && meta?.total ? (
           <p className="text-center text-xs font-medium text-[var(--home1-muted)] mt-4">
             Showing page {currentPage} of {lastPage} · {meta.total} articles
           </p>

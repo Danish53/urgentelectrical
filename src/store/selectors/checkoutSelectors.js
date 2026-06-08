@@ -7,6 +7,8 @@ export const selectValidateError = (s) => s.checkout.validateError;
 export const selectValidatedOrderData = (s) => s.checkout.validatedOrderData;
 export const selectPaymentIntentId = (s) => s.checkout.paymentIntentId;
 export const selectClientSecret = (s) => s.checkout.clientSecret;
+export const selectStripePublishableKey = (s) => s.checkout.stripePublishableKey;
+export const selectPaymentMethodTypes = (s) => s.checkout.paymentMethodTypes;
 export const selectPaymentIntentStatus = (s) => s.checkout.paymentIntentStatus;
 export const selectPaymentIntentError = (s) => s.checkout.paymentIntentError;
 export const selectPaymentStatus = (s) => s.checkout.paymentStatus;

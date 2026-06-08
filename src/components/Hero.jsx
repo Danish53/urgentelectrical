@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { useBookingOptions } from "@/hooks/useServices";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
+import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
 
 const MARQUEE_ITEMS = [
@@ -93,6 +95,7 @@ function HeroMarquee() {
 }
 
 export default function Hero() {
+  const router = useRouter();
   const { options, loading: servicesLoading } = useBookingOptions();
   const [service, setService] = useState("");
   const [postcode, setPostcode] = useState("");
@@ -103,6 +106,15 @@ export default function Hero() {
     }
   }, [options, service]);
   const reduceMotion = useReducedMotion();
+
+  function handleBookSubmit(e) {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (service) params.set("service", service);
+    if (postcode.trim()) params.set("postcode", postcode.trim().toUpperCase());
+    const qs = params.toString();
+    router.push(qs ? `/checkout?${qs}` : "/checkout");
+  }
 
   return (
     <section
@@ -181,6 +193,7 @@ export default function Hero() {
           variants={reduceMotion ? undefined : HERO_FORM}
           className="w-full max-w-[920px] mx-auto text-left bg-[#0a0a0a]/95 border border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm"
           aria-label="Book an electrician online"
+          onSubmit={handleBookSubmit}
         >
           <fieldset className="border-0 p-0 m-0">
             <legend className="sr-only">Check availability and book your electrician</legend>
@@ -239,19 +252,30 @@ export default function Hero() {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0"
-            >
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-4-4" strokeLinecap="round" />
-              </svg>
-              Check Availability &amp; Book Now
-              <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                <path d="M5 12h12M13 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="submit"
+                className="flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M20 20l-4-4" strokeLinecap="round" />
+                </svg>
+                <span className="truncate">Check Availability &amp; Book Now</span>
+                <svg className="w-5 h-5 shrink-0 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M5 12h12M13 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <a
+                href={`tel:${FOOTER_PHONE_TEL}`}
+                className="inline-flex items-center justify-center gap-2 shrink-0 w-full sm:w-auto sm:min-w-[148px] px-5 py-3.5 sm:py-4 rounded-xl border border-white/25 bg-white/[0.06] text-white font-bold text-[14px] sm:text-[15px] hover:bg-[#E31E24]/15 hover:border-[#E31E24]/45 transition-all duration-200"
+              >
+                <svg className="w-5 h-5 shrink-0 text-[#E31E24]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.24 1.01l-2.2 2.2z" />
+                </svg>
+                <span className="whitespace-nowrap">{FOOTER_PHONE}</span>
+              </a>
+            </div>
           </fieldset>
         </motion.form>
       </motion.div>

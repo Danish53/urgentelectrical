@@ -1,28 +1,36 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
 import { useBookableServices, useServiceCategories } from "@/hooks/useServices";
 import ServicesGridSkeleton from "@/components/skeletons/ServicesGridSkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
+import ListSearchBar from "@/components/common/ListSearchBar";
+import CategoryTabsSlider from "@/components/common/CategoryTabsSlider";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
+import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
 import SectionHeader from "@/components/home1/SectionHeader";
 import ServiceCard from "./ServiceCard";
 
 export default function ServicesCatalog() {
   const dispatch = useAppDispatch();
   const [active, setActive] = useState("all");
-  const reduceMotion = useReducedMotion();
+  const [searchQuery, setSearchQuery] = useState("");
   const { bookable, loading, failed, error } = useBookableServices();
   const { filters: categoryFilters } = useServiceCategories();
   const totalCount = useAppSelector((s) => s.services.meta?.total ?? bookable.length);
 
-  const filtered = useMemo(
-    () => (active === "all" ? bookable : bookable.filter((s) => s.category === active)),
-    [active, bookable]
-  );
+  const filtered = useMemo(() => {
+    const byCategory =
+      active === "all" ? bookable : bookable.filter((service) => service.category === active);
+
+    if (!normalizeSearchQuery(searchQuery)) return byCategory;
+
+    return byCategory.filter((service) =>
+      matchesListSearch(searchQuery, service.name, service.description)
+    );
+  }, [active, bookable, searchQuery]);
 
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
@@ -31,6 +39,8 @@ export default function ServicesCatalog() {
     if (matchCat) setActive(matchCat.id);
     else document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [categoryFilters]);
+
+  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
 
   return (
     <section
@@ -51,47 +61,38 @@ export default function ServicesCatalog() {
           align="center"
         />
 
-        <div
-          className="flex flex-wrap justify-center gap-2 mb-8 sm:mb-10 -mx-0.5 px-0.5"
-          role="tablist"
-          aria-label="Filter services by category"
-        >
-          {categoryFilters.map((cat) => {
-            const isActive = active === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActive(cat.id)}
-                className={`relative shrink-0 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[12px] sm:text-[13px] font-bold transition-colors ${
-                  isActive ? "text-white" : "text-[var(--home1-muted)] hover:text-[var(--home1-text)] bg-[var(--home1-surface)]"
-                }`}
-              >
-                {isActive && !reduceMotion && (
-                  <motion.span
-                    layoutId="services-tab-pill"
-                    className="absolute inset-0 rounded-xl bg-[var(--home1-red)]"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                    aria-hidden="true"
-                  />
-                )}
-                {isActive && reduceMotion && (
-                  <span className="absolute inset-0 rounded-xl bg-[var(--home1-red)]" aria-hidden="true" />
-                )}
-                <span className="relative z-10">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <ListSearchBar
+          id="services-list-search"
+          label="Search services"
+          placeholder="Search services by title or description…"
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
+
+        {searchActive ? (
+          <p className="home1-list-search-results" aria-live="polite">
+            {filtered.length} result{filtered.length === 1 ? "" : "s"} for &ldquo;{searchQuery.trim()}&rdquo;
+          </p>
+        ) : null}
+
+        <CategoryTabsSlider
+          categories={categoryFilters}
+          active={active}
+          onChange={setActive}
+          layoutId="services-tab-pill"
+          ariaLabel="Filter services by category"
+        />
 
         {loading ? (
           <ServicesGridSkeleton count={6} />
         ) : failed ? (
           <ServicesLoadError message={error} onRetry={() => dispatch(fetchServices())} />
         ) : filtered.length === 0 ? (
-          <p className="text-center text-[var(--home1-muted)] py-14">No services in this category.</p>
+          <p className="text-center text-[var(--home1-muted)] py-14">
+            {searchActive
+              ? `No services found for "${searchQuery.trim()}". Try another search term.`
+              : "No services in this category."}
+          </p>
         ) : (
           <ul
             key={active}

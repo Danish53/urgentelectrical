@@ -29,6 +29,7 @@ import {
 } from "@/store/slices/Checkoutslice";
 import {
   selectClientSecret,
+  selectStripePublishableKey,
   selectPaymentIntentId,
   selectValidateStatus,
   selectValidateError,
@@ -43,11 +44,15 @@ import CheckoutMainSkeleton from "@/components/skeletons/CheckoutMainSkeleton";
 import CheckoutSummarySkeleton from "@/components/skeletons/CheckoutSummarySkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { getTodayStart } from "@/components/checkout/checkoutUtils";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import { selectAuthUser } from "@/store/selectors/authSelectors";
 
-import { loadStripe } from "@stripe/stripe-js";
 import { Elements } from "@stripe/react-stripe-js";
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+import { createStripePromise } from "@/lib/checkout/stripeLoader";
+import {
+  formatCreateIntentApiResponse,
+  logPaymentIntentDebug,
+} from "@/lib/checkout/logPaymentIntentDebug";
 
 const EMPTY_DETAILS = {
   firstName: "",
@@ -57,8 +62,12 @@ const EMPTY_DETAILS = {
   passwordConfirmation: "",
   phone: "",
   address: "",
+  addressLine2: "",
   city: "",
   postcode: "",
+  county: "",
+  country: "GB",
+  title: "Mr",
   notes: "",
 };
 
@@ -76,15 +85,23 @@ export default function CheckoutPageClient() {
   const [stepError, setStepError] = useState("");
   const [processing, setProcessing] = useState(false);
   const [complete, setComplete] = useState(false);
+  const [handlingBankReturn, setHandlingBankReturn] = useState(false);
 
   const dispatch = useAppDispatch();
   const clientSecret = useAppSelector(selectClientSecret);
+  const stripePublishableKey = useAppSelector(selectStripePublishableKey);
   const paymentIntentId = useAppSelector(selectPaymentIntentId);
+  const stripePromise = useMemo(
+    () => createStripePromise(stripePublishableKey),
+    [stripePublishableKey]
+  );
   const validateStatus = useAppSelector(selectValidateStatus);
   const validateError = useAppSelector(selectValidateError);
   const paymentIntentStatus = useAppSelector(selectPaymentIntentStatus);
   const paymentIntentError = useAppSelector(selectPaymentIntentError);
   const paymentStatusError = useAppSelector(selectPaymentStatusError);
+  const { isLoggedIn } = useAuthSession();
+  const authUser = useAppSelector(selectAuthUser);
   const { bookable, loading: servicesLoading, failed: servicesFailed, error: servicesError } =
     useBookableServices();
   const { service: detailService, loading: detailLoading, failed: detailFailed } =
@@ -142,6 +159,27 @@ export default function CheckoutPageClient() {
     setSelectedDate(getTodayStart());
   }, [service?.apiId, selectedDate]);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
+  function scrollCheckoutTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleStepClick(targetStep) {
+    if (targetStep === step) {
+      scrollCheckoutTop();
+      return;
+    }
+
+    if (targetStep > step) return;
+
+    setStepError("");
+    setStep(targetStep);
+    scrollCheckoutTop();
+  }
+
   function handleSelectDate(date) {
     setSelectedDate(date);
     setSelectedTime("");
@@ -170,6 +208,88 @@ export default function CheckoutPageClient() {
     return true;
   }
 
+  useEffect(() => {
+    const paymentIntentClientSecret = searchParams.get("payment_intent_client_secret");
+    const redirectStatus = searchParams.get("redirect_status");
+    const returnedPaymentIntentId = searchParams.get("payment_intent");
+
+    if (!paymentIntentClientSecret || !redirectStatus) return;
+
+    let cancelled = false;
+
+    async function handleStripeReturn() {
+      setHandlingBankReturn(true);
+      setProcessing(true);
+      setStepError("");
+
+      try {
+        const stripe = await stripePromise;
+        if (!stripe || cancelled) return;
+
+        const { paymentIntent, error } = await stripe.retrievePaymentIntent(paymentIntentClientSecret);
+
+        if (cancelled) return;
+
+        if (error) {
+          setStepError(error.message ?? "Payment could not be verified.");
+          setStep(3);
+          return;
+        }
+
+        if (
+          redirectStatus === "succeeded" &&
+          (paymentIntent?.status === "succeeded" || paymentIntent?.status === "processing")
+        ) {
+          const intentId = paymentIntent?.id ?? returnedPaymentIntentId;
+          if (intentId) {
+            await dispatch(checkPaymentStatus(intentId));
+          }
+          setComplete(true);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          setStepError("Payment was not completed. Please try again.");
+          setStep(3);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setStepError(err?.message ?? "Payment could not be verified.");
+          setStep(3);
+        }
+      } finally {
+        if (!cancelled) {
+          setProcessing(false);
+          setHandlingBankReturn(false);
+
+          const cleanUrl = new URL(window.location.href);
+          cleanUrl.searchParams.delete("payment_intent");
+          cleanUrl.searchParams.delete("payment_intent_client_secret");
+          cleanUrl.searchParams.delete("redirect_status");
+          window.history.replaceState({}, "", cleanUrl.toString());
+        }
+      }
+    }
+
+    handleStripeReturn();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, dispatch, stripePromise]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !authUser) return;
+
+    setDetails((current) => ({
+      ...current,
+      firstName: current.firstName || String(authUser.first_name ?? authUser.firstName ?? "").trim(),
+      lastName: current.lastName || String(authUser.last_name ?? authUser.lastName ?? "").trim(),
+      email: current.email || String(authUser.email ?? "").trim(),
+      phone:
+        current.phone ||
+        String(authUser.mobile ?? authUser.mobile_number ?? authUser.phone ?? "").trim(),
+    }));
+  }, [isLoggedIn, authUser]);
+
   function validateStep2() {
     const { firstName, lastName, email, phone, address, postcode, password, passwordConfirmation } =
       details;
@@ -179,9 +299,7 @@ export default function CheckoutPageClient() {
       !email.trim() ||
       !phone.trim() ||
       !address.trim() ||
-      !postcode.trim() ||
-      !String(password ?? "").trim() ||
-      !String(passwordConfirmation ?? "").trim()
+      !postcode.trim()
     ) {
       setStepError("Please complete all required fields.");
       return false;
@@ -190,13 +308,19 @@ export default function CheckoutPageClient() {
       setStepError("Please enter a valid email address.");
       return false;
     }
-    if (String(password).trim().length < 8) {
-      setStepError("Password must be at least 8 characters.");
-      return false;
-    }
-    if (String(password).trim() !== String(passwordConfirmation).trim()) {
-      setStepError("Passwords do not match.");
-      return false;
+    if (!isLoggedIn) {
+      if (!String(password ?? "").trim() || !String(passwordConfirmation ?? "").trim()) {
+        setStepError("Please complete all required fields.");
+        return false;
+      }
+      if (String(password).trim().length < 8) {
+        setStepError("Password must be at least 8 characters.");
+        return false;
+      }
+      if (String(password).trim() !== String(passwordConfirmation).trim()) {
+        setStepError("Passwords do not match.");
+        return false;
+      }
     }
     setStepError("");
     return true;
@@ -219,6 +343,16 @@ export default function CheckoutPageClient() {
       return;
     }
 
+    logPaymentIntentDebug("Laravel API response", formatCreateIntentApiResponse(intentResult.payload?.raw));
+    logPaymentIntentDebug("Parsed for checkout", {
+      paymentIntentId: intentResult.payload?.paymentIntentId,
+      hasClientSecret: Boolean(intentResult.payload?.clientSecret),
+      paymentMethodTypesFromApi: intentResult.payload?.paymentMethodTypes,
+      stripePublishableKeyFromApi: intentResult.payload?.stripePublishableKey
+        ? `${String(intentResult.payload.stripePublishableKey).slice(0, 12)}…`
+        : null,
+    });
+
     const intentId = intentResult.payload?.paymentIntentId ?? paymentIntentId;
 
     const validateResult = await dispatch(
@@ -228,7 +362,7 @@ export default function CheckoutPageClient() {
         selectedDate,
         selectedTime,
         schedules: scheduleSlots,
-        details,
+        details: { ...details, isGuest: !isLoggedIn },
         lineItems,
         paymentIntentId: intentId,
       })
@@ -284,8 +418,13 @@ export default function CheckoutPageClient() {
                 totalInc: lineItems.totalInc,
               }}
             />
-          ) : pageLoading ? (
+          ) : pageLoading || handlingBankReturn ? (
             <div className="home1-checkout-flow home1-checkout-flow--loading">
+              {handlingBankReturn ? (
+                <p className="home1-checkout-bank-return-message" role="status">
+                  Verifying your payment…
+                </p>
+              ) : null}
               <div className="home1-checkout-skeleton-stepper" aria-hidden="true">
                 <div className="ue-skeleton home1-checkout-skeleton-stepper-bar" />
               </div>
@@ -303,7 +442,7 @@ export default function CheckoutPageClient() {
           ) : (
             <>
               <div className="home1-checkout-flow">
-                <CheckoutStepper currentStep={step} />
+                <CheckoutStepper currentStep={step} onStepClick={handleStepClick} />
 
                 <div className="home1-checkout-flow-inner">
                   <div className="home1-checkout-layout">
@@ -330,6 +469,7 @@ export default function CheckoutPageClient() {
                         <CheckoutDetailsStep
                           details={details}
                           onChange={setDetails}
+                          isLoggedIn={isLoggedIn}
                           onBack={() => {
                             setStep(1);
                             setStepError("");
@@ -340,12 +480,51 @@ export default function CheckoutPageClient() {
                             validateStatus === "loading" || paymentIntentStatus === "loading"
                           }
                         />
-                      ) : clientSecret ? (
-                        <Elements stripe={stripePromise} options={{ clientSecret }}>
+                      ) : clientSecret && stripePromise ? (
+                        <Elements
+                          stripe={stripePromise}
+                          options={{
+                            clientSecret,
+                            locale: "en-GB",
+                            developerTools: {
+                              assistant: {
+                                enabled: false,
+                              },
+                            },
+                            appearance: {
+                              theme: "stripe",
+                              variables: {
+                                colorPrimary: "#635bff",
+                                colorText: "#111827",
+                                colorDanger: "#dc2626",
+                                fontFamily: "Inter, system-ui, sans-serif",
+                                borderRadius: "8px",
+                                spacingUnit: "4px",
+                              },
+                              rules: {
+                                ".Tab": {
+                                  border: "1px solid #e5e7eb",
+                                  boxShadow: "none",
+                                },
+                                ".Tab--selected": {
+                                  borderColor: "#635bff",
+                                  backgroundColor: "#f8f7ff",
+                                },
+                                ".Input": {
+                                  border: "1px solid #e5e7eb",
+                                  boxShadow: "none",
+                                },
+                              },
+                            },
+                          }}
+                        >
                           <CheckoutPaymentStep
                             totalInc={lineItems.totalInc}
                             clientSecret={clientSecret}
                             paymentIntentId={paymentIntentId}
+                            billingName={[details.firstName, details.lastName].filter(Boolean).join(" ")}
+                            billingEmail={details.email}
+                            billingPhone={details.phone}
                             onBack={() => {
                               setStep(2);
                               setStepError("");
