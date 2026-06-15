@@ -200,7 +200,7 @@ export default function CreateSiteModal({
             </label>
 
             <div className="home1-sites-modal-divider">
-              <p className="home1-sites-modal-divider-label">Contact on site</p>
+              <p className="home1-sites-modal-divider-label">Contact Details</p>
             </div>
 
             <div className="home1-sites-form-grid home1-sites-form-grid--3">

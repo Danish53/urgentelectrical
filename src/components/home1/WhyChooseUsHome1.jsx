@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { WHY_CHOOSE_US_CARDS } from "@/data/whyChooseUs";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
-import { IconBolt } from "./icons";
+import { WHY_CHOOSE_US_ICONS } from "./icons";
 import { STAGGER_CONTAINER, STAGGER_ITEM, STAGGER_VIEWPORT } from "@/lib/motion";
 
 export default function WhyChooseUsHome1() {
@@ -31,7 +31,10 @@ export default function WhyChooseUsHome1() {
           whileInView={reduceMotion ? undefined : "visible"}
           viewport={STAGGER_VIEWPORT}
         >
-          {WHY_CHOOSE_US_CARDS.map((card) => (
+          {WHY_CHOOSE_US_CARDS.map((card, index) => {
+            const Icon = WHY_CHOOSE_US_ICONS[index] ?? WHY_CHOOSE_US_ICONS[0];
+
+            return (
             <motion.article
               key={card.num}
               variants={STAGGER_ITEM}
@@ -43,14 +46,15 @@ export default function WhyChooseUsHome1() {
                   style={{ background: "var(--home1-red)" }}
                   aria-hidden="true"
                 >
-                  <IconBolt className="w-5 h-5" />
+                  <Icon className="w-5 h-5" />
                 </span>
                 <span className="text-[var(--home1-red)]/20 text-5xl font-black leading-none tabular-nums">{card.num}</span>
               </div>
               <h3 className="font-bold text-[var(--home1-text)] text-lg mb-3 leading-snug">{card.title}</h3>
               <p className="text-[var(--home1-muted)] text-[14px] leading-relaxed flex-1">{card.description}</p>
             </motion.article>
-          ))}
+            );
+          })}
         </motion.div>
       </div>
     </section>

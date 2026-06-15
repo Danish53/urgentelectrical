@@ -44,6 +44,7 @@ export function resolveCrmScheduleKey(selectedDate, selectedTime, schedules) {
  *   paymentIntentId: string | null,
  *   crmScheduleKey?: string | null,
  *   sameAddress?: boolean,
+ *   coupon?: { code?: string, discountAmount?: number, discountValue?: number | null, discountType?: string | null } | null,
  * }} params
  */
 export function buildValidateOrderPayload({
@@ -57,9 +58,11 @@ export function buildValidateOrderPayload({
   paymentIntentId,
   crmScheduleKey: crmOverride,
   sameAddress = true,
+  coupon = null,
 }) {
-  const amount = parseFloat(lineItems.totalInc) || 0;
-  const subTotal = amount;
+  const subTotal = parseFloat(lineItems.totalInc) || 0;
+  const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
+  const amount = Math.max(0, subTotal - discountAmount);
   const deliveryFee = 0;
 
   const address1 = String(details.address ?? "").trim();
@@ -85,9 +88,9 @@ export function buildValidateOrderPayload({
     sub_total: subTotal,
     selected_date: selectedDate ? formatCheckoutApiDate(selectedDate) : null,
     selected_time: selectedTime || null,
-    discount_amount: 0,
-    discount_value: null,
-    discount_type: null,
+    discount_amount: discountAmount,
+    discount_value: coupon?.discountValue ?? null,
+    discount_type: coupon?.discountType ?? null,
     crm_schedule_key: crmScheduleKey,
     payment_intent_id: paymentIntentId,
     site_country: country,
@@ -110,6 +113,11 @@ export function buildValidateOrderPayload({
     email: String(details.email ?? "").trim(),
     company: details.company ?? null,
   };
+
+  const couponCode = String(coupon?.code ?? "").trim();
+  if (couponCode) {
+    payload.coupon_code = couponCode;
+  }
 
   const password = String(details.password ?? "").trim();
   const passwordConfirmation = String(details.passwordConfirmation ?? password).trim();

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Home2Image from "./Home2Image";
 import {
   EMERGENCY_STATS,
@@ -30,9 +31,9 @@ export default function EmergencyHome2() {
                 <IconPhone />
                 {EMERGENCY_PHONE}
               </a>
-              <a href="/checkout" className="home2-btn home2-btn--outline-light">
+              <Link href="/services" className="home2-btn home2-btn--outline-light">
                 Book online
-              </a>
+              </Link>
             </div>
             <div className="grid grid-cols-2 gap-3 mt-10">
               {EMERGENCY_STATS.map((s, idx) => (

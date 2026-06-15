@@ -14,6 +14,24 @@ import {
   isSameDay,
   isToday,
 } from "@/components/checkout/checkoutUtils";
+import { isNoSlotsScheduleError } from "@/lib/schedules";
+
+function SlotsWarning({ message = "No time slots available for this date." }) {
+  return (
+    <div className="home1-checkout-slots-warning" role="status">
+      {/* <span className="home1-checkout-slots-warning-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path
+            d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </span> */}
+      <p>{message}</p>
+    </div>
+  );
+}
 
 function CalNavIcon({ direction }) {
   return (
@@ -61,6 +79,12 @@ export default function CheckoutDateTimeStep({
   const displaySlots = useDynamicSchedule
     ? timeSlots
     : getTimeSlotsForBooking(selectedDate, schedules);
+  const noSlotsFromApi = isNoSlotsScheduleError({ message: slotsError ?? "" });
+  const showNoSlotsWarning =
+    Boolean(selectedDate) &&
+    !slotsLoading &&
+    displaySlots.length === 0 &&
+    (!slotsError || noSlotsFromApi);
 
   function isDateDisabled(date) {
     if (isPastDate(date)) return true;
@@ -187,21 +211,18 @@ export default function CheckoutDateTimeStep({
             ) : null}
 
             {selectedDate && useDynamicSchedule && slotsLoading ? (
-              <p className="home1-checkout-alert home1-checkout-card-sub" role="status">
+              <p className="home1-checkout-slots-loading" role="status">
                 Loading available time slots…
               </p>
             ) : null}
 
-            {slotsError ? (
-              <p className="home1-checkout-alert home1-checkout-alert--error" role="alert">
-                {slotsError}
-              </p>
-            ) : null}
+            {showNoSlotsWarning ? <SlotsWarning /> : null}
 
-            {selectedDate && !slotsLoading && !slotsAvailable && !slotsError ? (
-              <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
-                No time slots on this day. Please choose another date.
-              </p>
+            {slotsError && !showNoSlotsWarning ? (
+              <>
+                {/* {slotsError} */}
+                <SlotsWarning />
+              </>
             ) : null}
 
             {selectedDate && slotsAvailable && displaySlots.length > 0 ? (
@@ -229,17 +250,11 @@ export default function CheckoutDateTimeStep({
                 })}
               </div>
             ) : null}
-
-            {hasStaticSchedules && !displaySlots.length && selectedDate && slotsAvailable ? (
-              <p className="home1-checkout-alert home1-checkout-alert--warn" role="alert">
-                No slots listed for this date. Try another day.
-              </p>
-            ) : null}
           </div>
         </div>
       </div>
 
-      {error ? (
+      {error && !showNoSlotsWarning && !slotsError ? (
         <p className="home1-checkout-alert home1-checkout-alert--error" role="alert">
           {error}
         </p>

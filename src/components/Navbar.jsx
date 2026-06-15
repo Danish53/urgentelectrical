@@ -9,7 +9,9 @@ import { CONTAINER } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
 import { NAV_MENU_ITEM } from "@/components/nav/navMenuStyles";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
-import { NAV_GROUPS, NAV_DROPDOWN_SUBTITLES } from "./navData";
+import { NAV_DROPDOWN_SUBTITLES } from "./navData";
+import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
+import { useNavMenu } from "@/hooks/useNavMenu";
 
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (
@@ -61,6 +63,7 @@ function NavIconBookArrow() {
 
 function BrandLogo({ compact = false }) {
   const logoSize = compact ? 40 : 46;
+
   return (
     <Link href="/" className="inline-flex items-center gap-2.5 shrink-0">
       <Image
@@ -88,16 +91,18 @@ function BrandLogo({ compact = false }) {
 }
 
 function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true }) {
+  const { site } = useWebsiteGeneralData();
+
   return (
     <div className="bg-[#f9f8f6] border-b border-[#ececec]">
       <div className={`${CONTAINER} h-10 flex items-center justify-between text-[13px] leading-none`}>
         <div className="flex items-center gap-4 min-w-0">
           <a
-            href="tel:01157780622"
+            href={`tel:${site.contactNumber}`}
             className="flex items-center gap-2 text-[#6b7280] font-normal hover:text-[#111827] transition-colors shrink-0"
           >
             <NavIconPhone className="w-4 h-4 text-[#c62828]" />
-            <span className="tracking-wide">0115 778 0622</span>
+            <span className="tracking-wide">{site.contactNumberDisplay}</span>
           </a>
           {showDesktopExtras && <span className="hidden lg:block w-px h-[14px] bg-[#d4d4d4]" aria-hidden />}
           <span className="hidden lg:flex items-center gap-2 text-[#2e7d32] font-normal shrink-0">
@@ -156,7 +161,7 @@ function NavMegaDropdown({ group, onNavigate }) {
         </div>
         <ul className="px-5 py-1">
           {group.items.map((item) => (
-            <li key={item.label}>
+            <li key={item.key ?? item.label}>
               <Link
                 href={item.href}
                 onClick={onNavigate}
@@ -186,9 +191,16 @@ export default function Navbar() {
   const headerRef = useRef(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
-  const [mobileAccordion, setMobileAccordion] = useState("Domestic");
+  const [mobileAccordion, setMobileAccordion] = useState(null);
+  const { navGroups } = useNavMenu();
   const { incVat, toggleVat } = useVatPreference();
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (navGroups.length && mobileAccordion === null) {
+      setMobileAccordion(navGroups[0].label);
+    }
+  }, [navGroups, mobileAccordion]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -262,11 +274,11 @@ export default function Navbar() {
               </div>
 
               <nav className="flex items-center justify-center gap-x-0.5 px-2 ml-[60px]">
-                {NAV_GROUPS.map((group) => {
+                {navGroups.map((group) => {
                   const isOpen = activeMenu === group.label;
                   return (
                     <div
-                      key={group.label}
+                      key={group.slug ?? group.label}
                       className="relative"
                       onMouseEnter={() => setActiveMenu(group.label)}
                       onMouseLeave={() => setActiveMenu(null)}
@@ -297,7 +309,7 @@ export default function Navbar() {
               </nav>
 
               <div className="flex items-center justify-end min-w-0">
-                <a
+                <Link
                   href="/services"
                   className="group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
@@ -305,7 +317,7 @@ export default function Navbar() {
                   <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">
                     <NavIconBookArrow />
                   </span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -341,10 +353,10 @@ export default function Navbar() {
           </div>
 
           <nav className="flex-1 overflow-y-auto">
-            {NAV_GROUPS.map((group) => {
+            {navGroups.map((group) => {
               const isOpen = mobileAccordion === group.label;
               return (
-                <div key={group.label} className="border-b border-[#ebebeb]">
+                <div key={group.slug ?? group.label} className="border-b border-[#ebebeb]">
                   <button
                     type="button"
                     onClick={() => setMobileAccordion(isOpen ? null : group.label)}
@@ -363,7 +375,7 @@ export default function Navbar() {
                       </div>
                       <ul className="space-y-0">
                         {group.items.map((item) => (
-                          <li key={item.label}>
+                          <li key={item.key ?? item.label}>
                             <Link
                               href={item.href}
                               onClick={closeMobile}

@@ -8,6 +8,21 @@ export const DETAIL_SLUG_ALIASES = {
   "socket-replacment": "socket-replacement",
   "emergency-response-247": "emergency-response-24-7",
   "emergency-response-24-7-247": "emergency-response-24-7",
+  "fire-alarm-inspection-testing": "fire-alarm-inspection-and-testing",
+  /** Navbar menu slugs (CMS) → canonical service copy slug */
+  "domestic-electrician": "domestic-electrical-fault-investigation",
+  "commercial-electrician-nottingham": "portable-appliance-testing-pat",
+  "industrial-electrician-nottingham": "electrical-installation-condition-report-eicr",
+  "planned-electrical-maintenance-nottingham": "domestic-electrical-fault-investigation",
+  "electrical-certificates-nottingham": "electrical-installation-condition-report-eicr",
+};
+
+/** Canonical mock slug → live services API slug */
+export const SERVICE_API_SLUG_OVERRIDES = {
+  "emergency-response-24-7": "emergency-response-247",
+  "fire-alarm-inspection-and-testing": "fire-alarm-inspection-testing",
+  "emergency-lighting-periodic-inspection-and-testing":
+    "emergency-lighting-periodic-inspection-testing-certificate",
 };
 
 const SERVICE_DETAIL_SLUG_HINTS = [
@@ -49,6 +64,23 @@ export function resolveServiceDetailSlug(slug, title) {
   }
 
   return normalized || slug || "";
+}
+
+/**
+ * Slugs to try against GET /services/{slug} (menu URL slug + resolved + API variants).
+ * @param {string} slug
+ */
+export function resolveServiceApiSlugCandidates(slug) {
+  const trimmed = String(slug ?? "").trim();
+  if (!trimmed) return [];
+
+  const resolved = resolveServiceDetailSlug(trimmed);
+  const candidates = new Set([trimmed, resolved]);
+
+  if (DETAIL_SLUG_ALIASES[trimmed]) candidates.add(DETAIL_SLUG_ALIASES[trimmed]);
+  if (SERVICE_API_SLUG_OVERRIDES[resolved]) candidates.add(SERVICE_API_SLUG_OVERRIDES[resolved]);
+
+  return [...candidates].filter(Boolean);
 }
 
 /**

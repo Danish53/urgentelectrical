@@ -8,9 +8,10 @@ import { getPageImageUrl } from "@/services/pagesApiService";
  * @param {{
  *   page: import("@/services/pagesApiService").ApiInfoPageDetail,
  *   loadError?: string,
+ *   relatedLinks?: { slug: string, label: string, href: string }[],
  * }} props
  */
-export default function OtherServiceDetailClient({ page, loadError = "" }) {
+export default function OtherServiceDetailClient({ page, loadError = "", relatedLinks = [] }) {
   const slug = page?.slug ?? "";
   const richLayout = getPageDetailLayout(slug, page);
   const imageUrl = getPageImageUrl(page);
@@ -29,6 +30,7 @@ export default function OtherServiceDetailClient({ page, loadError = "" }) {
       loadError={loadError}
       imageUrl={imageUrl || richLayout.image}
       updatedAt={updatedAt}
+      relatedLinks={relatedLinks}
     />
   );
 }

@@ -265,6 +265,7 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
             lastPage={lastPage}
             loading={loading}
             onPageChange={handlePageChange}
+            className="mt-10 sm:mt-12"
           />
         ) : null}
 

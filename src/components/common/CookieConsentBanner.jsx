@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
+import { mapCookieContent } from "@/lib/cookie/mapCookieContent";
+import { fetchCookieSession } from "@/services/cookieApiService";
 import "./cookie-consent.css";
 
 const CONSENT_STORAGE_KEY = "ue-cookie-consent";
@@ -26,10 +28,15 @@ function CookieIcon() {
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [content, setContent] = useState(() => mapCookieContent({}));
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     setMounted(true);
+
+    fetchCookieSession()
+      .then((data) => setContent(mapCookieContent(data)))
+      .catch(() => setContent(mapCookieContent({})));
 
     try {
       const saved = window.localStorage.getItem(CONSENT_STORAGE_KEY);
@@ -49,6 +56,11 @@ export default function CookieConsentBanner() {
     } catch {
       // Ignore storage errors and still close the banner.
     }
+
+    if (choice === "accepted" || choice === "customized") {
+      fetchCookieSession().catch(() => {});
+    }
+
     setVisible(false);
   }
 
@@ -80,13 +92,11 @@ export default function CookieConsentBanner() {
                   <CookieIcon />
                 </span>
                 <p className="ue-cookie-consent__text">
-                  <strong>We value your privacy</strong>
-                  We use cookies to improve your experience, analyse site traffic, and support secure
-                  booking. Read our{" "}
-                  <Link href="/policies" className="ue-cookie-consent__link">
-                    Cookie policy
-                  </Link>{" "}
-                  to learn more.
+                  <strong>{content.title}</strong>
+                  {content.description}{" "}
+                  <Link href={content.policyUrl} className="ue-cookie-consent__link">
+                    {content.policyLinkText}
+                  </Link>
                 </p>
               </div>
 
@@ -96,21 +106,21 @@ export default function CookieConsentBanner() {
                   className="ue-cookie-consent__btn ue-cookie-consent__btn--accept"
                   onClick={() => closeBanner("accepted")}
                 >
-                  Accept all
+                  {content.acceptLabel}
                 </button>
                 <button
                   type="button"
                   className="ue-cookie-consent__btn ue-cookie-consent__btn--reject"
                   onClick={() => closeBanner("rejected")}
                 >
-                  Reject all
+                  {content.rejectLabel}
                 </button>
                 <button
                   type="button"
                   className="ue-cookie-consent__btn ue-cookie-consent__btn--settings"
                   onClick={() => closeBanner("customized")}
                 >
-                  Manage
+                  {content.manageLabel}
                 </button>
               </div>
             </div>

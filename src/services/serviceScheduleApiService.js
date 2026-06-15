@@ -1,5 +1,5 @@
 import { GET_SERVICE_SCHEDULE_PROXY } from "@/constants/serviceScheduleApi";
-import { formatScheduleRequestDate } from "@/lib/schedules";
+import { formatScheduleRequestDate, isNoSlotsScheduleMessage } from "@/lib/schedules";
 import { ApiError } from "@/lib/api/errors";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
 
@@ -53,6 +53,11 @@ export async function fetchServiceSchedule(serviceId, selectedDate) {
         ? Object.values(data.errors).flat().filter(Boolean).join(" ")
         : null) ||
       `Request failed (${response.status})`;
+
+    if (isNoSlotsScheduleMessage(message) || response.status === 404) {
+      return { data: { schedule: [] } };
+    }
+
     throw new ApiError(message, { status: response.status, data });
   }
 

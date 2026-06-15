@@ -220,10 +220,12 @@ export default function LocationDetailClient({ location, related }) {
                       {svc.tag ? (
                         <span className="home1-location-detail-service-tag">{svc.tag}</span>
                       ) : null}
-                      <span className="home1-location-detail-service-price">
-                        from <strong>£{svc.priceIncVat}</strong>
-                        <span className="sr-only"> including VAT</span>
-                      </span>
+                      {svc.priceIncVat ? (
+                        <span className="home1-location-detail-service-price">
+                          from <strong>£{svc.priceIncVat}</strong>
+                          <span className="sr-only"> including VAT</span>
+                        </span>
+                      ) : null}
                     </span>
                     <span className="home1-location-detail-service-name">{svc.name}</span>
                     <span className="home1-location-detail-service-link">

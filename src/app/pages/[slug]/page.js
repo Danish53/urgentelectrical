@@ -1,7 +1,8 @@
-import { notFound } from "next/navigation";
 import OtherServiceDetailClient from "@/components/pages/OtherServiceDetailClient";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { getServiceCategories } from "@/lib/services/getServices";
 import { fetchPageBySlug } from "@/services/pagesApiService";
+import { fetchRelatedServiceLinks } from "@/services/relatedServicesApiService";
 import { serviceSlug } from "@/lib/slugs";
 import "../../home1/home1.css";
 import "../pages.css";
@@ -35,12 +36,11 @@ export default async function OtherServiceDetailPage({ params }) {
 
   let page = null;
   let loadError = "";
+  let relatedLinks = [];
 
   try {
     page = await fetchPageBySlug(slug);
   } catch (error) {
-    const status = error && typeof error === "object" && "status" in error ? Number(error.status) : 0;
-    if (status === 404) notFound();
     loadError = getApiErrorMessage(error, "Could not load this page.");
     page = {
       id: 0,
@@ -50,5 +50,12 @@ export default async function OtherServiceDetailPage({ params }) {
     };
   }
 
-  return <OtherServiceDetailClient page={page} loadError={loadError} />;
+  try {
+    const { categoryMap } = await getServiceCategories();
+    relatedLinks = await fetchRelatedServiceLinks(page.slug || slug, categoryMap);
+  } catch {
+    relatedLinks = [];
+  }
+
+  return <OtherServiceDetailClient page={page} loadError={loadError} relatedLinks={relatedLinks} />;
 }

@@ -6,12 +6,9 @@ export default function SitesListSkeleton({ count = 3 }) {
       {Array.from({ length: count }).map((_, i) => (
         <li key={i}>
           <div className="home1-sites-card home1-sites-card--skeleton">
-            <div className="flex justify-between gap-3 mb-4">
-              <div className="flex-1 space-y-2">
-                <div className="ue-skeleton h-5 w-3/5 max-w-[200px] rounded" />
-                <div className="ue-skeleton h-3.5 w-2/5 max-w-[120px] rounded" />
-              </div>
-              <div className="ue-skeleton h-6 w-14 rounded-full shrink-0" />
+            <div className="mb-4 space-y-2">
+              <div className="ue-skeleton h-5 w-3/5 max-w-[200px] rounded" />
+              <div className="ue-skeleton h-3.5 w-2/5 max-w-[120px] rounded" />
             </div>
             <div className="space-y-2.5 mb-4">
               <div className="ue-skeleton h-3 w-full rounded" />

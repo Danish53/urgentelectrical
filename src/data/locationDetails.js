@@ -96,7 +96,7 @@ function getNearby(name, regionId, limit = 8) {
     });
 }
 
-function buildLocationRecord(name) {
+export function buildLocationRecord(name) {
   const regionId = findRegionForName(name);
   const regionLabel = REGION_LABELS[regionId] ?? "East Midlands";
   const slug = slugify(name);

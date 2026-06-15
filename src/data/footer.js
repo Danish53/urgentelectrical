@@ -21,7 +21,7 @@ export const FOOTER_BADGES = ["NICEIC Approved", "Fully Insured", "Est. 2014"];
 export const FOOTER_LEGAL = [
   { label: "Privacy policy", match: ["privacy"], fallbackHref: "/policies" },
   { label: "Terms & conditions", match: ["terms", "condition"], fallbackHref: "/policies" },
-  { label: "Cookie policy", match: ["cookie"], fallbackHref: "/policies" },
+  { label: "Cookie policy", match: ["cookie"], fallbackHref: "/policies/cookie-policy" },
 ];
 
 export const FOOTER_PHONE = "0115 778 0622";

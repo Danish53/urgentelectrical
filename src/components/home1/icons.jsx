@@ -38,3 +38,63 @@ export function IconArrow({ className = "w-4 h-4" }) {
     </svg>
   );
 }
+
+export function IconDispatch24({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="17" cy="7" r="4.2" fill="white" />
+      <text x="17" y="8.6" textAnchor="middle" fill="#D3231F" fontSize="5.5" fontWeight="700" fontFamily="system-ui, sans-serif">
+        24
+      </text>
+    </svg>
+  );
+}
+
+export function IconRapidResponse({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="5" y="6" width="14" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.6" strokeDasharray="3 2.5" />
+      <path
+        d="M15 12H9M11 10l-2 2 2 2"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function IconProblemSolved({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="10" cy="8.5" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M5.5 19.5v-1.2a4.5 4.5 0 019 0v1.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="17.5" cy="9" r="2.2" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M17.5 10.6v2.2M16.4 11.7h2.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconCoverage({ className = "w-5 h-5" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 3l7.5 3v6c0 4.5-3.2 7.8-7.5 9-4.3-1.2-7.5-4.5-7.5-9V6L12 3z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export const WHY_CHOOSE_US_ICONS = [IconDispatch24, IconRapidResponse, IconProblemSolved, IconCoverage];

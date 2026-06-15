@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useBookingOptions } from "@/hooks/useServices";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
@@ -8,6 +9,7 @@ import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { LOCATIONS_MAP_EMBED } from "@/data/locationsPage";
 
 export default function LocationsSearchMap() {
+  const router = useRouter();
   const { options, loading: servicesLoading } = useBookingOptions();
   const [service, setService] = useState("");
 
@@ -20,10 +22,12 @@ export default function LocationsSearchMap() {
 
   function handleSearch(e) {
     e.preventDefault();
-    window.location.href = buildCheckoutHref({
-      service: service || undefined,
-      postcode: postcode.trim() || undefined,
-    });
+    router.push(
+      buildCheckoutHref({
+        service: service || undefined,
+        postcode: postcode.trim() || undefined,
+      }),
+    );
   }
 
   return (

@@ -5896,6 +5896,31 @@
   color: var(--home1-red);
 }
 
+.home1-locations-area-card--skeleton {
+  pointer-events: none;
+  border-color: #eef2f6;
+  background: #f8fafc;
+}
+
+.home1-locations-area-card--skeleton .home1-locations-area-icon {
+  background: #e8edf2;
+}
+
+.home1-locations-area-name-skeleton {
+  display: block;
+  width: 72%;
+  height: 0.95rem;
+  border-radius: 6px;
+}
+
+.home1-locations-area-cta-skeleton {
+  display: block;
+  width: 52%;
+  height: 0.75rem;
+  margin-top: 0.35rem;
+  border-radius: 6px;
+}
+
 /* Location detail page */
 .home1-location-detail-page {
   background: #fff;

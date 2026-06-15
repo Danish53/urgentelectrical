@@ -1,6 +1,7 @@
+"use client";
+
+import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import {
-  CONTACT_ADDRESS,
-  CONTACT_BUSINESS_NAME,
   CONTACT_MAP_DIRECTIONS,
   CONTACT_MAP_EMBED,
   CONTACT_MAP_LINK,
@@ -8,13 +9,15 @@ import {
 } from "@/data/contactPage";
 
 export default function ContactMap() {
+  const { site } = useWebsiteGeneralData();
+
   return (
     <section className="home1-contact-map-section bg-[#eef0f2]" aria-label="Office location map">
       <div className="w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
         <div className="home1-contact-map-card">
           <div className="home1-contact-map-frame">
             <iframe
-              title={`Map showing ${CONTACT_BUSINESS_NAME} at ${CONTACT_ADDRESS.full}`}
+              title={`Map showing ${site.title} at ${site.address}`}
               src={CONTACT_MAP_EMBED}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
@@ -29,8 +32,8 @@ export default function ContactMap() {
                 rel="noopener noreferrer"
                 className="home1-contact-map-place-link"
               >
-                <strong className="home1-contact-map-place-name">{CONTACT_BUSINESS_NAME}</strong>
-                <span className="home1-contact-map-place-address">{CONTACT_ADDRESS.full}</span>
+                <strong className="home1-contact-map-place-name">{site.title}</strong>
+                <span className="home1-contact-map-place-address">{site.address}</span>
               </a>
 
               <div

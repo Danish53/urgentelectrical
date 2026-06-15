@@ -47,7 +47,7 @@ export default function HomePageClient() {
           <HowItWorksHome1 />
         </MotionSection>
         <MotionSection variant="fade-up">
-          <TestimonialsHome1 limit={3} />
+          <TestimonialsHome1 />
         </MotionSection>
         <MotionSection variant="fade-up">
           <FAQHome1 />

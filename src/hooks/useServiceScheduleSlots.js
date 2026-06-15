@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { normalizeScheduleApiSlots } from "@/lib/schedules";
+import { normalizeScheduleApiSlots, isNoSlotsScheduleError } from "@/lib/schedules";
 import { fetchServiceSchedule } from "@/services/serviceScheduleApiService";
 
 /**
@@ -34,7 +34,9 @@ export function useServiceScheduleSlots(serviceId, selectedDate) {
       .catch((err) => {
         if (cancelled) return;
         setSlots([]);
-        setError(err?.message ?? "Could not load time slots.");
+        setError(
+          isNoSlotsScheduleError(err) ? null : err?.message ?? "Could not load time slots."
+        );
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

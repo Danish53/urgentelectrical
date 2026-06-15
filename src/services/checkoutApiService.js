@@ -50,6 +50,16 @@ async function checkoutFetch(path, options = {}) {
 }
 
 /**
+ * @param {{ service_id: number, variant_id?: number | null, coupon_code: string }} payload
+ */
+export async function applyCoupon(payload) {
+  return checkoutFetch(CHECKOUT_PROXY.applyCoupon, {
+    method: "POST",
+    body: payload,
+  });
+}
+
+/**
  * @param {Record<string, unknown>} payload
  */
 export async function validateOrderData(payload) {

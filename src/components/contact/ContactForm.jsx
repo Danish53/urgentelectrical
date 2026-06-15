@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CONTACT_PHONE_DISPLAY, CONTACT_PHONE_TEL } from "@/data/contactPage";
+import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { parseContactResponseMessage, submitContact } from "@/services/contactService";
 import { toastError, toastSuccess } from "@/lib/toast";
 
@@ -31,6 +31,7 @@ const EMPTY_FORM = {
 };
 
 export default function ContactForm() {
+  const { site } = useWebsiteGeneralData();
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -79,8 +80,8 @@ export default function ContactForm() {
         <p className="home1-contact-success-title">Thank you</p>
         <p className="home1-contact-success-text">
           Your message has been received. For emergencies, call{" "}
-          <a href={`tel:${CONTACT_PHONE_TEL}`} className="home1-contact-success-link">
-            {CONTACT_PHONE_DISPLAY}
+          <a href={`tel:${site.contactNumber}`} className="home1-contact-success-link">
+            {site.contactNumberDisplay}
           </a>
           .
         </p>

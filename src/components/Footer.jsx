@@ -1,15 +1,11 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
 import FooterServicesLinks from "@/components/footer/FooterServicesLinks";
 import FooterLegalLinks from "@/components/footer/FooterLegalLinks";
-import {
-  FOOTER_COMPANY,
-  FOOTER_AREAS,
-  FOOTER_BADGES,
-  FOOTER_PHONE,
-  FOOTER_PHONE_TEL,
-  SOCIAL_LINKS,
-} from "@/data/footer";
+import SiteLogoImage from "@/components/common/SiteLogoImage";
+import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
+import { FOOTER_COMPANY, FOOTER_AREAS, FOOTER_BADGES } from "@/data/footer";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 const RED = "#e63946";
@@ -76,42 +72,41 @@ function FooterLinkList({ title, links }) {
 }
 
 export default function Footer() {
+  const { site } = useWebsiteGeneralData();
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="border-t-[3px]" style={{ backgroundColor: BG, borderColor: RED }}>
       <div className={`${SECTION_CONTAINER} pt-12 sm:pt-14 pb-8 sm:pb-10`}>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12 sm:mb-16">
-          {/* Brand column */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-11 h-11 shrink-0 rounded-lg flex items-center justify-center overflow-hidden"
-                style={{ backgroundColor: RED }}
-              >
-                <Image src="/logo.jpg" alt="" width={44} height={44} className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <p className="text-white font-bold text-[15px] leading-tight">Urgent Electrical Services</p>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] mt-0.5" style={{ color: RED }}>
-                  24 hr emergency response
-                </p>
-              </div>
-            </div>
+            <Link href="/" className="inline-block mb-5" aria-label={site.title}>
+              <SiteLogoImage
+                src={site.logo}
+                alt={site.title}
+                width={220}
+                height={56}
+                className="h-12 sm:h-14 w-auto max-w-[220px] object-contain object-left"
+              />
+            </Link>
 
-            <p className="text-[#999999] text-[14px] leading-relaxed mb-5 max-w-sm">
-              NICEIC approved emergency electricians serving Nottingham and the East Midlands since 2014. Fast,
-              reliable, and fully insured.
-            </p>
+            <p className="text-[#999999] text-[14px] leading-relaxed mb-3 max-w-sm">{site.address}</p>
 
             <a
-              href={`tel:${FOOTER_PHONE_TEL}`}
+              href={`mailto:${site.email}`}
+              className="block text-[#b0b0b0] text-[14px] hover:text-white transition-colors mb-4"
+            >
+              {site.email}
+            </a>
+
+            <a
+              href={`tel:${site.contactNumber}`}
               className="inline-flex items-center gap-2.5 text-white text-xl sm:text-2xl font-bold hover:opacity-90 transition-opacity mb-5"
             >
               <span style={{ color: RED }}>
                 <IconPhone />
               </span>
-              {FOOTER_PHONE}
+              {site.contactNumberDisplay}
             </a>
 
             <div className="flex flex-wrap gap-2 mb-6">
@@ -127,10 +122,12 @@ export default function Footer() {
             </div>
 
             <div className="flex items-center gap-3">
-              {SOCIAL_LINKS.map((social) => (
+              {site.socialLinks.map((social) => (
                 <a
                   key={social.id}
                   href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label}
                   className="w-9 h-9 rounded-full border border-[#555555] flex items-center justify-center text-[#cccccc] hover:border-white hover:text-white transition-colors duration-200"
                 >
@@ -150,8 +147,7 @@ export default function Footer() {
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
           <p className="text-[#666666] text-[11px] sm:text-xs leading-relaxed">
-            © {currentYear} Urgent Electrical Services Limited. All Rights Reserved | Company No: 08956007 | VAT: 208
-            755 592
+            © {currentYear} {site.title}. All Rights Reserved | Company No: 08956007 | VAT: 208 755 592
           </p>
           <FooterLegalLinks />
         </div>

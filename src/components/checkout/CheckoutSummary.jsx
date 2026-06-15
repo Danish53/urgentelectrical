@@ -1,15 +1,29 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { formatMoney } from "@/components/checkout/checkoutUtils";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { parseApplyCouponResponse } from "@/lib/checkout/parseCouponResponse";
 import { formatGbpDisplay, getDisplayPrice, getVatSuffix } from "@/lib/pricing";
+import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
 
-const COUPONS = {
-  URGENT10: { type: "percent", value: 10, label: "10% off" },
-  SAVE20: { type: "fixed", value: 20, label: "£20 off" },
-};
-
+/**
+ * @param {{
+ *   service: Record<string, unknown> | null,
+ *   variantLabel?: string | null,
+ *   lineItems: { totalInc: string, service: { label: string, amountInc: string, amountExc: string }, travel: { label: string, amountInc: string, amountExc: string } },
+ *   selectedDate?: Date | null,
+ *   selectedTime?: string | null,
+ *   postcode?: string,
+ *   serviceApiId?: number | string | null,
+ *   variantApiId?: number | string | null,
+ *   appliedCoupon?: { code: string, discountAmount: number, discountValue?: number | null, discountType?: string | null, message?: string } | null,
+ *   onCouponApplied?: (coupon: { code: string, discountAmount: number, discountValue: number | null, discountType: string | null, message: string }) => void,
+ *   onCouponRemoved?: () => void,
+ * }} props
+ */
 export default function CheckoutSummary({
   service,
   variantLabel,
@@ -17,47 +31,83 @@ export default function CheckoutSummary({
   selectedDate,
   selectedTime,
   postcode,
+  serviceApiId,
+  variantApiId,
+  appliedCoupon = null,
+  onCouponApplied,
+  onCouponRemoved,
 }) {
   const { incVat } = useVatPreference();
-  const [couponCode, setCouponCode] = useState("");
-  const [couponApplied, setCouponApplied] = useState(null);
+  const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
   const [couponError, setCouponError] = useState("");
-  const [couponSuccess, setCouponSuccess] = useState("");
+  const [couponSuccess, setCouponSuccess] = useState(appliedCoupon?.message ?? "");
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const subtotal = parseFloat(lineItems.totalInc);
-  const discount = useMemo(() => {
-    if (!couponApplied) return 0;
-    const c = COUPONS[couponApplied];
-    if (!c) return 0;
-    if (c.type === "percent") return Math.min(subtotal, (subtotal * c.value) / 100);
-    return Math.min(subtotal, c.value);
-  }, [couponApplied, subtotal]);
-
+  const subtotal = parseFloat(lineItems.totalInc) || 0;
+  const discount = appliedCoupon?.discountAmount ?? 0;
   const totalAfterDiscount = Math.max(0, subtotal - discount);
   const vatLabel = getVatSuffix(incVat);
   const priceExc = service?.priceExcVat ?? service?.price;
   const displayPrice = priceExc != null ? getDisplayPrice(priceExc, incVat) : null;
 
-  function applyCoupon() {
+  async function handleApplyCoupon() {
     const code = couponCode.trim().toUpperCase();
     if (!code) {
       setCouponError("Enter a coupon code.");
       setCouponSuccess("");
       return;
     }
-    if (!COUPONS[code]) {
-      setCouponApplied(null);
-      setCouponError("Invalid coupon code.");
+
+    if (!serviceApiId) {
+      setCouponError("Service is not available for coupons yet.");
       setCouponSuccess("");
       return;
     }
-    setCouponApplied(code);
+
+    setApplyingCoupon(true);
     setCouponError("");
-    setCouponSuccess(`Coupon applied: ${COUPONS[code].label}`);
+    setCouponSuccess("");
+
+    try {
+      const payload = {
+        service_id: Number(serviceApiId),
+        coupon_code: code,
+      };
+      if (variantApiId != null && variantApiId !== "") {
+        payload.variant_id = Number(variantApiId);
+      }
+
+      const data = await applyCouponApi(payload);
+      const parsed = parseApplyCouponResponse(data, subtotal);
+
+      if (!parsed.success) {
+        setCouponError("This coupon could not be applied.");
+        onCouponRemoved?.();
+        return;
+      }
+
+      const applied = {
+        code: parsed.couponCode || code,
+        discountAmount: parsed.discountAmount,
+        discountValue: parsed.discountValue,
+        discountType: parsed.discountType,
+        message: parsed.message,
+      };
+
+      onCouponApplied?.(applied);
+      setCouponCode(applied.code);
+      setCouponSuccess(applied.message);
+    } catch (err) {
+      onCouponRemoved?.();
+      setCouponError(getApiErrorMessage(err, "Invalid coupon code."));
+      setCouponSuccess("");
+    } finally {
+      setApplyingCoupon(false);
+    }
   }
 
-  function removeCoupon() {
-    setCouponApplied(null);
+  function handleRemoveCoupon() {
+    onCouponRemoved?.();
     setCouponCode("");
     setCouponError("");
     setCouponSuccess("");
@@ -105,18 +155,35 @@ export default function CheckoutSummary({
                   setCouponCode(e.target.value);
                   setCouponError("");
                 }}
-                placeholder="e.g. URGENT10"
+                placeholder="e.g. QWE"
                 className="home1-checkout-summary-coupon-input"
-                disabled={Boolean(couponApplied)}
+                disabled={Boolean(appliedCoupon) || applyingCoupon}
                 autoComplete="off"
               />
-              {couponApplied ? (
-                <button type="button" onClick={removeCoupon} className="home1-checkout-summary-coupon-btn is-remove">
+              {appliedCoupon ? (
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="home1-checkout-summary-coupon-btn is-remove"
+                >
                   Remove
                 </button>
               ) : (
-                <button type="button" onClick={applyCoupon} className="home1-checkout-summary-coupon-btn">
-                  Apply
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  className="home1-checkout-summary-coupon-btn"
+                  disabled={applyingCoupon}
+                  aria-busy={applyingCoupon}
+                >
+                  {applyingCoupon ? (
+                    <>
+                      <ButtonSpinner className="h-3.5 w-3.5 text-white" />
+                      <span>Applying…</span>
+                    </>
+                  ) : (
+                    "Apply"
+                  )}
                 </button>
               )}
             </div>
@@ -147,7 +214,9 @@ export default function CheckoutSummary({
             </li>
             {discount > 0 ? (
               <li className="home1-checkout-summary-line-discount">
-                <span className="home1-checkout-summary-line-label">Discount ({couponApplied})</span>
+                <span className="home1-checkout-summary-line-label">
+                  Discount ({appliedCoupon?.code})
+                </span>
                 <span className="home1-checkout-summary-line-price">−{formatMoney(discount)}</span>
               </li>
             ) : null}
@@ -187,7 +256,9 @@ export default function CheckoutSummary({
               ) : null}
             </dl>
           ) : (
-            <p className="home1-checkout-summary-hint">Select date and time in step 1 to see visit details here.</p>
+            <p className="home1-checkout-summary-hint">
+              Select date and time in step 1 to see visit details here.
+            </p>
           )}
 
           <ul className="home1-checkout-summary-trust list-none p-0 m-0">

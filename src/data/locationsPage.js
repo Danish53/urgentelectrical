@@ -169,10 +169,10 @@ export const LOCATIONS_JSON_LD = {
       "@id": `${SITE}/#organization`,
       name: "Urgent Electrical Services",
       url: SITE,
-      areaServed: getAllLocationNames().map((name) => ({
-        "@type": "City",
-        name,
-      })),
+      areaServed: {
+        "@type": "AdministrativeArea",
+        name: "Nottingham, Derby, Leicester, Lincoln and the East Midlands, United Kingdom",
+      },
     },
   ],
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
@@ -176,13 +177,13 @@ export default function HeroHome1() {
                 <IconPhone className="text-[#D3231F] w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 {FOOTER_PHONE}
               </a>
-              <a
+              <Link
                 href="/services"
                 className="home1-btn-primary text-[13px] sm:text-sm py-2.5 px-3 sm:py-3 sm:px-5 whitespace-nowrap shrink-0"
               >
                 Book online
                 <IconArrow className="w-4 h-4 shrink-0" />
-              </a>
+              </Link>
             </motion.div>
 
             {/* <motion.ul

@@ -8,6 +8,7 @@ import { getServiceCategories } from "@/lib/services/getServiceCategories";
 import { resolveServiceDetailSlug } from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
+import { fetchRelatedServices } from "@/services/relatedServicesApiService";
 
 /**
  * Fetch bookable services (server or client). Returns [] if API fails.
@@ -76,8 +77,17 @@ function resolveSlugForDetailRequest(requestedSlug, apiList) {
 async function loadServiceDetail(slug) {
   const [{ categoryMap }, api] = await Promise.all([getServiceCategories(), fetchServiceBySlug(slug)]);
   const service = buildBookableServiceFromDetailApi(api, categoryMap);
-  const all = await getBookableServices();
-  const related = getRelatedServicesFromList(service, all, 8);
+
+  let related = await fetchRelatedServices(service.slug, categoryMap, {
+    excludeSlug: service.slug,
+    limit: 8,
+  });
+
+  if (!related.length) {
+    const all = await getBookableServices();
+    related = getRelatedServicesFromList(service, all, 8);
+  }
+
   return { service, related };
 }
 

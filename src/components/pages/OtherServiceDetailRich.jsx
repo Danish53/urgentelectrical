@@ -46,10 +46,18 @@ function PageDetailFaq({ faqs }) {
  *   loadError?: string,
  *   imageUrl?: string | null,
  *   updatedAt?: string,
+ *   relatedLinks?: { slug: string, label: string, href: string }[],
  * }} props
  */
-export default function OtherServiceDetailRich({ layout, loadError = "", imageUrl = null, updatedAt = "" }) {
+export default function OtherServiceDetailRich({
+  layout,
+  loadError = "",
+  imageUrl = null,
+  updatedAt = "",
+  relatedLinks = [],
+}) {
   const heroImage = imageUrl || layout.image;
+  const related = relatedLinks.length ? relatedLinks : layout.related;
   const sections = [
     { id: "overview", label: "Overview" },
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
@@ -295,11 +303,11 @@ export default function OtherServiceDetailRich({ layout, loadError = "", imageUr
                     </div>
                   ) : null}
 
-                  {layout.related.length ? (
+                  {related.length ? (
                     <div className="home1-page-detail-aside-card">
                       <p className="home1-page-detail-aside-label">Related services</p>
                       <ul className="home1-page-detail-related">
-                        {layout.related.map((link) => (
+                        {related.map((link) => (
                           <li key={link.href}>
                             <Link href={link.href}>{link.label}</Link>
                           </li>

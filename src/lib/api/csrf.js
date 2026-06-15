@@ -1,6 +1,6 @@
 /** Laravel Sanctum SPA — CSRF cookie before stateful POST requests */
 
-let csrfCookiePromise = null;
+import { fetchCookieSession, clearCookieSessionCache } from "@/services/cookieApiService";
 
 /** @returns {string} */
 export function getAppOrigin() {
@@ -21,35 +21,12 @@ export function getXsrfTokenFromCookie() {
   }
 }
 
-/** Fetch `/sanctum/csrf-cookie` so `XSRF-TOKEN` is set (browser only). */
+/** Fetch `/api/cookie` so session / `XSRF-TOKEN` is ready (browser only). */
 export async function ensureCsrfCookie() {
   if (typeof window === "undefined") return;
-
-  const origin = getAppOrigin();
-  if (!origin) {
-    throw new Error("API base URL is not configured.");
-  }
-
-  if (!csrfCookiePromise) {
-    csrfCookiePromise = fetch(`${origin}/sanctum/csrf-cookie`, {
-      method: "GET",
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    }).then((response) => {
-      if (!response.ok) {
-        throw new Error("Could not initialize secure session (CSRF).");
-      }
-    });
-  }
-
-  try {
-    await csrfCookiePromise;
-  } catch (error) {
-    csrfCookiePromise = null;
-    throw error;
-  }
+  await fetchCookieSession();
 }
 
 export function clearCsrfCookieCache() {
-  csrfCookiePromise = null;
+  clearCookieSessionCache();
 }

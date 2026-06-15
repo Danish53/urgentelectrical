@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TESTIMONIALS } from "@/data/testimonials";
+import { useTestimonials } from "@/hooks/useTestimonials";
+import TestimonialAvatar from "@/components/testimonials/TestimonialAvatar";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
 const BG = "#e1e6e4";
@@ -39,12 +40,7 @@ function TestimonialCard({ item }) {
       <div className="flex items-start justify-between gap-3 mb-5">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative shrink-0">
-            <div
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
-              style={{ backgroundColor: item.avatarBg }}
-            >
-              {item.initial}
-            </div>
+            <TestimonialAvatar item={item} className="w-11 h-11 sm:w-12 sm:h-12" rounded="rounded-full" />
             <span
               className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[8px]"
               style={{ color: RED }}
@@ -86,10 +82,11 @@ function useSlidesPerView() {
 }
 
 export default function TestimonialsSection() {
+  const { testimonials } = useTestimonials();
   const slidesPerView = useSlidesPerView();
   const [index, setIndex] = useState(0);
 
-  const maxIndex = Math.max(0, TESTIMONIALS.length - slidesPerView);
+  const maxIndex = Math.max(0, testimonials.length - slidesPerView);
 
   useEffect(() => {
     setIndex((i) => Math.min(i, maxIndex));
@@ -152,7 +149,7 @@ export default function TestimonialsSection() {
                 transitionDuration: `${SLIDE_MS}ms`,
               }}
             >
-              {TESTIMONIALS.map((item) => (
+              {testimonials.map((item) => (
                 <div
                   key={item.id}
                   className="shrink-0 px-2 sm:px-3"
@@ -166,7 +163,7 @@ export default function TestimonialsSection() {
         </div>
 
         <div className="flex justify-center items-center gap-2 mt-8 sm:mt-10" role="tablist" aria-label="Testimonial slides">
-          {TESTIMONIALS.map((_, i) => (
+          {testimonials.map((_, i) => (
             <button
               key={i}
               type="button"

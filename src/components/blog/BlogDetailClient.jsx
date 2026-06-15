@@ -128,10 +128,10 @@ function BlogSidebar({ post }) {
         <p className="home1-blog-sidebar-text">
           Book online or call for NICEIC approved work across Nottingham &amp; the East Midlands.
         </p>
-        <a href="/checkout" className="home1-btn-primary home1-blog-sidebar-cta w-full justify-center">
+        <Link href="/services" className="home1-btn-primary home1-blog-sidebar-cta w-full justify-center">
           <IconCalendar className="w-4 h-4" aria-hidden="true" />
           Book online
-        </a>
+        </Link>
         <a href={FOOTER_PHONE_TEL} className="home1-btn-outline home1-blog-sidebar-cta w-full justify-center">
           Call {FOOTER_PHONE}
         </a>

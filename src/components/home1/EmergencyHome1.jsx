@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   EMERGENCY_STATS,
   EMERGENCY_STATS_LABELS,
@@ -39,9 +40,9 @@ export default function EmergencyHome1() {
                 <IconPhone />
                 {EMERGENCY_PHONE}
               </a>
-              <a href="/checkout" className="home1-btn-outline">
+              <Link href="/services" className="home1-btn-outline">
                 Book online
-              </a>
+              </Link>
             </div>
           </div>
 

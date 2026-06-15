@@ -89,7 +89,7 @@ export default function ProfilePageClient() {
         </div>
         <div className="home1-profile-hero-badge">
           <IconCheck className="w-4 h-4 shrink-0" aria-hidden="true" />
-          Verified customer
+          Verified Customer
         </div>
       </div>
 

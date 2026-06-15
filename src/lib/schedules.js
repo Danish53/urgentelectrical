@@ -33,6 +33,39 @@ export function parseServiceScheduleRows(payload) {
   return [];
 }
 
+/**
+ * Laravel may return 4xx with a message when a date has no bookable slots.
+ * @param {string | null | undefined} message
+ */
+export function isNoSlotsScheduleMessage(message) {
+  const text = String(message ?? "").toLowerCase().trim();
+  if (!text) return false;
+
+  return (
+    text.includes("no time slot") ||
+    text.includes("no slots") ||
+    text.includes("not available for this date") ||
+    text.includes("no schedule") ||
+    text.includes("no schedules") ||
+    text.includes("no availability") ||
+    text.includes("unavailable for this date") ||
+    text.includes("slot not available")
+  );
+}
+
+/**
+ * @param {unknown} error
+ */
+export function isNoSlotsScheduleError(error) {
+  if (!error || typeof error !== "object") return false;
+
+  const record = /** @type {{ status?: number, message?: string }} */ (error);
+  const status = Number(record.status) || 0;
+  if (status === 404) return true;
+
+  return isNoSlotsScheduleMessage(record.message);
+}
+
 function parseSlotRange(slotText) {
   const text = String(slotText ?? "").trim();
   if (!text) return { startTime: "", endTime: "" };

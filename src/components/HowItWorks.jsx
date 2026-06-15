@@ -23,8 +23,7 @@ function StepItem({ step, index, total }) {
           aria-hidden="true"
         >
           <span
-            className="text-[22px] sm:text-2xl font-extrabold leading-none transition-colors duration-500 ease-out group-hover:text-white"
-            style={{ color: BRAND_RED }}
+            className="text-[22px] sm:text-2xl font-extrabold leading-none text-[var(--home1-red,#D3231F)] transition-colors duration-500 ease-out group-hover:text-white"
           >
             {step.num}
           </span>

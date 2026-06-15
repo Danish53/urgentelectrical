@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { TESTIMONIALS } from "@/data/testimonials";
-
-const HOME_REVIEW_LIMIT = 3;
+import { useTestimonials } from "@/hooks/useTestimonials";
+import TestimonialAvatar from "@/components/testimonials/TestimonialAvatar";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 
@@ -22,12 +21,12 @@ function useSlidesPerView() {
   return n;
 }
 
-export default function TestimonialsHome1({ limit = TESTIMONIALS.length }) {
-  const reviews = TESTIMONIALS.slice(0, limit);
+export default function TestimonialsHome1({ limit }) {
+  const { testimonials: reviews } = useTestimonials(limit ? { limit } : {});
   const perView = useSlidesPerView();
   const [index, setIndex] = useState(0);
   const maxIndex = Math.max(0, reviews.length - perView);
-  const pct = 100 / perView;
+  const canScroll = reviews.length > perView;
 
   useEffect(() => setIndex((i) => Math.min(i, maxIndex)), [maxIndex]);
   const prev = useCallback(() => setIndex((i) => Math.max(0, i - 1)), []);
@@ -50,31 +49,45 @@ export default function TestimonialsHome1({ limit = TESTIMONIALS.length }) {
             compact
           />
           <div className="flex gap-2 shrink-0">
-            <button type="button" onClick={prev} disabled={index === 0} className="home1-nav-btn home1-nav-btn--ghost" aria-label="Previous">
+            <button
+              type="button"
+              onClick={prev}
+              disabled={!canScroll || index === 0}
+              className="home1-nav-btn home1-nav-btn--ghost"
+              aria-label="Previous testimonials"
+            >
               ←
             </button>
-            <button type="button" onClick={next} disabled={index >= maxIndex} className="home1-nav-btn home1-nav-btn--primary" aria-label="Next">
+            <button
+              type="button"
+              onClick={next}
+              disabled={!canScroll || index >= maxIndex}
+              className="home1-nav-btn home1-nav-btn--primary"
+              aria-label="Next testimonials"
+            >
               →
             </button>
           </div>
         </div>
 
         <div className="overflow-hidden">
-          <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${index * pct}%)` }}>
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${index * (100 / perView)}%)` }}
+          >
             {reviews.map((t) => (
-              <article key={t.id} className="shrink-0 px-2.5" style={{ width: `${pct}%` }}>
+              <article
+                key={t.id}
+                className="shrink-0 px-2.5"
+                style={{ width: `${100 / perView}%` }}
+              >
                 <div className="home1-card h-full p-6 sm:p-7 flex flex-col min-h-[260px]">
                   <p className="text-[#F59E0B] text-sm tracking-wide mb-4" aria-hidden="true">
                     ★★★★★
                   </p>
                   <p className="text-[var(--home1-muted)] text-[14px] leading-relaxed flex-1 italic">&ldquo;{t.text}&rdquo;</p>
                   <div className="flex items-center gap-3 mt-6 pt-5 border-t border-[var(--home1-border)]">
-                    <span
-                      className="w-11 h-11 rounded-xl flex items-center justify-center text-white font-bold"
-                      style={{ backgroundColor: t.avatarBg }}
-                    >
-                      {t.initial}
-                    </span>
+                    <TestimonialAvatar item={t} />
                     <div>
                       <p className="font-bold text-[var(--home1-text)] text-sm">{t.name}</p>
                       <p className="text-[var(--home1-muted)] text-xs">{t.date}</p>

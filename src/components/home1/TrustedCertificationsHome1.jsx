@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { PARTNERS } from "@/data/partners";
+import { usePartners } from "@/hooks/usePartners";
 import { HOME_CERTIFICATIONS } from "@/data/homeProjects";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
@@ -11,6 +11,7 @@ import { IconCheck } from "./icons";
 function PartnerLogo({ partner, index }) {
   const [failed, setFailed] = useState(false);
   const alt = `${partner.name} — trusted partner of Urgent Electrical Services Nottingham`;
+  const isRemote = Boolean(partner.image?.startsWith("http"));
 
   return (
     <li>
@@ -20,7 +21,7 @@ function PartnerLogo({ partner, index }) {
       >
         <figure className="w-full m-0 flex flex-col items-center gap-2.5">
           <div className="home1-partner-logo-well w-full">
-            {!failed ? (
+            {!failed && partner.image ? (
               <Image
                 src={partner.image}
                 alt={alt}
@@ -30,6 +31,7 @@ function PartnerLogo({ partner, index }) {
                 className="max-h-12 w-auto h-auto object-contain object-center"
                 priority={index < 2}
                 loading={index < 2 ? undefined : "lazy"}
+                unoptimized={isRemote}
                 onError={() => setFailed(true)}
               />
             ) : (
@@ -50,6 +52,8 @@ function PartnerLogo({ partner, index }) {
 }
 
 export default function TrustedCertificationsHome1() {
+  const { partners } = usePartners();
+
   return (
     <section
       id="trusted"
@@ -81,7 +85,7 @@ export default function TrustedCertificationsHome1() {
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 list-none p-0 m-0"
           aria-label="Organisations we work with"
         >
-          {PARTNERS.map((p, i) => (
+          {partners.map((p, i) => (
             <PartnerLogo key={p.id} partner={p} index={i} />
           ))}
         </ul>

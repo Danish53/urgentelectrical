@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   EMERGENCY_STATS,
   EMERGENCY_STATS_LABELS,
@@ -63,13 +64,13 @@ export default function EmergencySection() {
                 <IconPhone />
                 Call Us Now
               </a>
-              <a
-                href="/checkout"
+              <Link
+                href="/services"
                 className="inline-flex items-center justify-center gap-2.5 min-w-[160px] px-7 py-3.5 rounded-md border border-white/70 text-white font-bold text-[13px] sm:text-sm uppercase tracking-[0.06em] bg-transparent transition-all duration-300 ease-out delay-0 hover:delay-100 cursor-pointer hover:bg-white hover:text-[#0a0a0a]"
               >
                 <IconCalendar />
                 Book Online
-              </a>
+              </Link>
             </div>
           </div>
 

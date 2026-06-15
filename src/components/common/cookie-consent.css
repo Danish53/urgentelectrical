@@ -81,17 +81,19 @@
 
 .ue-cookie-consent__actions {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 0.55rem;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.5rem;
   flex-shrink: 0;
+  width: min(100%, 10.5rem);
 }
 
 .ue-cookie-consent__btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   min-height: 2.5rem;
   padding: 0.55rem 1rem;
   border-radius: 10px;
@@ -154,29 +156,12 @@
   }
 
   .ue-cookie-consent__actions {
-    justify-content: stretch;
     width: 100%;
-  }
-
-  .ue-cookie-consent__btn {
-    flex: 1 1 calc(33.333% - 0.4rem);
-    min-width: 0;
-    white-space: normal;
-    text-align: center;
   }
 }
 
 @media (max-width: 560px) {
   .ue-cookie-consent__panel {
     padding: 0 0.75rem 0.75rem;
-  }
-
-  .ue-cookie-consent__actions {
-    flex-direction: column;
-  }
-
-  .ue-cookie-consent__btn {
-    width: 100%;
-    flex: none;
   }
 }

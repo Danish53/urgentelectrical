@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
@@ -53,13 +54,13 @@ export default function CTABannerSection() {
               <IconPhone />
               {FOOTER_PHONE}
             </a>
-            <a
-              href="/checkout"
+            <Link
+              href="/services"
               className="inline-flex items-center justify-center gap-2 border-2 border-white text-white font-bold text-[15px] px-7 sm:px-8 py-3.5 sm:py-4 rounded-md transition-colors duration-200 hover:bg-white/10 whitespace-nowrap"
             >
               Book Online Now
               <span aria-hidden="true">→</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

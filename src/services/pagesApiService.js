@@ -2,10 +2,81 @@ import { PAGES_API } from "@/constants/pagesApi";
 import { ApiError } from "@/lib/api/errors";
 import { apiRequest } from "@/lib/api/client";
 import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
+import { resolveServiceApiSlugCandidates } from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 
 const SITE = "https://www.urgentelectrical.services";
+
+function getPublicSiteOrigin() {
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
+  if (apiBase) {
+    return apiBase.replace(/\/api\/?$/i, "").replace(/\/$/, "");
+  }
+  return SITE;
+}
+
+function titleFromSlug(slug) {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+/**
+ * @param {Record<string, unknown>} api
+ * @param {string} urlSlug
+ * @returns {ApiInfoPageDetail}
+ */
+function pageFromServiceApi(api, urlSlug) {
+  const base = normalizePageListItem(/** @type {Record<string, unknown>} */ (api));
+  return {
+    ...base,
+    slug: urlSlug,
+    detail:
+      (typeof api.long_description === "string" && api.long_description) ||
+      (typeof api.description === "string" && api.description) ||
+      "",
+    long_description:
+      typeof api.long_description === "string" ? api.long_description : undefined,
+    seo_title: typeof api.seo_title === "string" ? api.seo_title : undefined,
+    seo_description:
+      typeof api.seo_description === "string" ? api.seo_description : undefined,
+  };
+}
+
+/** @param {string} slug */
+async function fetchPublicCmsPageBySlug(slug) {
+  const encoded = encodeURIComponent(slug);
+  const url = `${getPublicSiteOrigin()}/public/api/pages/${encoded}`;
+  let response;
+
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      next: { revalidate: 3600 },
+    });
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+
+  let payload = null;
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    payload = JSON.parse(text);
+  } catch {
+    return null;
+  }
+
+  const page = parsePageDetailResponse(payload);
+  return page ? { ...page, slug } : null;
+}
 
 /**
  * @typedef {object} ApiInfoPage
@@ -140,33 +211,42 @@ async function fetchPagesFromServicesFallback() {
 }
 
 /**
- * GET /pages/{slug} — falls back to GET /services/{slug}
+ * GET /pages/{slug} — public CMS, then services API (resolved slugs), then local fallback.
  * @param {string} slug
  */
 export async function fetchPageBySlug(slug) {
-  const encoded = encodeURIComponent(slug);
+  const urlSlug = String(slug ?? "").trim();
+  if (!urlSlug) {
+    throw new ApiError("Page slug is required.", { status: 400 });
+  }
+
+  const encoded = encodeURIComponent(urlSlug);
 
   try {
     const payload = await apiRequest(`${PAGES_API.list}/${encoded}`, { method: "GET" });
     const page = parsePageDetailResponse(payload);
-    if (page) return page;
+    if (page) return { ...page, slug: urlSlug };
   } catch {
-    /* try services detail */
+    /* CMS /pages API not available on all environments */
   }
 
-  const api = await fetchServiceBySlug(slug);
-  const base = normalizePageListItem(/** @type {Record<string, unknown>} */ (api));
+  const publicPage = await fetchPublicCmsPageBySlug(urlSlug);
+  if (publicPage) return publicPage;
+
+  for (const candidate of resolveServiceApiSlugCandidates(urlSlug)) {
+    try {
+      const api = await fetchServiceBySlug(candidate);
+      return pageFromServiceApi(api, urlSlug);
+    } catch {
+      /* try next candidate */
+    }
+  }
+
   return {
-    ...base,
-    detail:
-      (typeof api.long_description === "string" && api.long_description) ||
-      (typeof api.description === "string" && api.description) ||
-      "",
-    long_description:
-      typeof api.long_description === "string" ? api.long_description : undefined,
-    seo_title: typeof api.seo_title === "string" ? api.seo_title : undefined,
-    seo_description:
-      typeof api.seo_description === "string" ? api.seo_description : undefined,
+    id: 0,
+    title: titleFromSlug(urlSlug),
+    slug: serviceSlug(urlSlug) || urlSlug,
+    description: "",
   };
 }
 

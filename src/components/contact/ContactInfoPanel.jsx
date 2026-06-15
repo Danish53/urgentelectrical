@@ -1,11 +1,8 @@
+"use client";
+
 import { IconPhone } from "@/components/home1/icons";
-import {
-  CONTACT_ADDRESS,
-  CONTACT_BUSINESS_HOURS,
-  CONTACT_EMAIL,
-  CONTACT_PHONE_DISPLAY,
-  CONTACT_PHONE_TEL,
-} from "@/data/contactPage";
+import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
+import { CONTACT_BUSINESS_HOURS } from "@/data/contactPage";
 
 const CARD =
   "rounded-xl bg-white border border-[#e8eaed] shadow-[0_4px_24px_rgba(17,24,39,0.06)] px-5 py-6 sm:px-6 sm:py-7";
@@ -59,6 +56,8 @@ function InfoCell({ type, label, children }) {
 }
 
 export default function ContactInfoPanel() {
+  const { site } = useWebsiteGeneralData();
+
   return (
     <div
       className="home1-contact-info-panel flex flex-col gap-5 sm:gap-6 h-full"
@@ -66,7 +65,7 @@ export default function ContactInfoPanel() {
       itemType="https://schema.org/LocalBusiness"
       itemID="https://www.urgentelectrical.services/#organization"
     >
-      <meta itemProp="name" content="Urgent Electrical Services" />
+      <meta itemProp="name" content={site.title} />
 
       <div className={CARD}>
         <h2 className={CARD_TITLE}>Contact information</h2>
@@ -74,25 +73,17 @@ export default function ContactInfoPanel() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           <InfoCell type="phone" label="Phone">
             <a
-              href={`tel:${CONTACT_PHONE_TEL}`}
+              href={`tel:${site.contactNumber}`}
               className="hover:text-[#d3231f] transition-colors break-words"
               itemProp="telephone"
             >
-              {CONTACT_PHONE_DISPLAY}
+              {site.contactNumberDisplay}
             </a>
           </InfoCell>
 
           <InfoCell type="address" label="Address">
-            <address
-              className="not-italic"
-              itemProp="address"
-              itemScope
-              itemType="https://schema.org/PostalAddress"
-            >
-              <span itemProp="streetAddress">{CONTACT_ADDRESS.streetAddress}</span>
-              <br />
-              <span itemProp="addressLocality">{CONTACT_ADDRESS.addressLocality}</span>{" "}
-              <span itemProp="postalCode">{CONTACT_ADDRESS.postalCode}</span>
+            <address className="not-italic" itemProp="address">
+              {site.address}
             </address>
           </InfoCell>
         </div>
@@ -100,11 +91,11 @@ export default function ContactInfoPanel() {
         <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[#eef0f2]">
           <InfoCell type="email" label="E-mail">
             <a
-              href={`mailto:${CONTACT_EMAIL}`}
+              href={`mailto:${site.email}`}
               className="break-all hover:text-[#d3231f] transition-colors"
               itemProp="email"
             >
-              {CONTACT_EMAIL}
+              {site.email}
             </a>
           </InfoCell>
         </div>

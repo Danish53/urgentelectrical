@@ -43,9 +43,6 @@ function SiteCard({ site, onUpdate, busy = false }) {
           </h2>
           <p className="home1-sites-card-contact">{site.contact}</p>
         </div>
-        <span className="home1-sites-card-jobs">
-          {site.jobs} {site.jobs === 1 ? "job" : "jobs"}
-        </span>
       </div>
 
       <dl className="home1-sites-card-meta">
@@ -133,9 +130,8 @@ export default function SitesPageClient() {
     () => ({
       total: totalCount,
       hasDefault: Boolean(defaultSite),
-      jobs: sites.reduce((sum, s) => sum + s.jobs, 0),
     }),
-    [totalCount, defaultSite, sites]
+    [totalCount, defaultSite]
   );
 
   useEffect(() => {
@@ -215,18 +211,14 @@ export default function SitesPageClient() {
           <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.hasDefault ? "Yes" : "No"}</p>
           <p className="home1-sites-stat-label">Default set</p>
         </div>
-        <div className="home1-sites-stat home1-card">
-          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.jobs}</p>
-          <p className="home1-sites-stat-label">Jobs on this page</p>
-        </div>
       </div>
 
-      {defaultSite && !initialLoading ? (
+      {/* {defaultSite && !initialLoading ? (
         <p className="home1-sites-default-hint">
           Default address: <strong>{defaultSite.name}</strong>
           {defaultSite.address ? ` · ${defaultSite.address}` : ""}
         </p>
-      ) : null}
+      ) : null} */}
 
       <section className="home1-sites-panel home1-card w-full">
         <header className="home1-sites-panel-head home1-sites-panel-head--row">

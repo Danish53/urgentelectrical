@@ -2,6 +2,7 @@ export const CHECKOUT_API = {
   validateOrderData: "/orders/validate-order-data",
   createPaymentIntent: "/orders/create-payment-intent",
   checkPaymentStatus: "/orders/check-payment-status",
+  applyCoupon: "/apply-coupon",
 };
 
 /** Same-origin Next.js proxies (browser → Laravel via server) */
@@ -9,4 +10,5 @@ export const CHECKOUT_PROXY = {
   validateOrderData: "/api/orders/validate-order-data",
   createPaymentIntent: "/api/orders/create-payment-intent",
   checkPaymentStatus: "/api/orders/check-payment-status",
+  applyCoupon: "/api/apply-coupon",
 };

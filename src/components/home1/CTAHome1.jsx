@@ -1,10 +1,9 @@
+import Link from "next/link";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER, SECTION_PY } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
 
-import { CHECKOUT_PATH } from "@/lib/checkoutHref";
-
-export default function CTAHome1({ bookHref = CHECKOUT_PATH }) {
+export default function CTAHome1({ bookHref = "/services" }) {
   return (
     <section
       id="cta"
@@ -34,10 +33,10 @@ export default function CTAHome1({ bookHref = CHECKOUT_PATH }) {
                 <IconPhone />
                 {FOOTER_PHONE}
               </a>
-              <a href={bookHref} className="home1-btn-outline">
+              <Link href={bookHref} className="home1-btn-outline">
                 Book online
                 <IconArrow />
-              </a>
+              </Link>
             </div>
           </div>
         </div>

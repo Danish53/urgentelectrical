@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -8,6 +8,7 @@ import FloatingCTA from "@/components/FloatingCTA.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
 import { CHECKOUT_PAGE_CONTAINER } from "@/components/home1/constants";
 import CheckoutSessionBar from "@/components/checkout/CheckoutSessionBar";
+import CheckoutSessionExpiredModal from "@/components/checkout/CheckoutSessionExpiredModal";
 import CheckoutStepper from "@/components/checkout/CheckoutStepper";
 import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 import CheckoutDateTimeStep from "@/components/checkout/CheckoutDateTimeStep";
@@ -78,7 +79,7 @@ export default function CheckoutPageClient() {
   const variantLabelParam = searchParams.get("variantLabel") ?? "";
 
   const [step, setStep] = useState(1);
-  const secondsLeft = useCheckoutSessionTimer(CHECKOUT_SESSION_SECONDS);
+  const { secondsLeft, expired: sessionExpired } = useCheckoutSessionTimer(CHECKOUT_SESSION_SECONDS);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
   const [details, setDetails] = useState(EMPTY_DETAILS);
@@ -86,6 +87,7 @@ export default function CheckoutPageClient() {
   const [processing, setProcessing] = useState(false);
   const [complete, setComplete] = useState(false);
   const [handlingBankReturn, setHandlingBankReturn] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
   const dispatch = useAppDispatch();
   const clientSecret = useAppSelector(selectClientSecret);
@@ -144,15 +146,90 @@ export default function CheckoutPageClient() {
     [service, selectedVariant]
   );
 
+  const payableTotalInc = useMemo(() => {
+    const subtotal = parseFloat(lineItems.totalInc) || 0;
+    const discount = appliedCoupon?.discountAmount ?? 0;
+    return Math.max(0, subtotal - discount).toFixed(2);
+  }, [lineItems.totalInc, appliedCoupon]);
+
+  const paymentCouponSnapshotRef = useRef(null);
+
   const initialPostcode = searchParams.get("postcode") ?? "";
   const pageLoading = servicesLoading || (Boolean(slug) && detailLoading);
   const pageFailed = servicesFailed || (Boolean(slug) && detailFailed && !service);
+
+  useEffect(() => {
+    if (step !== 3) {
+      paymentCouponSnapshotRef.current = null;
+    }
+  }, [step]);
+
+  useEffect(() => {
+    if (step !== 3 || !clientSecret) return;
+
+    const snapshot = `${appliedCoupon?.code ?? ""}:${appliedCoupon?.discountAmount ?? 0}:${payableTotalInc}`;
+    if (paymentCouponSnapshotRef.current === snapshot) return;
+
+    const isInitial = paymentCouponSnapshotRef.current === null;
+    paymentCouponSnapshotRef.current = snapshot;
+    if (isInitial) return;
+
+    let cancelled = false;
+
+    async function refreshPaymentIntent() {
+      const amount = parseFloat(payableTotalInc) || 0;
+      const intentResult = await dispatch(createPaymentIntent(amount));
+      if (cancelled || createPaymentIntent.rejected.match(intentResult)) return;
+
+      const intentId = intentResult.payload?.paymentIntentId ?? paymentIntentId;
+      if (!service?.apiId || !intentId) return;
+
+      await dispatch(
+        validateOrderData({
+          service,
+          variant: selectedVariant,
+          selectedDate,
+          selectedTime,
+          schedules: scheduleSlots,
+          details: { ...details, isGuest: !isLoggedIn },
+          lineItems,
+          paymentIntentId: intentId,
+          coupon: appliedCoupon,
+        })
+      );
+    }
+
+    refreshPaymentIntent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    step,
+    clientSecret,
+    appliedCoupon,
+    payableTotalInc,
+    dispatch,
+    paymentIntentId,
+    service,
+    selectedVariant,
+    selectedDate,
+    selectedTime,
+    scheduleSlots,
+    details,
+    lineItems,
+    isLoggedIn,
+  ]);
 
   useEffect(() => {
     if (initialPostcode) {
       setDetails((d) => ({ ...d, postcode: initialPostcode.toUpperCase() }));
     }
   }, [initialPostcode]);
+
+  useEffect(() => {
+    setAppliedCoupon(null);
+  }, [service?.apiId, selectedVariant?.apiVariantId, selectedVariant?.id]);
 
   useEffect(() => {
     if (!service?.apiId || selectedDate) return;
@@ -196,7 +273,11 @@ export default function CheckoutPageClient() {
         setStepError("Loading time slots. Please wait.");
         return false;
       }
-      if (!selectedTime || !scheduleSlots.length) {
+      if (!scheduleSlots.length) {
+        setStepError("");
+        return false;
+      }
+      if (!selectedTime) {
         setStepError("Please select a time slot to continue.");
         return false;
       }
@@ -329,7 +410,7 @@ export default function CheckoutPageClient() {
   async function handleContinueToPayment() {
     if (!validateStep2()) return;
 
-    const amount = parseFloat(lineItems.totalInc) || 0;
+    const amount = parseFloat(payableTotalInc) || 0;
     if (!service?.apiId) {
       setStepError("Service is not available for booking. Please choose a service and try again.");
       return;
@@ -365,6 +446,7 @@ export default function CheckoutPageClient() {
         details: { ...details, isGuest: !isLoggedIn },
         lineItems,
         paymentIntentId: intentId,
+        coupon: appliedCoupon,
       })
     );
 
@@ -399,7 +481,9 @@ export default function CheckoutPageClient() {
     >
       <Navbar />
 
-      {!complete ? (
+      {!complete && sessionExpired ? <CheckoutSessionExpiredModal /> : null}
+
+      {!complete && !sessionExpired ? (
         <div className="home1-checkout-top">
           <CheckoutSessionBar secondsLeft={secondsLeft} />
         </div>
@@ -415,7 +499,7 @@ export default function CheckoutPageClient() {
                 serviceName: service?.name ?? "Service",
                 date: selectedDate,
                 time: selectedTime,
-                totalInc: lineItems.totalInc,
+                totalInc: payableTotalInc,
               }}
             />
           ) : pageLoading || handlingBankReturn ? (
@@ -482,6 +566,7 @@ export default function CheckoutPageClient() {
                         />
                       ) : clientSecret && stripePromise ? (
                         <Elements
+                          key={clientSecret}
                           stripe={stripePromise}
                           options={{
                             clientSecret,
@@ -519,7 +604,7 @@ export default function CheckoutPageClient() {
                           }}
                         >
                           <CheckoutPaymentStep
-                            totalInc={lineItems.totalInc}
+                            totalInc={payableTotalInc}
                             clientSecret={clientSecret}
                             paymentIntentId={paymentIntentId}
                             billingName={[details.firstName, details.lastName].filter(Boolean).join(" ")}
@@ -565,6 +650,11 @@ export default function CheckoutPageClient() {
                       selectedDate={selectedDate}
                       selectedTime={selectedTime}
                       postcode={summaryPostcode}
+                      serviceApiId={service?.apiId}
+                      variantApiId={selectedVariant?.apiVariantId ?? selectedVariant?.id}
+                      appliedCoupon={appliedCoupon}
+                      onCouponApplied={setAppliedCoupon}
+                      onCouponRemoved={() => setAppliedCoupon(null)}
                     />
                   </div>
                 </div>
