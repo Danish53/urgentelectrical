@@ -450,7 +450,7 @@
 }
 
 .home1-checkout-stepper-btn:disabled {
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .home1-checkout-stepper-btn:not(:disabled):hover {
@@ -690,37 +690,37 @@
 
 @media (min-width: 768px) {
   .home1-checkout-datetime-grid {
-    grid-template-columns: minmax(0, 1.32fr) minmax(0, 0.68fr);
-    gap: 1.1rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: stretch;
   }
 }
 
 @media (min-width: 1024px) {
   .home1-checkout-datetime-grid {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
-    gap: 1.25rem;
+    gap: 1.35rem;
   }
 }
 
 .home1-checkout-datetime-calendar,
 .home1-checkout-datetime-slots {
   min-width: 0;
-  align-self: start;
-}
-
-.home1-checkout-datetime-calendar {
   width: 100%;
-  max-width: 22rem;
 }
 
 @media (min-width: 768px) {
-  .home1-checkout-datetime-calendar {
-    max-width: none;
+  .home1-checkout-datetime-calendar,
+  .home1-checkout-datetime-slots {
+    align-self: stretch;
   }
 }
 
+.home1-checkout-datetime-calendar .home1-checkout-card-head {
+  width: 100%;
+}
+
 .home1-checkout-datetime-head {
-  margin-bottom: 0.55rem;
+  margin-bottom: 0.45rem;
 }
 
 .home1-checkout-datetime-slots {
@@ -730,12 +730,27 @@
 
 @media (min-width: 768px) {
   .home1-checkout-datetime-slots {
+    display: flex;
+    flex-direction: column;
     border-top: none;
     border-left: 1px solid #eef2f6;
     padding-top: 0;
     padding-left: 0.85rem;
     padding-right: 0.25rem;
-    max-height: 33rem;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  .home1-checkout-datetime-slots .home1-checkout-card-head {
+    flex-shrink: 0;
+  }
+
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-warning,
+  .home1-checkout-datetime-slots > .home1-checkout-schedule-grid {
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     scroll-behavior: smooth;
@@ -745,24 +760,43 @@
     scrollbar-color: rgba(211, 35, 31, 0.45) #eef2f6;
   }
 
-  .home1-checkout-datetime-slots::-webkit-scrollbar {
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder::-webkit-scrollbar,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading::-webkit-scrollbar,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-warning::-webkit-scrollbar,
+  .home1-checkout-datetime-slots > .home1-checkout-schedule-grid::-webkit-scrollbar {
     width: 7px;
   }
 
-  .home1-checkout-datetime-slots::-webkit-scrollbar-track {
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder::-webkit-scrollbar-track,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading::-webkit-scrollbar-track,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-warning::-webkit-scrollbar-track,
+  .home1-checkout-datetime-slots > .home1-checkout-schedule-grid::-webkit-scrollbar-track {
     margin: 0.35rem 0;
     border-radius: 999px;
     background: #eef2f6;
   }
 
-  .home1-checkout-datetime-slots::-webkit-scrollbar-thumb {
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder::-webkit-scrollbar-thumb,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading::-webkit-scrollbar-thumb,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-warning::-webkit-scrollbar-thumb,
+  .home1-checkout-datetime-slots > .home1-checkout-schedule-grid::-webkit-scrollbar-thumb {
     border: 2px solid transparent;
     border-radius: 999px;
     background: rgba(211, 35, 31, 0.38);
     background-clip: padding-box;
   }
 
-  .home1-checkout-datetime-slots::-webkit-scrollbar-thumb:hover {
+  .home1-checkout-datetime-slots > .home1-checkout-slots-placeholder::-webkit-scrollbar-thumb:hover,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-loading::-webkit-scrollbar-thumb:hover,
+  .home1-checkout-datetime-slots > .home1-checkout-slots-warning::-webkit-scrollbar-thumb:hover,
+  .home1-checkout-datetime-slots > .home1-checkout-schedule-grid::-webkit-scrollbar-thumb:hover {
     background: rgba(211, 35, 31, 0.58);
     background-clip: padding-box;
   }
@@ -791,6 +825,7 @@
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #92400e;
+  /* height: fit-content; */
 }
 
 .home1-checkout-slots-warning-icon {
@@ -833,10 +868,15 @@
 
 @media (min-width: 768px) {
   .home1-checkout-datetime-slots .home1-checkout-schedule-grid {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
     padding-right: 0.35rem;
     padding-bottom: 0.25rem;
+  }
+
+  .home1-checkout-datetime-slots .home1-checkout-schedule-slot {
+    min-height: 3.35rem;
+    padding: 0.5rem 0.4rem;
   }
 }
 
@@ -914,6 +954,12 @@
   line-height: 1.35;
 }
 
+.home1-checkout-datetime-calendar .home1-checkout-today-btn {
+  padding: 0.38rem 0.75rem;
+  font-size: 12px;
+  border-radius: 8px;
+}
+
 .home1-checkout-today-btn {
   flex-shrink: 0;
   padding: 0.4rem 0.85rem;
@@ -938,8 +984,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 0.45rem;
-  padding: 0 0.1rem;
+  width: 100%;
+  margin-bottom: 0.4rem;
+  padding: 0;
 }
 
 .home1-checkout-calendar-month {
@@ -953,8 +1000,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   background: #fff;
@@ -971,9 +1018,10 @@
 
 .home1-checkout-calendar-weekdays {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 0.1rem;
-  margin-bottom: 0.35rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+  width: 100%;
+  margin-bottom: 0.3rem;
   text-align: center;
 }
 
@@ -998,15 +1046,13 @@
   width: 100%;
   aspect-ratio: 1;
   height: auto;
-  min-height: 0;
-  max-height: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.12rem;
+  gap: 0.1rem;
   border: 1.5px solid transparent;
-  border-radius: 10px;
+  border-radius: 9px;
   background: transparent;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1014,7 +1060,7 @@
 }
 
 .home1-checkout-cal-day-num {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #334155;
   line-height: 1;
@@ -1946,6 +1992,7 @@
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
@@ -2134,7 +2181,8 @@
     gap: 0.4rem 0.65rem;
   }
 
-  .home1-checkout-calendar-grid {
+  .home1-checkout-calendar-grid,
+  .home1-checkout-calendar-weekdays {
     gap: 0.3rem;
   }
 
@@ -2143,7 +2191,7 @@
   }
 
   .home1-checkout-cal-day-num {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .home1-checkout-datetime-slots {
@@ -2279,12 +2327,14 @@
 .home1-checkout-skeleton-cal-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 0.2rem;
+  gap: 0.35rem;
+  width: 100%;
 }
 
 .home1-checkout-skeleton-cal-cell {
+  width: 100%;
   aspect-ratio: 1;
-  min-height: 1.75rem;
+  height: auto;
 }
 
 .home1-checkout-skeleton-slots {
@@ -3508,4 +3558,20 @@
 .stripe-field .StripeElement,
 .stripe-field .home1-checkout-input {
   width: 100%;
+}
+
+/* Pointer cursor on all buttons site-wide (theme pages load after globals) */
+button:not(:disabled):not([disabled]),
+[role="button"]:not([aria-disabled="true"]),
+input[type="button"]:not(:disabled):not([disabled]),
+input[type="submit"]:not(:disabled):not([disabled]),
+input[type="reset"]:not(:disabled):not([disabled]),
+summary,
+a[class*="-btn"],
+a[class*="__btn"],
+button[class*="-btn"],
+button[class*="__btn"],
+label[class*="-btn"],
+label[class*="__btn"] {
+  cursor: pointer;
 }

@@ -32,6 +32,31 @@ body {
   max-width: 100%;
 }
 
+/* Pointer cursor on buttons and button-styled controls site-wide */
+button:not(:disabled):not([disabled]),
+input[type="button"]:not(:disabled):not([disabled]),
+input[type="submit"]:not(:disabled):not([disabled]),
+input[type="reset"]:not(:disabled):not([disabled]),
+summary,
+a[class*="-btn"],
+a[class*="__btn"],
+button[class*="-btn"],
+button[class*="__btn"],
+label[class*="-btn"],
+label[class*="__btn"],
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+button:disabled,
+button[disabled],
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Prevent nested scroll areas from overflow-x: hidden (forces overflow-y: auto) */
 main,
 main > * {

@@ -63,6 +63,21 @@ const HERO_STATS = [
   { value: "2014", label: "Est. since" },
 ];
 
+const AVAILABILITY_OPEN = {
+  limited: false,
+  text: "Engineers available now in your area",
+};
+
+const AVAILABILITY_LIMITED = {
+  limited: true,
+  text: "Limited availability — call us before booking",
+};
+
+function getEngineerAvailability() {
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 22 ? AVAILABILITY_OPEN : AVAILABILITY_LIMITED;
+}
+
 export default function HeroHome1() {
   const router = useRouter();
   const { options, loading: servicesLoading } = useBookingOptions();
@@ -74,7 +89,12 @@ export default function HeroHome1() {
     }
   }, [options, service]);
   const [postcode, setPostcode] = useState("");
+  const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    setAvailability(getEngineerAvailability());
+  }, []);
 
   function handleBookSubmit(e) {
     e.preventDefault();
@@ -130,11 +150,12 @@ export default function HeroHome1() {
 
             <motion.div
               variants={reduceMotion ? undefined : HERO_ITEM}
-              className="inline-flex items-center gap-2 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-1.5 mb-6"
+              id="availabilityBadge"
+              className={`home1-hero-availability${availability.limited ? " home1-hero-availability--limited" : ""}`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse shrink-0" aria-hidden="true" />
-              <span className="text-[#4ADE80] text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.12em]">
-                Engineers available now in your area
+              <span className="home1-hero-availability-dot" aria-hidden="true" />
+              <span id="availabilityText" className="home1-hero-availability-text">
+                {availability.text}
               </span>
             </motion.div>
 

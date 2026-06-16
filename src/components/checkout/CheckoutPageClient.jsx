@@ -481,7 +481,9 @@ export default function CheckoutPageClient() {
     >
       <Navbar />
 
-      {!complete && sessionExpired ? <CheckoutSessionExpiredModal /> : null}
+      {!complete && sessionExpired ? (
+        <CheckoutSessionExpiredModal serviceSlug={slug || service?.slug || ""} />
+      ) : null}
 
       {!complete && !sessionExpired ? (
         <div className="home1-checkout-top">

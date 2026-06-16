@@ -17,12 +17,12 @@ function SessionExpiredIcon() {
   );
 }
 
-export default function CheckoutSessionExpiredModal() {
+export default function CheckoutSessionExpiredModal({ serviceSlug = "" }) {
   const router = useRouter();
 
-  function goToServices() {
+  function goToService() {
     clearCheckoutSession();
-    router.push("/services");
+    router.push(serviceSlug ? `/services/${serviceSlug}` : "/services");
   }
 
   return (
@@ -47,7 +47,7 @@ export default function CheckoutSessionExpiredModal() {
             Your checkout session has expired. Please start again.
           </p>
 
-          <button type="button" className="home1-btn-primary home1-checkout-session-expired-btn" onClick={goToServices}>
+          <button type="button" className="home1-btn-primary home1-checkout-session-expired-btn" onClick={goToService}>
             Go to Service
           </button>
         </div>
