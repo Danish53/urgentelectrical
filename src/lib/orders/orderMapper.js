@@ -32,6 +32,73 @@ function parseMoney(value) {
 }
 
 /**
+ * @param {Record<string, unknown>} api
+ */
+function pickOrderDiscount(api) {
+  return parseMoney(
+    api.discount_amount ??
+      api.discountAmount ??
+      api.discount ??
+      api.coupon_discount ??
+      api.couponDiscount
+  );
+}
+
+/**
+ * @param {Record<string, unknown>} api
+ */
+function pickOrderSubTotal(api) {
+  return parseMoney(
+    api.sub_total ?? api.subtotal ?? api.totalSubtotal ?? api.total_subtotal ?? api.service_total
+  );
+}
+
+/**
+ * @param {Record<string, unknown>} api
+ */
+function pickOrderDeliveryFee(api) {
+  return parseMoney(api.delivery_fee ?? api.deliveryFee);
+}
+
+/**
+ * Paid total inc. VAT — prefers net amount after coupon discount.
+ * @param {Record<string, unknown>} api
+ */
+function pickOrderPaidTotal(api) {
+  const discount = pickOrderDiscount(api);
+  const subTotal = pickOrderSubTotal(api);
+  const deliveryFee = pickOrderDeliveryFee(api);
+  const grossFromParts = subTotal + deliveryFee;
+
+  if (grossFromParts > 0) {
+    const netFromParts = Math.max(0, grossFromParts - discount);
+    if (discount > 0) return netFromParts;
+  }
+
+  const explicitPaid = parseMoney(
+    api.paid_amount ?? api.amount_paid ?? api.total_paid ?? api.net_amount ?? api.net_total
+  );
+  if (explicitPaid > 0) return explicitPaid;
+
+  const amount = parseMoney(api.amount);
+  if (amount > 0) {
+    if (discount > 0 && grossFromParts > 0 && Math.abs(amount - grossFromParts) < 0.02) {
+      return Math.max(0, amount - discount);
+    }
+    return amount;
+  }
+
+  const headlineTotal = parseMoney(
+    api.total_inc_vat ?? api.total_incl_vat ?? api.grand_total ?? api.total
+  );
+  if (headlineTotal > 0 && discount > 0) {
+    return Math.max(0, headlineTotal - discount);
+  }
+
+  return headlineTotal;
+}
+
+/**
  * @param {unknown} value
  */
 function formatApiTime(value) {
@@ -159,11 +226,12 @@ function pickVisitTime(api) {
  * @returns {OrderSummary}
  */
 export function apiToOrderSummary(api) {
-  const totalInc = parseMoney(
-    api.paid_amount ?? api.total_inc_vat ?? api.total_incl_vat ?? api.grand_total ?? api.total ?? api.amount
-  );
+  const discount = pickOrderDiscount(api);
+  const subTotal = pickOrderSubTotal(api);
+  const deliveryFee = pickOrderDeliveryFee(api);
+  const totalInc = pickOrderPaidTotal(api);
   const totalExc = parseMoney(
-    api.totalSubtotal ?? api.total_subtotal ?? api.subtotal ?? api.total_exc_vat ?? api.total_ex_vat
+    api.total_exc_vat ?? api.total_ex_vat ?? api.totalSubtotal ?? api.total_subtotal ?? subTotal
   );
   const rawStatus = api.order_status ?? api.status;
 
@@ -180,8 +248,9 @@ export function apiToOrderSummary(api) {
     address: formatOrderAddress(api) || "",
     totalInc,
     totalExc,
-    deliveryFee: parseMoney(api.delivery_fee),
-    discount: parseMoney(api.discount),
+    serviceSubTotal: subTotal,
+    deliveryFee,
+    discount,
     paymentMethod: String(api.payment_method ?? "").trim(),
     paymentStatus: String(api.payment_status ?? "").trim(),
   };

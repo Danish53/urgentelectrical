@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -54,6 +54,10 @@ import {
   formatCreateIntentApiResponse,
   logPaymentIntentDebug,
 } from "@/lib/checkout/logPaymentIntentDebug";
+import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
+import { parseDeliveryFeeResponse, isDeliveryFeeOutOfRange } from "@/lib/checkout/parseDeliveryFeeResponse";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { calculateDeliveryFee } from "@/services/checkoutApiService";
 
 const EMPTY_DETAILS = {
   firstName: "",
@@ -70,6 +74,13 @@ const EMPTY_DETAILS = {
   country: "GB",
   title: "Mr",
   notes: "",
+  siteAddress: "",
+  siteAddressLine2: "",
+  siteCity: "",
+  sitePostcode: "",
+  siteCounty: "",
+  siteCountry: "GB",
+  siteSameAsBilling: true,
 };
 
 export default function CheckoutPageClient() {
@@ -88,6 +99,11 @@ export default function CheckoutPageClient() {
   const [complete, setComplete] = useState(false);
   const [handlingBankReturn, setHandlingBankReturn] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [deliveryFeeFromApi, setDeliveryFeeFromApi] = useState(0);
+  const [deliveryFeeResolved, setDeliveryFeeResolved] = useState(false);
+  const [deliveryFeeOutOfRange, setDeliveryFeeOutOfRange] = useState(false);
+  const [deliveryFeeLoading, setDeliveryFeeLoading] = useState(false);
+  const lastFetchedPostcodeRef = useRef("");
 
   const dispatch = useAppDispatch();
   const clientSecret = useAppSelector(selectClientSecret);
@@ -142,8 +158,11 @@ export default function CheckoutPageClient() {
   const variantLabel = selectedVariant?.label ?? (variantLabelParam || null);
 
   const lineItems = useMemo(
-    () => buildCheckoutLineItems(service, 0, selectedVariant),
-    [service, selectedVariant]
+    () =>
+      buildCheckoutLineItems(service, deliveryFeeFromApi, selectedVariant, {
+        travelFeeIsInc: true,
+      }),
+    [service, selectedVariant, deliveryFeeFromApi]
   );
 
   const payableTotalInc = useMemo(() => {
@@ -221,6 +240,40 @@ export default function CheckoutPageClient() {
     isLoggedIn,
   ]);
 
+  const refreshDeliveryFee = useCallback(async (postcode) => {
+    const normalized = String(postcode ?? "").trim().toUpperCase();
+    if (!normalized) {
+      lastFetchedPostcodeRef.current = "";
+      setDeliveryFeeFromApi(0);
+      setDeliveryFeeResolved(false);
+      setDeliveryFeeOutOfRange(false);
+      return null;
+    }
+
+    setDeliveryFeeLoading(true);
+    setDeliveryFeeOutOfRange(false);
+
+    try {
+      const feeResponse = await calculateDeliveryFee({ postcode: normalized });
+      if (isDeliveryFeeOutOfRange(feeResponse)) {
+        lastFetchedPostcodeRef.current = normalized;
+        setDeliveryFeeFromApi(0);
+        setDeliveryFeeResolved(false);
+        setDeliveryFeeOutOfRange(true);
+        return null;
+      }
+
+      const fee = parseDeliveryFeeResponse(feeResponse);
+      lastFetchedPostcodeRef.current = normalized;
+      setDeliveryFeeFromApi(fee);
+      setDeliveryFeeResolved(true);
+      setDeliveryFeeOutOfRange(false);
+      return fee;
+    } finally {
+      setDeliveryFeeLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (initialPostcode) {
       setDetails((d) => ({ ...d, postcode: initialPostcode.toUpperCase() }));
@@ -230,6 +283,36 @@ export default function CheckoutPageClient() {
   useEffect(() => {
     setAppliedCoupon(null);
   }, [service?.apiId, selectedVariant?.apiVariantId, selectedVariant?.id]);
+
+  useEffect(() => {
+    const postcode = String(details.postcode ?? "").trim();
+    if (postcode.length < 4) {
+      lastFetchedPostcodeRef.current = "";
+      setDeliveryFeeFromApi(0);
+      setDeliveryFeeResolved(false);
+      setDeliveryFeeOutOfRange(false);
+      return;
+    }
+
+    const normalized = postcode.toUpperCase();
+    if (lastFetchedPostcodeRef.current !== normalized) {
+      setDeliveryFeeFromApi(0);
+      setDeliveryFeeResolved(false);
+      setDeliveryFeeOutOfRange(false);
+    }
+
+    if (lastFetchedPostcodeRef.current === normalized) return;
+
+    const timer = window.setTimeout(() => {
+      refreshDeliveryFee(postcode).catch(() => {
+        setDeliveryFeeFromApi(0);
+        setDeliveryFeeResolved(false);
+        setDeliveryFeeOutOfRange(false);
+      });
+    }, 600);
+
+    return () => window.clearTimeout(timer);
+  }, [details.postcode, refreshDeliveryFee]);
 
   useEffect(() => {
     if (!service?.apiId || selectedDate) return;
@@ -372,17 +455,25 @@ export default function CheckoutPageClient() {
   }, [isLoggedIn, authUser]);
 
   function validateStep2() {
-    const { firstName, lastName, email, phone, address, postcode, password, passwordConfirmation } =
-      details;
+    const { firstName, lastName, email, phone, password, passwordConfirmation } = details;
+    const billing = readCheckoutAddress(details, "billing");
+    const siteSameAsBilling = details.siteSameAsBilling !== false;
+    const site = siteSameAsBilling ? billing : readCheckoutAddress(details, "site");
+
     if (
       !firstName.trim() ||
       !lastName.trim() ||
       !email.trim() ||
       !phone.trim() ||
-      !address.trim() ||
-      !postcode.trim()
+      !billing.address ||
+      !billing.postcode
     ) {
       setStepError("Please complete all required fields.");
+      return false;
+    }
+
+    if (!siteSameAsBilling && (!site.address || !site.postcode)) {
+      setStepError("Please complete the site address or choose Yes to use billing address.");
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -410,13 +501,50 @@ export default function CheckoutPageClient() {
   async function handleContinueToPayment() {
     if (!validateStep2()) return;
 
-    const amount = parseFloat(payableTotalInc) || 0;
     if (!service?.apiId) {
       setStepError("Service is not available for booking. Please choose a service and try again.");
       return;
     }
 
+    const billing = readCheckoutAddress(details, "billing");
+    const postcode = billing.postcode.trim();
+    if (!postcode) {
+      setStepError("Please enter a billing postcode.");
+      return;
+    }
+
+    const normalizedPostcode = postcode.toUpperCase();
+    if (deliveryFeeOutOfRange && lastFetchedPostcodeRef.current === normalizedPostcode) {
+      setStepError(
+        "We are unable to service this postcode. Please contact us or use a different billing address."
+      );
+      return;
+    }
+
     setStepError("");
+
+    let fee = deliveryFeeFromApi;
+    if (!deliveryFeeResolved || lastFetchedPostcodeRef.current !== normalizedPostcode) {
+      try {
+        const refreshedFee = await refreshDeliveryFee(postcode);
+        if (refreshedFee == null) {
+          setStepError(
+            "We are unable to service this postcode. Please contact us or use a different billing address."
+          );
+          return;
+        }
+        fee = refreshedFee;
+      } catch (err) {
+        setStepError(getApiErrorMessage(err, "Could not calculate delivery fee for this postcode."));
+        return;
+      }
+    }
+
+    const updatedLineItems = buildCheckoutLineItems(service, fee, selectedVariant, {
+      travelFeeIsInc: true,
+    });
+    const discount = appliedCoupon?.discountAmount ?? 0;
+    const amount = Math.max(0, parseFloat(updatedLineItems.totalInc) - discount);
 
     const intentResult = await dispatch(createPaymentIntent(amount));
     if (createPaymentIntent.rejected.match(intentResult)) {
@@ -444,7 +572,7 @@ export default function CheckoutPageClient() {
         selectedTime,
         schedules: scheduleSlots,
         details: { ...details, isGuest: !isLoggedIn },
-        lineItems,
+        lineItems: updatedLineItems,
         paymentIntentId: intentId,
         coupon: appliedCoupon,
       })
@@ -563,7 +691,9 @@ export default function CheckoutPageClient() {
                           onContinue={handleContinueToPayment}
                           error={stepError || (validateStatus === "failed" ? validateError : "")}
                           submitting={
-                            validateStatus === "loading" || paymentIntentStatus === "loading"
+                            deliveryFeeLoading ||
+                            validateStatus === "loading" ||
+                            paymentIntentStatus === "loading"
                           }
                         />
                       ) : clientSecret && stripePromise ? (
@@ -657,6 +787,9 @@ export default function CheckoutPageClient() {
                       appliedCoupon={appliedCoupon}
                       onCouponApplied={setAppliedCoupon}
                       onCouponRemoved={() => setAppliedCoupon(null)}
+                      deliveryFeeLoading={deliveryFeeLoading}
+                      deliveryFeeResolved={deliveryFeeResolved}
+                      deliveryFeeOutOfRange={deliveryFeeOutOfRange}
                     />
                   </div>
                 </div>

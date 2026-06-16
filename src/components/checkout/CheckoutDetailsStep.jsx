@@ -3,6 +3,7 @@
 import { useState } from "react";
 import CheckoutAddressLookup from "@/components/checkout/CheckoutAddressLookup";
 import CheckoutSiteAddressModal from "@/components/checkout/CheckoutSiteAddressModal";
+import CheckoutSiteSameToggle from "@/components/checkout/CheckoutSiteSameToggle";
 import { mapSavedSiteToCheckoutDetails } from "@/lib/checkout/mapSavedSiteToCheckoutDetails";
 
 const labelClass = "home1-checkout-label";
@@ -19,13 +20,23 @@ export default function CheckoutDetailsStep({
 }) {
   const [siteModalOpen, setSiteModalOpen] = useState(false);
   const [selectedSiteLabel, setSelectedSiteLabel] = useState("");
+  const siteSameAsBilling = details.siteSameAsBilling !== false;
 
   function set(field, value) {
     onChange({ ...details, [field]: value });
   }
 
+  function handleSiteSameChange(same) {
+    if (same) {
+      setSelectedSiteLabel("");
+      onChange({ ...details, siteSameAsBilling: true });
+      return;
+    }
+    onChange({ ...details, siteSameAsBilling: false });
+  }
+
   function handleSiteSelect(site) {
-    onChange(mapSavedSiteToCheckoutDetails(site, details));
+    onChange(mapSavedSiteToCheckoutDetails(site, { ...details, siteSameAsBilling: false }));
     setSelectedSiteLabel(site.name || site.address);
   }
 
@@ -154,11 +165,24 @@ export default function CheckoutDetailsStep({
         <CheckoutAddressLookup
           details={details}
           onChange={onChange}
-          isLoggedIn={isLoggedIn}
-          selectedSiteLabel={selectedSiteLabel}
-          onClearSavedSite={() => setSelectedSiteLabel("")}
-          onOpenSavedAddresses={() => setSiteModalOpen(true)}
+          variant="billing"
+          sectionTitle="Billing Address"
         />
+
+        <CheckoutSiteSameToggle value={siteSameAsBilling} onChange={handleSiteSameChange} />
+
+        {!siteSameAsBilling ? (
+          <CheckoutAddressLookup
+            details={details}
+            onChange={onChange}
+            variant="site"
+            sectionTitle="Site Address"
+            isLoggedIn={isLoggedIn}
+            selectedSiteLabel={selectedSiteLabel}
+            onClearSavedSite={() => setSelectedSiteLabel("")}
+            onOpenSavedAddresses={() => setSiteModalOpen(true)}
+          />
+        ) : null}
 
         <div>
           <label htmlFor="checkout-notes" className={labelClass}>
@@ -184,7 +208,7 @@ export default function CheckoutDetailsStep({
         </div>
       </form>
 
-      {isLoggedIn ? (
+      {isLoggedIn && !siteSameAsBilling ? (
         <CheckoutSiteAddressModal
           open={siteModalOpen}
           onClose={() => setSiteModalOpen(false)}

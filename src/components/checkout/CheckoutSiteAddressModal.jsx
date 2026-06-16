@@ -15,13 +15,19 @@ function matchesSiteSearch(site, query) {
   const haystack = [
     site.name,
     site.address,
+    site.addressLine1,
+    site.addressLine2,
     site.postcode,
     site.townCity,
     site.county,
+    site.country,
     site.contact,
+    site.firstName,
+    site.lastName,
     site.phone,
+    site.mobile,
     site.email,
-    site.notes,
+    site.description,
   ]
     .filter(Boolean)
     .join(" ")
@@ -169,28 +175,55 @@ export default function CheckoutSiteAddressModal({ open, onClose, onSelect }) {
 
           {!loading && !error && filteredSites.length > 0 ? (
             <ul className="home1-checkout-site-modal-list" role="listbox" aria-label="Saved site addresses">
-              {filteredSites.map((site) => (
-                <li key={site.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    className="home1-checkout-site-modal-item"
-                    onClick={() => {
-                      onSelect(site);
-                      onClose();
-                    }}
-                  >
-                    <span className="home1-checkout-site-modal-item-top">
-                      <strong>{site.name}</strong>
-                      {site.primary ? <span className="home1-checkout-site-modal-badge">Default</span> : null}
-                    </span>
-                    <span className="home1-checkout-site-modal-item-address">{site.address}</span>
-                    {site.postcode ? (
-                      <span className="home1-checkout-site-modal-item-meta">{site.postcode}</span>
-                    ) : null}
-                  </button>
-                </li>
-              ))}
+              {filteredSites.map((site) => {
+                const countryLabel =
+                  site.country === "GB" ? "United Kingdom" : (site.country || "");
+
+                // In the API response we commonly get only address parts.
+                // We already show `site.name` (usually address_line_1) as the title row,
+                // so we render the remaining address lines below it.
+                const addressLines = [
+                  site.addressLine2 || "",
+                  site.townCity || "",
+                  site.county || "",
+                  site.postcode || "",
+                  countryLabel,
+                ].filter((v) => Boolean(String(v).trim()));
+
+                return (
+                  <li key={site.id}>
+                    <button
+                      type="button"
+                      role="option"
+                      className="home1-checkout-site-modal-item"
+                      onClick={() => {
+                        onSelect(site);
+                        onClose();
+                      }}
+                    >
+                      <span className="home1-checkout-site-modal-item-top">
+                        <strong>{site.name}</strong>
+                        {site.primary ? (
+                          <span className="home1-checkout-site-modal-badge">Default</span>
+                        ) : null}
+                      </span>
+
+                      <span className="home1-checkout-site-modal-item-address">
+                        {addressLines.length ? (
+                          addressLines.map((line, idx) => (
+                            <span key={`${site.id}-addr-${idx}`}>
+                              {line}
+                              {idx < addressLines.length - 1 ? <br /> : null}
+                            </span>
+                          ))
+                        ) : (
+                          site.address
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : null}
         </div>

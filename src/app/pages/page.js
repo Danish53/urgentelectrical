@@ -2,7 +2,7 @@ import { buildPagesListingMetadata } from "@/data/pagesSeo";
 import OtherServicesPageClient from "@/components/pages/OtherServicesPageClient";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getSiteUrl } from "@/lib/siteUrl";
-import { fetchPagesWithCardContent } from "@/services/pagesApiService";
+import { fetchOtherServicesPage, fetchPagesWithCardContent } from "@/services/pagesApiService";
 import "../home1/home1.css";
 import "./pages.css";
 
@@ -20,13 +20,29 @@ const PAGES_LISTING_JSON_LD = {
 export const revalidate = 3600;
 
 export default async function OtherServicesPage() {
-  let pages = [];
+  let initialPages = [];
+  let initialMeta = null;
   let loadError = "";
 
   try {
-    pages = await fetchPagesWithCardContent();
+    const result = await fetchOtherServicesPage(1);
+    initialPages = result.pages;
+    initialMeta = result.meta;
   } catch (error) {
-    loadError = getApiErrorMessage(error, "Could not load other services.");
+    try {
+      const fallbackPages = await fetchPagesWithCardContent();
+      initialPages = fallbackPages;
+      initialMeta = {
+        current_page: 1,
+        last_page: 1,
+        per_page: fallbackPages.length,
+        total: fallbackPages.length,
+        from: fallbackPages.length ? 1 : 0,
+        to: fallbackPages.length,
+      };
+    } catch {
+      loadError = getApiErrorMessage(error, "Could not load other services.");
+    }
   }
 
   return (
@@ -35,7 +51,11 @@ export default async function OtherServicesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(PAGES_LISTING_JSON_LD) }}
       />
-      <OtherServicesPageClient pages={pages} loadError={loadError} />
+      <OtherServicesPageClient
+        initialPages={initialPages}
+        initialMeta={initialMeta}
+        loadError={loadError}
+      />
     </>
   );
 }

@@ -3,7 +3,7 @@ import { getAllBlogPosts } from "@/lib/blogs/getBlogs";
 import { getSiteUrl } from "@/lib/siteUrl";
 import { getBookableServices } from "@/lib/services/getServices";
 import { fetchLocationsPage } from "@/services/locationsApiService";
-import { fetchPagesList } from "@/services/pagesApiService";
+import { fetchAllOtherServices, fetchPagesList } from "@/services/pagesApiService";
 import { fetchPolicies } from "@/services/policyApiService";
 
 async function getLocationSitemapEntries(site) {
@@ -54,6 +54,20 @@ async function getPolicySitemapEntries(site) {
 }
 
 async function getPagesSitemapEntries(site) {
+  try {
+    const { pages } = await fetchAllOtherServices();
+    if (pages.length) {
+      return pages.map((page) => ({
+        url: `${site}/pages/${page.slug}`,
+        lastModified: new Date(),
+        changeFrequency: "monthly",
+        priority: 0.7,
+      }));
+    }
+  } catch {
+    /* fall through */
+  }
+
   try {
     const pages = await fetchPagesList();
     return pages.map((page) => ({

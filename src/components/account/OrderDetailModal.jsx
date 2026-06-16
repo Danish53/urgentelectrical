@@ -147,7 +147,12 @@ export default function OrderDetailModal({ open, onClose, order, loading = false
                     <dd>{capitalize(order.paymentStatus)}</dd>
                   </div>
                 ) : null}
-                {order.totalExc > 0 ? (
+                {order.serviceSubTotal > 0 ? (
+                  <div>
+                    <dt>Service subtotal</dt>
+                    <dd>{formatMoney(order.serviceSubTotal)}</dd>
+                  </div>
+                ) : order.totalExc > 0 ? (
                   <div>
                     <dt>Subtotal</dt>
                     <dd>{formatMoney(order.totalExc)}</dd>

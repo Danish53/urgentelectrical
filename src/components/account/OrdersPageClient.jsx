@@ -115,9 +115,14 @@ function OrderCard({ order, onViewDetails, detailLoading = false }) {
           <dt>Paid</dt>
           <dd>
             {formatMoney(order.totalInc)}
-            {order.totalExc > 0 && order.totalExc !== order.totalInc ? (
+            {order.discount > 0 ? (
               <span className="home1-orders-card-meta-sub">
-                Subtotal {formatMoney(order.totalExc)}
+                Includes −{formatMoney(order.discount)} discount
+              </span>
+            ) : order.serviceSubTotal > 0 &&
+              order.serviceSubTotal + order.deliveryFee !== order.totalInc ? (
+              <span className="home1-orders-card-meta-sub">
+                Before discount {formatMoney(order.serviceSubTotal + order.deliveryFee)}
               </span>
             ) : null}
           </dd>

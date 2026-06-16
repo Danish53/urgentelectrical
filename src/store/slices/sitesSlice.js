@@ -94,6 +94,7 @@ const initialState = {
   pagination: null,
   saving: false,
   saveError: null,
+  detailSite: null,
   detailStatus: "idle",
   detailError: null,
 };
@@ -129,8 +130,13 @@ const sitesSlice = createSlice({
       })
       .addCase(fetchSiteById.fulfilled, (state, action) => {
         state.detailStatus = "succeeded";
+        state.detailSite = action.payload;
         const idx = state.sites.findIndex((s) => s.id === action.payload.id);
-        if (idx >= 0) state.sites[idx] = action.payload;
+        if (idx >= 0) {
+          state.sites[idx] = action.payload;
+        } else {
+          state.sites.push(action.payload);
+        }
       })
       .addCase(fetchSiteById.rejected, (state, action) => {
         state.detailStatus = "failed";

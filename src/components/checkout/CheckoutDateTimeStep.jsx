@@ -15,6 +15,7 @@ import {
   isToday,
 } from "@/components/checkout/checkoutUtils";
 import { isNoSlotsScheduleError } from "@/lib/schedules";
+import CheckoutSlotBadge from "@/components/checkout/CheckoutSlotRadio";
 
 function SlotsWarning({ message = "No time slots available for this date." }) {
   return (
@@ -238,12 +239,15 @@ export default function CheckoutDateTimeStep({
                       aria-pressed={isSelected}
                     >
                       <span className="home1-checkout-schedule-slot-label">Available</span>
-                      <span className="home1-checkout-schedule-slot-times">
-                        <span className="home1-checkout-schedule-slot-start">{slot.startTime}</span>
-                        <span className="home1-checkout-schedule-slot-sep" aria-hidden="true">
-                          to
+                      <span className="home1-checkout-schedule-slot-main">
+                        <CheckoutSlotBadge />
+                        <span className="home1-checkout-schedule-slot-times">
+                          <span className="home1-checkout-schedule-slot-start">{slot.startTime}</span>
+                          <span className="home1-checkout-schedule-slot-sep" aria-hidden="true">
+                            to
+                          </span>
+                          <span className="home1-checkout-schedule-slot-end">{slot.endTime}</span>
                         </span>
-                        <span className="home1-checkout-schedule-slot-end">{slot.endTime}</span>
                       </span>
                     </button>
                   );

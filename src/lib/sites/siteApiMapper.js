@@ -1,16 +1,15 @@
-import { formatSiteAddress, formatSiteContact, siteFromForm } from "@/lib/sites/siteForm";
+import {
+  formatSiteAddress,
+  formatSiteContactName,
+  siteFromForm,
+} from "@/lib/sites/siteForm";
 
 /**
  * @param {import("@/lib/sites/siteForm").SiteFormValues} form
  */
 export function formToApiPayload(form) {
-  const country =
-    form.country === "GB" || !form.country?.trim()
-      ? "United Kingdom"
-      : form.country.trim();
-
   return {
-    country,
+    country: form.country.trim() || "United Kingdom",
     address_line_1: form.addressLine1.trim(),
     address_line_2: form.addressLine2.trim() || null,
     post_code: form.postcode.trim(),
@@ -18,10 +17,10 @@ export function formToApiPayload(form) {
     county: form.county.trim() || null,
     is_default: form.isDefault ? 1 : 0,
     title: form.title.trim() || null,
-    first_name: form.firstName.trim() || null,
-    last_name: form.lastName.trim() || null,
+    first_name: form.firstName.trim(),
+    last_name: form.lastName.trim(),
     description: form.description.trim() || null,
-    mobile: form.mobile.trim() || null,
+    mobile: form.mobile.trim(),
     email: form.email.trim() || null,
   };
 }
@@ -31,9 +30,7 @@ export function formToApiPayload(form) {
  * @returns {import("@/lib/sites/siteForm").SiteFormValues}
  */
 export function apiRecordToForm(api) {
-  const countryRaw = String(api.country ?? "").trim();
-  const country =
-    !countryRaw || countryRaw === "United Kingdom" || countryRaw === "UK" ? "GB" : countryRaw;
+  const country = String(api.country ?? "United Kingdom").trim() || "United Kingdom";
 
   return {
     country,
@@ -41,49 +38,48 @@ export function apiRecordToForm(api) {
     addressLine1: String(api.address_line_1 ?? "").trim(),
     addressLine2: String(api.address_line_2 ?? "").trim(),
     townCity: String(api.town ?? api.town_city ?? "").trim(),
-    county: String(api.county ?? "").trim(),
+    county: api.county == null ? "" : String(api.county).trim(),
     isDefault:
       api.is_default === 1 ||
       api.is_default === true ||
       api.is_default === "1" ||
       String(api.is_default).toLowerCase() === "true",
-    title: String(api.title ?? "").trim(),
-    firstName: String(api.first_name ?? "").trim(),
-    lastName: String(api.last_name ?? "").trim(),
-    mobile: String(api.mobile ?? api.mobile_number ?? "").trim(),
-    email: String(api.email ?? "").trim(),
-    description: String(api.description ?? "").trim(),
+    title: api.title == null ? "" : String(api.title).trim(),
+    firstName: String(api.first_name ?? api.firstName ?? "").trim(),
+    lastName: String(api.last_name ?? api.lastName ?? "").trim(),
+    mobile: String(api.mobile ?? api.phone ?? "").trim(),
+    email: api.email == null ? "" : String(api.email).trim(),
+    description: api.description == null ? "" : String(api.description).trim(),
   };
 }
 
 /**
  * @param {Record<string, unknown>} api
- * @returns {import("@/lib/sites/siteTypes").SavedSite}
  */
-/** @param {Record<string, unknown>} api */
 export function normalizeSiteId(api) {
   const raw = api.id ?? api.site_address_id ?? api.site_id;
   if (raw == null || raw === "") return "";
   return String(raw);
 }
 
+/**
+ * @param {Record<string, unknown>} api
+ * @returns {import("@/lib/sites/siteTypes").SavedSite}
+ */
 export function apiRecordToSavedSite(api) {
   const id = normalizeSiteId(api);
   const form = apiRecordToForm(api);
   const site = siteFromForm(form, id);
-
-  site.title = form.title;
-  site.firstName = form.firstName;
-  site.lastName = form.lastName;
-  site.contact = formatSiteContact(form);
-  site.name =
-    String(api.title ?? "").trim() || form.addressLine1 || form.townCity || "Saved site";
-  site.primary = form.isDefault;
-  site.jobs = Number(api.jobs_count ?? api.jobs ?? 0) || 0;
-  site.lastVisit = String(api.last_visit ?? api.last_visit_at ?? "Not yet");
-
   const address = formatSiteAddress(form);
   if (address) site.address = address;
+
+  if (api.user_id != null) site.userId = String(api.user_id);
+  if (api.added_by != null) site.addedBy = String(api.added_by);
+  if (api.created_at != null) site.createdAt = String(api.created_at);
+  if (api.updated_at != null) site.updatedAt = String(api.updated_at);
+
+  const contact = formatSiteContactName(form);
+  if (contact) site.contact = contact;
 
   return site;
 }
@@ -106,15 +102,7 @@ function extractSiteRows(value) {
     return record.data.filter((item) => item && typeof item === "object");
   }
 
-  const arrayKeys = [
-    "site_addresses",
-    "site_address",
-    "addresses",
-    "sites",
-    "items",
-    "results",
-    "records",
-  ];
+  const arrayKeys = ["site_addresses", "site_address", "addresses", "sites", "items", "results", "records"];
 
   for (const key of arrayKeys) {
     const list = record[key];
@@ -202,7 +190,9 @@ export function parseSiteDetailResponse(payload) {
   const record = /** @type {Record<string, unknown>} */ (payload);
 
   if (record.status === true && record.data && typeof record.data === "object") {
-    return parseSiteDetailResponse(record.data);
+    const data = /** @type {Record<string, unknown>} */ (record.data);
+    if ("id" in data) return data;
+    return parseSiteDetailResponse(data);
   }
 
   if (record.success === true && record.data && typeof record.data === "object") {
@@ -210,7 +200,7 @@ export function parseSiteDetailResponse(payload) {
     if (data.site_address && typeof data.site_address === "object") {
       return /** @type {Record<string, unknown>} */ (data.site_address);
     }
-    if (!Array.isArray(data)) return data;
+    if (!Array.isArray(data) && "id" in data) return data;
   }
 
   if (record.site_address && typeof record.site_address === "object") {

@@ -1,5 +1,5 @@
 import { CHECKOUT_PATH, buildCheckoutHref } from "@/lib/checkoutHref";
-import { formatApiPrice, priceIncVatFromString } from "@/lib/pricing";
+import { formatApiPrice, priceIncVatFromString, VAT_MULTIPLIER } from "@/lib/pricing";
 
 const SITE = "https://www.urgentelectrical.services";
 
@@ -35,7 +35,13 @@ export function findServiceByName(name, services) {
   return services.find((s) => s.name === name) ?? services[0];
 }
 
-export function buildCheckoutLineItems(service, travelExc = TRAVEL_CHARGE_EXC, variant = null) {
+export function buildCheckoutLineItems(
+  service,
+  travelFee = TRAVEL_CHARGE_EXC,
+  variant = null,
+  options = {}
+) {
+  const { travelFeeIsInc = false } = options;
   if (!service) {
     return {
       service: { label: "Service", amountExc: "0.00", amountInc: "0.00" },
@@ -50,7 +56,12 @@ export function buildCheckoutLineItems(service, travelExc = TRAVEL_CHARGE_EXC, v
   const serviceExc = parseFloat(
     variant?.priceExcVat ?? variant?.price ?? service.priceExcVat ?? service.price ?? serviceInc
   );
-  const travelInc = parseFloat(priceIncVatFromString(String(travelExc)));
+  const travelInc = travelFeeIsInc
+    ? parseFloat(String(travelFee)) || 0
+    : parseFloat(priceIncVatFromString(String(travelFee)));
+  const travelExc = travelFeeIsInc
+    ? (parseFloat(String(travelFee)) || 0) / VAT_MULTIPLIER
+    : parseFloat(String(travelFee)) || 0;
   const totalInc = (serviceInc + travelInc).toFixed(2);
   const serviceLabel = variant?.label ? `${service.name} — ${variant.label}` : service.name;
 

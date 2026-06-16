@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import AccountLayout from "@/components/account/AccountLayout";
 import CreateSiteModal from "@/components/account/CreateSiteModal";
+import SiteCardSummary from "@/components/account/SiteCardSummary";
 import BlogPagination from "@/components/blog/BlogPagination";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { siteToForm } from "@/lib/sites/siteForm";
@@ -34,47 +36,32 @@ function SiteCard({ site, onUpdate, busy = false }) {
       <div className="home1-sites-card-head">
         <div className="min-w-0">
           <h2 className="home1-sites-card-title">
-            {site.name}
+            {site.addressLine1 || site.name}
             {site.primary ? (
               <span className="home1-sites-primary-badge" title="Default site address">
                 Default site
               </span>
             ) : null}
           </h2>
-          <p className="home1-sites-card-contact">{site.contact}</p>
         </div>
       </div>
 
-      <dl className="home1-sites-card-meta">
-        <div>
-          <dt>Address</dt>
-          <dd>{site.address}</dd>
-        </div>
-        <div>
-          <dt>Phone</dt>
-          <dd>{site.phone}</dd>
-        </div>
-        {site.email ? (
-          <div>
-            <dt>Email</dt>
-            <dd>{site.email}</dd>
-          </div>
-        ) : null}
-        <div>
-          <dt>Last visit</dt>
-          <dd>{site.lastVisit}</dd>
-        </div>
-      </dl>
-
-      {site.notes ? <p className="home1-sites-card-notes">{site.notes}</p> : null}
+      <SiteCardSummary site={site} />
 
       <div className="home1-sites-card-actions">
+        <Link
+          href={`/account/sites/${site.id}`}
+          className="home1-btn-outline home1-sites-btn"
+          aria-label={`View details for ${site.addressLine1 || site.name}`}
+        >
+          View details
+        </Link>
         <button
           type="button"
           className="home1-btn-primary home1-sites-btn home1-sites-btn--update"
           onClick={() => onUpdate(site)}
           disabled={busy || !site.id}
-          aria-label={`Update ${site.name}`}
+          aria-label={`Update ${site.addressLine1 || site.name}`}
         >
           Update
         </button>
@@ -91,7 +78,7 @@ function SitesEmpty({ onCreate, disabled }) {
       </div>
       <h2 className="home1-sites-empty-title">No saved sites yet</h2>
       <p className="home1-sites-empty-text">
-        Add your first job location to speed up checkout and keep visit notes in one place.
+        Add your first job location to speed up checkout and keep addresses in one place.
       </p>
       <button
         type="button"
@@ -118,10 +105,6 @@ export default function SitesPageClient() {
   const initialLoading = (status === "loading" || status === "idle") && sites.length === 0;
   const pageLoading = status === "loading" && sites.length > 0;
   const busy = saving;
-
-  const editingSite = editingId ? sites.find((s) => s.id === editingId) : null;
-  const modalMode = editingId ? "edit" : "create";
-  const modalInitialForm = editForm ?? (editingSite ? siteToForm(editingSite) : undefined);
 
   const totalCount = pagination?.total ?? sites.length;
   const defaultSite = sites.find((s) => s.primary);
@@ -150,7 +133,6 @@ export default function SitesPageClient() {
       toastError("This site cannot be updated (missing ID).");
       return;
     }
-
     setEditingId(id);
     setEditForm(siteToForm(site));
     setModalOpen(true);
@@ -212,13 +194,6 @@ export default function SitesPageClient() {
           <p className="home1-sites-stat-label">Default set</p>
         </div>
       </div>
-
-      {/* {defaultSite && !initialLoading ? (
-        <p className="home1-sites-default-hint">
-          Default address: <strong>{defaultSite.name}</strong>
-          {defaultSite.address ? ` · ${defaultSite.address}` : ""}
-        </p>
-      ) : null} */}
 
       <section className="home1-sites-panel home1-card w-full">
         <header className="home1-sites-panel-head home1-sites-panel-head--row">
@@ -310,9 +285,9 @@ export default function SitesPageClient() {
         onClose={closeModal}
         onSubmit={handleSubmitSite}
         saving={saving}
-        mode={modalMode}
-        initialForm={modalInitialForm}
-        siteName={editingSite?.name}
+        mode={editingId ? "edit" : "create"}
+        initialForm={editForm ?? undefined}
+        siteName={editingId ? (sites.find((s) => s.id === editingId)?.addressLine1 || "") : ""}
       />
     </AccountLayout>
   );

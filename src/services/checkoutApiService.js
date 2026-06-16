@@ -60,6 +60,18 @@ export async function applyCoupon(payload) {
 }
 
 /**
+ * @param {{ postcode: string }} payload
+ */
+export async function calculateDeliveryFee(payload) {
+  return checkoutFetch(CHECKOUT_PROXY.calculateDeliveryFee, {
+    method: "POST",
+    body: {
+      postcode: String(payload.postcode ?? "").trim().toUpperCase(),
+    },
+  });
+}
+
+/**
  * @param {Record<string, unknown>} payload
  */
 export async function validateOrderData(payload) {

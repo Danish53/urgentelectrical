@@ -1,4 +1,4 @@
-import { PAGES_API } from "@/constants/pagesApi";
+import { OTHER_SERVICES_PUBLIC_PATH, PAGES_API } from "@/constants/pagesApi";
 import { ApiError } from "@/lib/api/errors";
 import { apiRequest } from "@/lib/api/client";
 import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
@@ -87,6 +87,23 @@ async function fetchPublicCmsPageBySlug(slug) {
  * @property {string} [image]
  * @property {string} [page_image]
  * @property {string} [short_description]
+ * @property {string} [full_title]
+ */
+
+/**
+ * @typedef {object} OtherServicesPaginationMeta
+ * @property {number} current_page
+ * @property {number} last_page
+ * @property {number} per_page
+ * @property {number} total
+ * @property {number} from
+ * @property {number} to
+ */
+
+/**
+ * @typedef {object} OtherServicesListResult
+ * @property {(ApiInfoPage & { short_description: string })[]} pages
+ * @property {OtherServicesPaginationMeta | null} meta
  */
 
 /**
@@ -127,6 +144,156 @@ export function normalizePageListItem(item) {
     image: typeof item.image === "string" ? item.image : undefined,
     page_image: typeof item.page_image === "string" ? item.page_image : undefined,
   };
+}
+
+/**
+ * @param {Record<string, unknown>} item
+ * @returns {ApiInfoPage}
+ */
+export function normalizeOtherServiceListItem(item) {
+  const fullTitle = String(item.title ?? "Service page").trim() || "Service page";
+  const displayName =
+    (typeof item.page_display_name === "string" && item.page_display_name.trim()) || fullTitle;
+
+  return {
+    id: 0,
+    title: displayName,
+    full_title: displayName !== fullTitle ? fullTitle : undefined,
+    slug: normalizePageSlug(item),
+    description: "",
+    page_image: typeof item.page_image === "string" ? item.page_image : undefined,
+  };
+}
+
+/**
+ * @param {unknown} payload
+ * @returns {{ pages: ApiInfoPage[], meta: OtherServicesPaginationMeta | null } | null}
+ */
+export function parseOtherServicesListResponse(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const record = /** @type {Record<string, unknown>} */ (payload);
+  if (!Array.isArray(record.data)) return null;
+
+  const pages = record.data
+    .filter((item) => item && typeof item === "object")
+    .map((item) => normalizeOtherServiceListItem(/** @type {Record<string, unknown>} */ (item)));
+
+  const current_page = Number(record.current_page);
+  const last_page = Number(record.last_page);
+
+  if (!Number.isFinite(current_page) || !Number.isFinite(last_page)) {
+    return { pages, meta: null };
+  }
+
+  const per_page = Number(record.per_page);
+  const total = Number(record.total);
+  const from = Number(record.from);
+  const to = Number(record.to);
+  const safePerPage = Number.isFinite(per_page) && per_page > 0 ? per_page : pages.length;
+  const safeTotal = Number.isFinite(total) ? total : pages.length;
+  const safeFrom = Number.isFinite(from) ? from : (current_page - 1) * safePerPage + 1;
+  const safeTo = Number.isFinite(to) ? to : safeFrom + Math.max(pages.length, 1) - 1;
+
+  return {
+    pages,
+    meta: {
+      current_page,
+      last_page,
+      per_page: safePerPage,
+      total: safeTotal,
+      from: safeFrom,
+      to: safeTo,
+    },
+  };
+}
+
+async function fetchOtherServicesPayload(page = 1, fetchOptions = {}) {
+  const safePage = Math.max(1, Number(page) || 1);
+  const url = `${getPublicSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}?page=${safePage}`;
+  let response;
+
+  try {
+    response = await fetch(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      ...fetchOptions,
+    });
+  } catch {
+    throw new ApiError("Unable to reach the server. Check your connection and try again.", {
+      status: 0,
+    });
+  }
+
+  if (!response.ok) {
+    throw new ApiError(`Could not load other services (${response.status}).`, {
+      status: response.status,
+    });
+  }
+
+  const text = await response.text();
+  if (!text) {
+    throw new ApiError("Empty other services response from server.", { status: 0 });
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ApiError("Invalid other services response from server.", { status: 0 });
+  }
+}
+
+/**
+ * GET /public/api/other-services?page={n}
+ * @param {number} [page]
+ * @returns {Promise<OtherServicesListResult>}
+ */
+export async function fetchOtherServicesPage(page = 1) {
+  const isServer = typeof window === "undefined";
+  const payload = await fetchOtherServicesPayload(
+    page,
+    isServer ? { next: { revalidate: 3600 } } : {}
+  );
+  const parsed = parseOtherServicesListResponse(payload);
+
+  if (!parsed) {
+    throw new ApiError("Invalid other services response from server.", { status: 0, data: payload });
+  }
+
+  return {
+    pages: parsed.pages.map((item) => ({
+      ...item,
+      short_description: getPageShortDescription(item),
+    })),
+    meta: parsed.meta,
+  };
+}
+
+/** All pages from public other-services API (search / sitemap). */
+export async function fetchAllOtherServices() {
+  /** @type {(ApiInfoPage & { short_description: string })[]} */
+  const all = [];
+  let meta = null;
+  let page = 1;
+  let lastPage = 1;
+
+  do {
+    const payload = await fetchOtherServicesPayload(page, { next: { revalidate: 3600 } });
+    const parsed = parseOtherServicesListResponse(payload);
+    if (!parsed) break;
+
+    all.push(
+      ...parsed.pages.map((item) => ({
+        ...item,
+        short_description: getPageShortDescription(item),
+      }))
+    );
+    meta = parsed.meta ?? meta;
+    lastPage = Math.max(1, Number(parsed.meta?.last_page) || 1);
+    page += 1;
+  } while (page <= lastPage);
+
+  return { pages: all, meta };
 }
 
 /**
@@ -291,6 +458,12 @@ function truncateText(text, maxLength = 170) {
 export function getPageShortDescription(page) {
   const fromDesc = typeof page.description === "string" ? page.description.trim() : "";
   if (fromDesc) return truncateText(fromDesc, 170);
+
+  const fullTitle =
+    "full_title" in page && typeof page.full_title === "string" ? page.full_title.trim() : "";
+  if (fullTitle && fullTitle !== page.title) {
+    return truncateText(fullTitle, 170);
+  }
 
   const detail = "detail" in page && typeof page.detail === "string" ? page.detail : "";
   const fromHtml = detail ? htmlToPlainText(detail) : "";

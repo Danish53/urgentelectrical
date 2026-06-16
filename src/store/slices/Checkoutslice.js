@@ -62,6 +62,13 @@ const EMPTY_DETAILS = {
   isGuest: true,
   password: "",
   passwordConfirmation: "",
+  siteAddress: "",
+  siteAddressLine2: "",
+  siteCity: "",
+  sitePostcode: "",
+  siteCounty: "",
+  siteCountry: "GB",
+  siteSameAsBilling: true,
 };
 
 const initialState = {

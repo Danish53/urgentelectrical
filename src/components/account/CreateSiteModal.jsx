@@ -6,9 +6,6 @@ import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { EMPTY_SITE_FORM } from "@/lib/sites/siteForm";
 
 const INPUT = `${AUTH_INPUT_CLASS} home1-sites-input`;
-const SELECT = `${AUTH_INPUT_CLASS} home1-sites-input home1-sites-select`;
-
-const COUNTRIES = [{ value: "GB", label: "United Kingdom (UK)" }];
 
 function Field({ id, label, optional, children }) {
   return (
@@ -111,19 +108,16 @@ export default function CreateSiteModal({
         <form onSubmit={handleSubmit} className="home1-sites-modal-form">
           <div className="home1-sites-modal-body">
             <Field id="site-country" label="Country / Region">
-              <select
+              <input
                 id="site-country"
                 value={form.country}
                 onChange={(e) => update("country", e.target.value)}
-                className={SELECT}
+                placeholder="e.g. United Kingdom"
+                className={INPUT}
+                required
                 disabled={saving}
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+                autoComplete="country-name"
+              />
             </Field>
 
             <div className="home1-sites-form-grid home1-sites-form-grid--2">
@@ -200,7 +194,7 @@ export default function CreateSiteModal({
             </label>
 
             <div className="home1-sites-modal-divider">
-              <p className="home1-sites-modal-divider-label">Contact Details</p>
+              <p className="home1-sites-modal-divider-label">Contact details</p>
             </div>
 
             <div className="home1-sites-form-grid home1-sites-form-grid--3">
@@ -291,7 +285,7 @@ export default function CreateSiteModal({
               disabled={saving}
             >
               {saving ? <ButtonSpinner /> : null}
-              {saving ? "Updating…" : isEdit ? "Update site" : "Add site"}
+              {saving ? "Saving…" : isEdit ? "Update site" : "Add site"}
             </button>
           </footer>
         </form>

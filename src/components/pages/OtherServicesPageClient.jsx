@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -8,13 +8,19 @@ import FloatingCTA from "@/components/FloatingCTA";
 import CTAHome1 from "@/components/home1/CTAHome1";
 import ListSearchBar from "@/components/common/ListSearchBar";
 import AppImage from "@/components/common/AppImage";
+import BlogPagination from "@/components/blog/BlogPagination";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
-import { getPageImageUrl } from "@/services/pagesApiService";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import {
+  fetchAllOtherServices,
+  fetchOtherServicesPage,
+  getPageImageUrl,
+} from "@/services/pagesApiService";
 
 /**
  * @param {{
- *   page: import("@/services/pagesApiService").ApiInfoPage & { short_description?: string },
+ *   page: import("@/services/pagesApiService").ApiInfoPage & { short_description?: string, full_title?: string },
  * }} props
  */
 function OtherServiceCard({ page }) {
@@ -49,37 +55,116 @@ function OtherServiceCard({ page }) {
   );
 }
 
+function ListSpinner() {
+  return (
+    <svg
+      className="h-5 w-5 shrink-0 animate-spin text-[#d3231f]"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      />
+    </svg>
+  );
+}
+
 /**
  * @param {{
- *   pages: (import("@/services/pagesApiService").ApiInfoPage & { short_description?: string })[],
+ *   initialPages: (import("@/services/pagesApiService").ApiInfoPage & { short_description?: string })[],
+ *   initialMeta: import("@/services/pagesApiService").OtherServicesPaginationMeta | null,
  *   loadError?: string,
  * }} props
  */
-const INITIAL_VISIBLE = 4;
-
-export default function OtherServicesPageClient({ pages, loadError = "" }) {
-  const [showAll, setShowAll] = useState(false);
+export default function OtherServicesPageClient({
+  initialPages,
+  initialMeta,
+  loadError: initialLoadError = "",
+}) {
+  const [pages, setPages] = useState(initialPages ?? []);
+  const [meta, setMeta] = useState(initialMeta ?? null);
+  const [page, setPage] = useState(initialMeta?.current_page ?? 1);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(initialLoadError);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchPool, setSearchPool] = useState(/** @type {typeof pages | null} */ (null));
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [searchRetryKey, setSearchRetryKey] = useState(0);
 
-  const filteredPages = useMemo(() => {
-    if (!normalizeSearchQuery(searchQuery)) return pages;
+  const loadPage = useCallback(async (nextPage) => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const result = await fetchOtherServicesPage(nextPage);
+      setPages(result.pages);
+      setMeta(result.meta);
+    } catch (err) {
+      setLoadError(getApiErrorMessage(err, "Could not load other services."));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    return pages.filter((page) =>
-      matchesListSearch(
-        searchQuery,
-        page.title,
-        page.short_description || page.description
-      )
-    );
-  }, [pages, searchQuery]);
+  useEffect(() => {
+    if (!normalizeSearchQuery(searchQuery)) {
+      setSearchPool(null);
+      setSearchError(null);
+      setSearchLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+    setSearchError(null);
+
+    fetchAllOtherServices()
+      .then((result) => {
+        if (cancelled) return;
+        setSearchPool(result.pages);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSearchPool([]);
+        setSearchError(getApiErrorMessage(err, "Could not search services."));
+      })
+      .finally(() => {
+        if (!cancelled) setSearchLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchQuery, searchRetryKey]);
 
   const searchActive = Boolean(normalizeSearchQuery(searchQuery));
-  const visible = searchActive
-    ? filteredPages
-    : showAll
-      ? pages
-      : pages.slice(0, INITIAL_VISIBLE);
-  const hasMore = !searchActive && pages.length > INITIAL_VISIBLE && !showAll;
+
+  const filteredPages = useMemo(() => {
+    if (!searchActive || !searchPool) return [];
+    return searchPool.filter((item) =>
+      matchesListSearch(
+        searchQuery,
+        item.title,
+        item.full_title || item.short_description || item.description
+      )
+    );
+  }, [searchActive, searchPool, searchQuery]);
+
+  const visiblePages = searchActive ? filteredPages : pages;
+  const lastPage = meta?.last_page ?? 1;
+  const currentPage = meta?.current_page ?? page;
+  const listLoading = loading || (searchActive && searchLoading);
+
+  function handlePageChange(nextPage) {
+    if (nextPage === page || nextPage < 1 || nextPage > lastPage) return;
+    setPage(nextPage);
+    loadPage(nextPage);
+    document.getElementById("other-services-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   return (
     <div className="home1-page w-full min-w-0">
@@ -107,7 +192,7 @@ export default function OtherServicesPageClient({ pages, loadError = "" }) {
           </div>
         </section>
 
-        <section className="py-10 sm:py-14 lg:py-16 bg-[#f8fafc]">
+        <section id="other-services-list" className="py-10 sm:py-14 lg:py-16 bg-[#f8fafc]">
           <div className={SERVICES_PAGE_CONTAINER}>
             <ListSearchBar
               id="other-services-list-search"
@@ -119,10 +204,17 @@ export default function OtherServicesPageClient({ pages, loadError = "" }) {
 
             {searchActive ? (
               <p className="home1-list-search-results" aria-live="polite">
-                {filteredPages.length} result{filteredPages.length === 1 ? "" : "s"} for &ldquo;
-                {searchQuery.trim()}&rdquo;
+                {searchLoading
+                  ? "Searching services…"
+                  : `${filteredPages.length} result${filteredPages.length === 1 ? "" : "s"} for “${searchQuery.trim()}”`}
               </p>
             ) : null}
+
+            {/* {!searchActive && meta?.total ? (
+              <p className="home1-list-search-results" aria-live="polite">
+                Showing {meta.from}–{meta.to} of {meta.total} services
+              </p>
+            ) : null} */}
 
             {loadError ? (
               <div className="rounded-2xl border border-[#fecaca] bg-[#fff1f2] p-5 text-[#9f1239]">
@@ -131,34 +223,56 @@ export default function OtherServicesPageClient({ pages, loadError = "" }) {
               </div>
             ) : null}
 
-            {!loadError && pages.length === 0 ? (
+            {searchError ? (
+              <div className="rounded-2xl border border-[#fecaca] bg-[#fff1f2] p-5 text-[#9f1239] mb-6">
+                <h2 className="text-[16px] font-extrabold">Search unavailable</h2>
+                <p className="mt-1 text-[14px]">{searchError}</p>
+                <button
+                  type="button"
+                  onClick={() => setSearchRetryKey((key) => key + 1)}
+                  className="mt-3 text-[13px] font-bold underline"
+                >
+                  Try again
+                </button>
+              </div>
+            ) : null}
+
+            {!loadError && !searchActive && pages.length === 0 && !loading ? (
               <p className="text-center text-[var(--home1-muted)] py-12">No services available right now.</p>
             ) : null}
 
-            {!loadError && pages.length > 0 && searchActive && filteredPages.length === 0 ? (
+            {!loadError && searchActive && !searchLoading && filteredPages.length === 0 ? (
               <p className="text-center text-[var(--home1-muted)] py-12">
                 No services found for &ldquo;{searchQuery.trim()}&rdquo;. Try another search term.
               </p>
             ) : null}
 
-            {!loadError && visible.length > 0 ? (
+            {listLoading ? (
+              <div className="flex justify-center py-16" role="status" aria-live="polite">
+                <ListSpinner />
+                <span className="sr-only">Loading services…</span>
+              </div>
+            ) : null}
+
+            {!listLoading && !loadError && visiblePages.length > 0 ? (
               <>
                 <ul className="home1-other-services-grid p-0 m-0">
-                  {visible.map((page) => (
-                    <li key={page.id || page.slug}>
-                      <OtherServiceCard page={page} />
+                  {visiblePages.map((item) => (
+                    <li key={item.slug}>
+                      <OtherServiceCard page={item} />
                     </li>
                   ))}
                 </ul>
-                {hasMore ? (
-                  <div className="flex justify-center mt-8 sm:mt-10">
-                    <button
-                      type="button"
-                      onClick={() => setShowAll(true)}
-                      className="inline-flex items-center justify-center rounded-full bg-[#d3231f] px-10 py-3 text-[14px] font-bold text-white transition-colors hover:bg-[#b71c1c]"
-                    >
-                      See more services
-                    </button>
+
+                {!searchActive ? (
+                  <div className="mt-8 sm:mt-10">
+                    <BlogPagination
+                      currentPage={currentPage}
+                      lastPage={lastPage}
+                      loading={loading}
+                      onPageChange={handlePageChange}
+                      ariaLabel="Other services pagination"
+                    />
                   </div>
                 ) : null}
               </>

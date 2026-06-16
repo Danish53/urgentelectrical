@@ -1,4 +1,5 @@
 import { getScheduleSlotsForDate } from "@/lib/schedules";
+import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
 
 /**
  * @param {Date} date
@@ -60,16 +61,14 @@ export function buildValidateOrderPayload({
   sameAddress = true,
   coupon = null,
 }) {
-  const subTotal = parseFloat(lineItems.totalInc) || 0;
+  const serviceSubTotal = parseFloat(lineItems.service?.amountInc) || 0;
+  const deliveryFee = parseFloat(lineItems.travel?.amountInc) || 0;
   const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
-  const amount = Math.max(0, subTotal - discountAmount);
-  const deliveryFee = 0;
+  const amount = Math.max(0, serviceSubTotal + deliveryFee - discountAmount);
 
-  const address1 = String(details.address ?? "").trim();
-  const address2 = String(details.addressLine2 ?? "").trim() || null;
-  const town = String(details.city ?? "").trim();
-  const postcode = String(details.postcode ?? "").trim().toUpperCase();
-  const country = String(details.country ?? "GB").trim() || "GB";
+  const sameAsBilling = details.siteSameAsBilling !== false;
+  const billing = readCheckoutAddress(details, "billing");
+  const site = sameAsBilling ? billing : readCheckoutAddress(details, "site");
 
   const crmScheduleKey =
     crmOverride ?? resolveCrmScheduleKey(selectedDate, selectedTime, schedules) ?? "CRM-1";
@@ -82,10 +81,10 @@ export function buildValidateOrderPayload({
         : variant?.id != null && !Number.isNaN(Number(variant.id))
           ? Number(variant.id)
           : null,
-    same_address: sameAddress,
+    same_address: sameAsBilling,
     amount,
     delivery_fee: deliveryFee,
-    sub_total: subTotal,
+    sub_total: serviceSubTotal,
     selected_date: selectedDate ? formatCheckoutApiDate(selectedDate) : null,
     selected_time: selectedTime || null,
     discount_amount: discountAmount,
@@ -93,19 +92,19 @@ export function buildValidateOrderPayload({
     discount_type: coupon?.discountType ?? null,
     crm_schedule_key: crmScheduleKey,
     payment_intent_id: paymentIntentId,
-    site_country: country,
-    site_post_code: postcode,
-    site_address_line_1: address1,
-    site_address_line_2: address2,
-    site_town: town,
-    site_county: details.county ?? null,
+    site_country: site.country,
+    site_post_code: site.postcode,
+    site_address_line_1: site.address,
+    site_address_line_2: site.addressLine2 || null,
+    site_town: site.city,
+    site_county: site.county || null,
     is_guest: details.isGuest !== false,
-    country,
-    post_code: postcode,
-    address_line_1: address1,
-    address_line_2: address2,
-    town,
-    county: details.county ?? null,
+    country: billing.country,
+    post_code: billing.postcode,
+    address_line_1: billing.address,
+    address_line_2: billing.addressLine2 || null,
+    town: billing.city,
+    county: billing.county || null,
     title: String(details.title ?? "Mr").trim() || "Mr",
     first_name: String(details.firstName ?? "").trim(),
     last_name: String(details.lastName ?? "").trim(),

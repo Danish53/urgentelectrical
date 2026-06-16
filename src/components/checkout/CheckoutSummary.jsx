@@ -22,6 +22,9 @@ import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
  *   appliedCoupon?: { code: string, discountAmount: number, discountValue?: number | null, discountType?: string | null, message?: string } | null,
  *   onCouponApplied?: (coupon: { code: string, discountAmount: number, discountValue: number | null, discountType: string | null, message: string }) => void,
  *   onCouponRemoved?: () => void,
+ *   deliveryFeeLoading?: boolean,
+ *   deliveryFeeResolved?: boolean,
+ *   deliveryFeeOutOfRange?: boolean,
  * }} props
  */
 export default function CheckoutSummary({
@@ -36,6 +39,9 @@ export default function CheckoutSummary({
   appliedCoupon = null,
   onCouponApplied,
   onCouponRemoved,
+  deliveryFeeLoading = false,
+  deliveryFeeResolved = false,
+  deliveryFeeOutOfRange = false,
 }) {
   const { incVat } = useVatPreference();
   const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
@@ -49,6 +55,15 @@ export default function CheckoutSummary({
   const vatLabel = getVatSuffix(incVat);
   const priceExc = service?.priceExcVat ?? service?.price;
   const displayPrice = priceExc != null ? getDisplayPrice(priceExc, incVat) : null;
+
+  const travelPrice =
+    deliveryFeeLoading
+      ? "Calculating…"
+      : deliveryFeeOutOfRange
+        ? "Unavailable"
+        : !deliveryFeeResolved && postcode
+          ? "—"
+          : formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc);
 
   async function handleApplyCoupon() {
     const code = couponCode.trim().toUpperCase();
@@ -208,8 +223,10 @@ export default function CheckoutSummary({
             </li>
             <li>
               <span className="home1-checkout-summary-line-label">{lineItems.travel.label}</span>
-              <span className="home1-checkout-summary-line-price">
-                {formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc)}
+              <span
+                className={`home1-checkout-summary-line-price${deliveryFeeOutOfRange ? " is-muted" : ""}`}
+              >
+                {travelPrice}
               </span>
             </li>
             {discount > 0 ? (

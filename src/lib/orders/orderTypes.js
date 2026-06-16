@@ -25,6 +25,7 @@
  * @property {string} address
  * @property {number} totalInc
  * @property {number} totalExc
+ * @property {number} serviceSubTotal
  * @property {number} deliveryFee
  * @property {number} discount
  * @property {string} paymentMethod

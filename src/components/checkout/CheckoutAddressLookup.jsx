@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { formatIdealAddressLabel } from "@/lib/idealPostcodes/mapIdealAddress";
 import {
-  formatIdealAddressLabel,
-  mapIdealAddressToCheckout,
-} from "@/lib/idealPostcodes/mapIdealAddress";
+  mapIdealAddressToCheckoutVariant,
+  readCheckoutAddress,
+  writeCheckoutAddress,
+} from "@/lib/checkout/checkoutAddressFields";
 import { fetchAddressesByPostcode } from "@/services/idealPostcodesApiService";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 
@@ -24,6 +26,8 @@ function IconSearch({ className = "w-4 h-4" }) {
  * @param {{
  *   details: Record<string, unknown>,
  *   onChange: (next: Record<string, unknown>) => void,
+ *   variant?: import("@/lib/checkout/checkoutAddressFields").CheckoutAddressVariant,
+ *   sectionTitle?: string,
  *   isLoggedIn?: boolean,
  *   onOpenSavedAddresses?: () => void,
  *   selectedSiteLabel?: string,
@@ -33,6 +37,8 @@ function IconSearch({ className = "w-4 h-4" }) {
 export default function CheckoutAddressLookup({
   details,
   onChange,
+  variant = "billing",
+  sectionTitle = "Billing Address",
   isLoggedIn = false,
   onOpenSavedAddresses,
   selectedSiteLabel = "",
@@ -41,18 +47,16 @@ export default function CheckoutAddressLookup({
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
   const [lookupSuggestions, setLookupSuggestions] = useState([]);
-  /** @type {[Record<string, unknown>[], import("react").Dispatch<import("react").SetStateAction<Record<string, unknown>[]>>]} */
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressPicked, setAddressPicked] = useState(false);
 
+  const idPrefix = variant === "site" ? "checkout-site" : "checkout-billing";
+  const values = readCheckoutAddress(details, variant);
   const showAddressSelect = addressOptions.length > 0 && !addressPicked;
+  const showSavedSearch = variant === "site" && isLoggedIn;
 
-  function patch(fields) {
-    onChange({ ...details, ...fields });
-  }
-
-  function setField(field, value) {
-    patch({ [field]: value });
+  function patchAddress(valuesPatch) {
+    onChange(writeCheckoutAddress(details, variant, valuesPatch));
   }
 
   function resetLookup() {
@@ -65,7 +69,7 @@ export default function CheckoutAddressLookup({
   function handlePostcodeChange(value) {
     onClearSavedSite?.();
     resetLookup();
-    patch({
+    patchAddress({
       postcode: value.toUpperCase(),
       address: "",
       addressLine2: "",
@@ -75,7 +79,7 @@ export default function CheckoutAddressLookup({
   }
 
   async function handleFind() {
-    const postcode = String(details.postcode ?? "").trim();
+    const postcode = values.postcode.trim();
     if (!postcode) {
       setLookupError("Please enter a postcode.");
       return;
@@ -111,16 +115,17 @@ export default function CheckoutAddressLookup({
     if (!match) return;
 
     onClearSavedSite?.();
-    patch(mapIdealAddressToCheckout(match));
+    const mapped = mapIdealAddressToCheckoutVariant(match, variant);
+    onChange({ ...details, ...mapped });
     setAddressPicked(true);
     setAddressOptions([]);
   }
 
   return (
-    <div className="home1-checkout-address-block">
-      {isLoggedIn ? (
-        <div className="home1-checkout-address-head">
-          <p className="home1-checkout-address-block-title"></p>
+    <section className="home1-checkout-address-card home1-card">
+      <header className="home1-checkout-address-card-head">
+        <h3 className="home1-checkout-address-section-title">{sectionTitle}</h3>
+        {showSavedSearch ? (
           <button
             type="button"
             className="home1-checkout-address-search-btn"
@@ -129,8 +134,8 @@ export default function CheckoutAddressLookup({
             <IconSearch className="w-3.5 h-3.5" />
             Search saved addresses
           </button>
-        </div>
-      ) : null}
+        ) : null}
+      </header>
 
       {selectedSiteLabel ? (
         <p className="home1-checkout-address-selected" role="status">
@@ -138,177 +143,179 @@ export default function CheckoutAddressLookup({
         </p>
       ) : null}
 
-      <div className="home1-checkout-form-grid ">
-        <div>
-          <label htmlFor="checkout-country" className={labelClass}>
-            Country<span className="text-[#d3231f]">*</span>
-          </label>
-          <input
-            id="checkout-country"
-            value="United Kingdom (UK)"
-            className={`${inputClass} home1-checkout-input--readonly`}
-            readOnly
-            tabIndex={-1}
-            aria-readonly="true"
-          />
-        </div>
-        <div>
-          <label htmlFor="checkout-postcode" className={labelClass}>
-            Post code<span className="text-[#d3231f]">*</span>
-          </label>
-          <div className="home1-checkout-postcode-row">
+      <div className="home1-checkout-address-block">
+        <div className="home1-checkout-form-grid ">
+          <div>
+            <label htmlFor={`${idPrefix}-country`} className={labelClass}>
+              Country<span className="text-[#d3231f]">*</span>
+            </label>
             <input
-              id="checkout-postcode"
-              value={String(details.postcode ?? "")}
-              onChange={(e) => handlePostcodeChange(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleFind();
-                }
+              id={`${idPrefix}-country`}
+              value="United Kingdom (UK)"
+              className={`${inputClass} home1-checkout-input--readonly`}
+              readOnly
+              tabIndex={-1}
+              aria-readonly="true"
+            />
+          </div>
+          <div>
+            <label htmlFor={`${idPrefix}-postcode`} className={labelClass}>
+              Post code<span className="text-[#d3231f]">*</span>
+            </label>
+            <div className="home1-checkout-postcode-row">
+              <input
+                id={`${idPrefix}-postcode`}
+                value={values.postcode}
+                onChange={(e) => handlePostcodeChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleFind();
+                  }
+                }}
+                className={inputClass}
+                autoComplete="postal-code"
+                required
+              />
+              <button
+                type="button"
+                className="home1-checkout-postcode-find"
+                onClick={handleFind}
+                disabled={lookupLoading}
+                aria-busy={lookupLoading}
+              >
+                {lookupLoading ? (
+                  <>
+                    <ButtonSpinner className="h-4 w-4 text-white" />
+                    <span>Finding…</span>
+                  </>
+                ) : (
+                  <>
+                    <IconSearch />
+                    <span>Find</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {lookupError ? (
+          <p className="home1-checkout-address-lookup-error" role="alert">
+            {lookupError}
+            {lookupSuggestions.length ? (
+              <span className="home1-checkout-address-lookup-suggestions">
+                {" "}
+                Did you mean:{" "}
+                {lookupSuggestions.map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    className="home1-checkout-address-suggestion"
+                    onClick={() => {
+                      handlePostcodeChange(suggestion);
+                      setLookupError("");
+                      setLookupSuggestions([]);
+                    }}
+                  >
+                    {suggestion}
+                    {index < lookupSuggestions.length - 1 ? ", " : ""}
+                  </button>
+                ))}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
+
+        {showAddressSelect ? (
+          <div className="home1-checkout-address-select-wrap">
+            <label htmlFor={`${idPrefix}-address-select`} className={labelClass}>
+              Select address<span className="text-[#d3231f]">*</span>
+            </label>
+            <select
+              id={`${idPrefix}-address-select`}
+              className={`${inputClass} home1-checkout-address-select`}
+              defaultValue=""
+              onChange={(e) => handleSelectAddress(e.target.value)}
+              required
+            >
+              <option value="" disabled>
+                Select an address…
+              </option>
+              {addressOptions.map((address) => {
+                const key = String(address.udprn ?? formatIdealAddressLabel(address));
+                return (
+                  <option key={key} value={String(address.udprn ?? "")}>
+                    {formatIdealAddressLabel(address)}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        ) : null}
+
+        <div className="home1-checkout-form-grid">
+          <div>
+            <label htmlFor={`${idPrefix}-line-1`} className={labelClass}>
+              Address line 1<span className="text-[#d3231f]">*</span>
+            </label>
+            <input
+              id={`${idPrefix}-line-1`}
+              value={values.address}
+              onChange={(e) => {
+                onClearSavedSite?.();
+                patchAddress({ address: e.target.value });
               }}
               className={inputClass}
-              autoComplete="postal-code"
+              autoComplete="address-line1"
               required
             />
-            <button
-              type="button"
-              className="home1-checkout-postcode-find"
-              onClick={handleFind}
-              disabled={lookupLoading}
-              aria-busy={lookupLoading}
-            >
-              {lookupLoading ? (
-                <>
-                  <ButtonSpinner className="h-4 w-4 text-white" />
-                  <span>Finding…</span>
-                </>
-              ) : (
-                <>
-                  <IconSearch />
-                  <span>Find</span>
-                </>
-              )}
-            </button>
+          </div>
+          <div>
+            <label htmlFor={`${idPrefix}-line-2`} className={labelClass}>
+              Address line 2
+            </label>
+            <input
+              id={`${idPrefix}-line-2`}
+              value={values.addressLine2}
+              onChange={(e) => {
+                onClearSavedSite?.();
+                patchAddress({ addressLine2: e.target.value });
+              }}
+              className={inputClass}
+              autoComplete="address-line2"
+              placeholder="Flat / Suite"
+            />
+          </div>
+        </div>
+
+        <div className="home1-checkout-form-grid home1-checkout-form-grid--location">
+          <div>
+            <label htmlFor={`${idPrefix}-city`} className={labelClass}>
+              Town / city
+            </label>
+            <input
+              id={`${idPrefix}-city`}
+              value={values.city}
+              onChange={(e) => patchAddress({ city: e.target.value })}
+              className={inputClass}
+              autoComplete="address-level2"
+            />
+          </div>
+          <div>
+            <label htmlFor={`${idPrefix}-county`} className={labelClass}>
+              County
+            </label>
+            <input
+              id={`${idPrefix}-county`}
+              value={values.county}
+              onChange={(e) => patchAddress({ county: e.target.value })}
+              className={inputClass}
+              autoComplete="address-level1"
+            />
           </div>
         </div>
       </div>
-
-      {lookupError ? (
-        <p className="home1-checkout-address-lookup-error" role="alert">
-          {lookupError}
-          {lookupSuggestions.length ? (
-            <span className="home1-checkout-address-lookup-suggestions">
-              {" "}
-              Did you mean:{" "}
-              {lookupSuggestions.map((suggestion, index) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  className="home1-checkout-address-suggestion"
-                  onClick={() => {
-                    handlePostcodeChange(suggestion);
-                    setLookupError("");
-                    setLookupSuggestions([]);
-                  }}
-                >
-                  {suggestion}
-                  {index < lookupSuggestions.length - 1 ? ", " : ""}
-                </button>
-              ))}
-            </span>
-          ) : null}
-        </p>
-      ) : null}
-
-      {showAddressSelect ? (
-        <div className="home1-checkout-address-select-wrap">
-          <label htmlFor="checkout-address-select" className={labelClass}>
-            Select address<span className="text-[#d3231f]">*</span>
-          </label>
-          <select
-            id="checkout-address-select"
-            className={`${inputClass} home1-checkout-address-select`}
-            defaultValue=""
-            onChange={(e) => handleSelectAddress(e.target.value)}
-            required
-          >
-            <option value="" disabled>
-              Select an address…
-            </option>
-            {addressOptions.map((address) => {
-              const key = String(address.udprn ?? formatIdealAddressLabel(address));
-              return (
-                <option key={key} value={String(address.udprn ?? "")}>
-                  {formatIdealAddressLabel(address)}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-      ) : null}
-
-      <div className="home1-checkout-form-grid">
-        <div>
-          <label htmlFor="checkout-address-line-1" className={labelClass}>
-            Address line 1<span className="text-[#d3231f]">*</span>
-          </label>
-          <input
-            id="checkout-address-line-1"
-            value={String(details.address ?? "")}
-            onChange={(e) => {
-              onClearSavedSite?.();
-              setField("address", e.target.value);
-            }}
-            className={inputClass}
-            autoComplete="address-line1"
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="checkout-address-line-2" className={labelClass}>
-            Address line 2
-          </label>
-          <input
-            id="checkout-address-line-2"
-            value={String(details.addressLine2 ?? "")}
-            onChange={(e) => {
-              onClearSavedSite?.();
-              setField("addressLine2", e.target.value);
-            }}
-            className={inputClass}
-            autoComplete="address-line2"
-            placeholder="Flat / Suite"
-          />
-        </div>
-      </div>
-
-      <div className="home1-checkout-form-grid home1-checkout-form-grid--location">
-        <div>
-          <label htmlFor="checkout-city" className={labelClass}>
-            Town / city
-          </label>
-          <input
-            id="checkout-city"
-            value={String(details.city ?? "")}
-            onChange={(e) => setField("city", e.target.value)}
-            className={inputClass}
-            autoComplete="address-level2"
-          />
-        </div>
-        <div>
-          <label htmlFor="checkout-county" className={labelClass}>
-            County
-          </label>
-          <input
-            id="checkout-county"
-            value={String(details.county ?? "")}
-            onChange={(e) => setField("county", e.target.value)}
-            className={inputClass}
-            autoComplete="address-level1"
-          />
-        </div>
-      </div>
-    </div>
+    </section>
   );
 }
