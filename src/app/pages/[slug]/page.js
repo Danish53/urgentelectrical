@@ -1,3 +1,4 @@
+import { buildPageDetailMetadata, buildPageDetailJsonLd } from "@/data/pagesSeo";
 import OtherServiceDetailClient from "@/components/pages/OtherServiceDetailClient";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getServiceCategories } from "@/lib/services/getServices";
@@ -22,12 +23,12 @@ export async function generateMetadata({ params }) {
 
   try {
     const page = await fetchPageBySlug(slug);
-    return {
-      title: page.seo_title || `${page.title} | Urgent Electrical`,
-      description: page.seo_description || page.description || undefined,
-    };
+    return buildPageDetailMetadata(page);
   } catch {
-    return { title: `${titleFromSlug(slug)} | Urgent Electrical` };
+    return {
+      title: `${titleFromSlug(slug)} | Urgent Electrical`,
+      robots: { index: false, follow: false },
+    };
   }
 }
 
@@ -57,5 +58,14 @@ export default async function OtherServiceDetailPage({ params }) {
     relatedLinks = [];
   }
 
-  return <OtherServiceDetailClient page={page} loadError={loadError} relatedLinks={relatedLinks} />;
+  const jsonLd = page && !loadError && page.slug ? buildPageDetailJsonLd(page) : null;
+
+  return (
+    <>
+      {jsonLd ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      ) : null}
+      <OtherServiceDetailClient page={page} loadError={loadError} relatedLinks={relatedLinks} />
+    </>
+  );
 }

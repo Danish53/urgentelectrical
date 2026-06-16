@@ -31,6 +31,7 @@
 
 import { Plus_Jakarta_Sans, Playfair_Display, Anton } from "next/font/google";
 import AppProviders from "@/components/providers/AppProviders";
+import { getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -54,7 +55,7 @@ const anton = Anton({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: {
     default: "Urgent Electrical Nottingham | Electricians Across the East Midlands",
     template: "%s | Urgent Electrical Services",
@@ -94,6 +95,7 @@ export const metadata = {
     title: "Urgent Electrical Nottingham | 24/7 Emergency Electricians",
     description:
       "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
+    images: [getOgImageUrl()],
   },
   robots: {
     index: true,
@@ -105,11 +107,13 @@ export const metadata = {
     },
   },
   alternates: {
-    canonical: "https://www.urgentelectrical.services",
+    canonical: getSiteUrl(),
   },
 };
 
 export default function RootLayout({ children }) {
+  const site = getSiteUrl();
+
   return (
     <html lang="en-GB">
       <head>
@@ -119,39 +123,58 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "ElectricalContractor",
-              "@id": "https://www.urgentelectrical.services/#organization",
-              name: "Urgent Electrical Services",
-              image: "https://www.urgentelectrical.services/assets/urgent_electrical_logo.svg",
-              url: "https://www.urgentelectrical.services",
-              telephone: "01157780622",
-              priceRange: "££",
-              address: {
-                "@type": "PostalAddress",
-                addressLocality: "Nottingham",
-                addressRegion: "Nottinghamshire",
-                addressCountry: "GB",
-              },
-              geo: {
-                "@type": "GeoCoordinates",
-                latitude: 52.9548,
-                longitude: -1.1581,
-              },
-              openingHoursSpecification: {
-                "@type": "OpeningHoursSpecification",
-                dayOfWeek: [
-                  "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday",
-                ],
-                opens: "00:00",
-                closes: "23:59",
-              },
-              aggregateRating: {
-                "@type": "AggregateRating",
-                ratingValue: "5",
-                reviewCount: "47",
-              },
-              areaServed: [
-                "Nottingham","Nottinghamshire","Derby","Leicester","Loughborough","East Midlands",
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": `${site}/#website`,
+                  url: site,
+                  name: "Urgent Electrical Services",
+                  publisher: { "@id": `${site}/#organization` },
+                },
+                {
+                  "@type": "ElectricalContractor",
+                  "@id": `${site}/#organization`,
+                  name: "Urgent Electrical Services",
+                  image: `${site}/assets/urgent_electrical_logo.svg`,
+                  url: site,
+                  telephone: "01157780622",
+                  priceRange: "££",
+                  address: {
+                    "@type": "PostalAddress",
+                    streetAddress: "17 Regent Street",
+                    addressLocality: "Nottingham",
+                    postalCode: "NG1 5BQ",
+                    addressRegion: "Nottinghamshire",
+                    addressCountry: "GB",
+                  },
+                  geo: {
+                    "@type": "GeoCoordinates",
+                    latitude: 52.9548,
+                    longitude: -1.1581,
+                  },
+                  openingHoursSpecification: {
+                    "@type": "OpeningHoursSpecification",
+                    dayOfWeek: [
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                      "Sunday",
+                    ],
+                    opens: "00:00",
+                    closes: "23:59",
+                  },
+                  areaServed: [
+                    "Nottingham",
+                    "Nottinghamshire",
+                    "Derby",
+                    "Leicester",
+                    "Loughborough",
+                    "East Midlands",
+                  ],
+                },
               ],
             }),
           }}

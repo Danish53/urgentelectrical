@@ -4,6 +4,11 @@ import Footer from "@/components/Footer.jsx";
 import { CONTAINER } from "@/components/home1/constants";
 import "../../home1/home1.css";
 
+export const metadata = {
+  title: "Article not found",
+  robots: { index: false, follow: false },
+};
+
 export default function BlogNotFound() {
   return (
     <div className="home1-page min-h-screen flex flex-col">

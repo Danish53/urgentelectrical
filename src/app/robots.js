@@ -1,11 +1,12 @@
-const SITE_URL = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 export default function robots() {
   return {
     rules: {
       userAgent: "*",
       allow: "/",
+      disallow: ["/account/", "/login/", "/checkout", "/home1", "/home2"],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: `${getSiteUrl()}/sitemap.xml`,
   };
 }

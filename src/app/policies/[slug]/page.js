@@ -1,4 +1,7 @@
+import { buildPolicyDetailMetadata, buildPolicyDetailJsonLd } from "@/data/policiesPage";
 import Link from "next/link";
+import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
@@ -17,6 +20,20 @@ function toTitleFromSlug(slug) {
 }
 
 export const revalidate = 3600;
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+
+  try {
+    const policy = await fetchPolicyBySlug(slug);
+    return buildPolicyDetailMetadata(policy);
+  } catch {
+    return {
+      title: "Policy not found",
+      robots: { index: false, follow: false },
+    };
+  }
+}
 
 export default async function PolicyDetailPage({ params }) {
   const { slug } = await params;
@@ -42,8 +59,13 @@ export default async function PolicyDetailPage({ params }) {
       })
     : "";
 
+  const jsonLd = policy && !loadError ? buildPolicyDetailJsonLd(policy) : null;
+
   return (
     <div className="home1-page w-full min-w-0">
+      {jsonLd ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      ) : null}
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
         <section
@@ -91,14 +113,15 @@ export default async function PolicyDetailPage({ params }) {
               ) : null}
 
                 {!loadError && policyImage ? (
-                  <div className="mb-6 overflow-hidden rounded-xl border border-[#e5e7eb]">
-                    <img
+                  <div className="relative mb-6 overflow-hidden rounded-xl border border-[#e5e7eb] h-[220px] sm:h-[340px] lg:h-[440px]">
+                    <Image
                       src={policyImage}
                       alt={policyTitle}
-                      className="w-full h-[220px] sm:h-[340px] lg:h-[440px] object-cover"
-                      width={1200}
-                      height={520}
-                      loading="eager"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1200px"
+                      className="object-cover"
+                      priority
+                      unoptimized={shouldUnoptimizeImage(policyImage)}
                     />
                   </div>
                 ) : null}

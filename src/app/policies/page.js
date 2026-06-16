@@ -1,11 +1,19 @@
+import { buildPoliciesListingMetadata } from "@/data/policiesPage";
 import PoliciesPageClient from "@/components/policies/PoliciesPageClient";
 import { getApiErrorMessage } from "@/lib/api/errors";
+import { getSiteUrl } from "@/lib/siteUrl";
 import { fetchPoliciesWithCardContent } from "@/services/policyApiService";
 import "../home1/home1.css";
 
-export const metadata = {
-  title: "Policies | Urgent Electrical",
-  description: "Read Urgent Electrical privacy, cookie and service terms policies.",
+export const metadata = buildPoliciesListingMetadata();
+
+const POLICIES_LISTING_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "Urgent Electrical Policies",
+  url: `${getSiteUrl()}/policies`,
+  description: "Privacy, cookie, and terms policies for Urgent Electrical Services.",
+  isPartOf: { "@id": `${getSiteUrl()}/#website` },
 };
 
 export const revalidate = 3600;
@@ -20,5 +28,13 @@ export default async function PoliciesPage() {
     loadError = getApiErrorMessage(error, "Could not load policies.");
   }
 
-  return <PoliciesPageClient policies={policies} loadError={loadError} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(POLICIES_LISTING_JSON_LD) }}
+      />
+      <PoliciesPageClient policies={policies} loadError={loadError} />
+    </>
+  );
 }

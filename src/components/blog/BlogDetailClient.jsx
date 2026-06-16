@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -11,38 +10,32 @@ import SectionHeader from "@/components/home1/SectionHeader";
 import { SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { getBlogImageAlt, getBlogImageUrl } from "@/data/blogs";
+import { getBlogImageAlt, getBlogImageUrl, BLOG_HERO_IMAGE_HEIGHT, BLOG_HERO_IMAGE_WIDTH } from "@/data/blogs";
+import AppImage from "@/components/common/AppImage";
 
 const SIDEBAR_TRUST = ["NICEIC approved", "Fixed pricing", "Same-day slots"];
 
 function BlogHeroImage({ post, alt }) {
-  const [failed, setFailed] = useState(false);
   const src = getBlogImageUrl(post);
 
-  if (failed || !src) {
-    return (
-      <div
-        className="home1-blog-hero-media-fallback"
-        style={{ backgroundColor: post.color }}
-        role="img"
-        aria-label={alt}
-      >
-        {post.categoryLabel}
-      </div>
-    );
-  }
-
   return (
-    // Native img — remote serviceImage URLs fail via Next /_next/image optimizer (500/timeout).
-    <img
+    <AppImage
       src={src}
       alt={alt}
-      width={1200}
-      height={675}
-      decoding="async"
-      fetchPriority="high"
+      width={BLOG_HERO_IMAGE_WIDTH}
+      height={BLOG_HERO_IMAGE_HEIGHT}
+      priority
       className="home1-blog-hero-media-img"
-      onError={() => setFailed(true)}
+      fallback={
+        <div
+          className="home1-blog-hero-media-fallback"
+          style={{ backgroundColor: post.color }}
+          role="img"
+          aria-label={alt}
+        >
+          {post.categoryLabel}
+        </div>
+      }
     />
   );
 }

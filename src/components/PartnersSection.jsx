@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import AppImage from "@/components/common/AppImage";
 import { PARTNERS } from "@/data/partners";
 
 const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
@@ -8,29 +8,27 @@ const CARD_BG = "#222222";
 const RED = "#E74C3C";
 
 function PartnerLogo({ partner }) {
-  const [failed, setFailed] = useState(false);
-
   return (
     <div className="flex flex-col items-center text-center h-full">
-      <div className="w-full aspect-square max-w-[120px] mx-auto mb-3 rounded-lg border border-white/10 overflow-hidden flex items-center justify-center bg-black/30">
-        {!failed && partner.image ? (
-          <img
-            src={partner.image}
-            alt=""
-            className="w-full h-full object-contain p-2"
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          <span
-            className="text-[10px] sm:text-xs font-bold uppercase px-2 text-center leading-tight"
-            style={{
-              color: partner.color === "#ffffff" ? "#333" : partner.color,
-              backgroundColor: partner.color === "#ffffff" ? "#f5f5f5" : `${partner.color}33`,
-            }}
-          >
-            {partner.name.split(" ")[0]}
-          </span>
-        )}
+      <div className="w-full aspect-square max-w-[120px] mx-auto mb-3 rounded-lg border border-white/10 overflow-hidden flex items-center justify-center bg-black/30 relative">
+        <AppImage
+          src={partner.image}
+          alt=""
+          width={120}
+          height={120}
+          className="object-contain p-2"
+          fallback={
+            <span
+              className="text-[10px] sm:text-xs font-bold uppercase px-2 text-center leading-tight"
+              style={{
+                color: partner.color === "#ffffff" ? "#333" : partner.color,
+                backgroundColor: partner.color === "#ffffff" ? "#f5f5f5" : `${partner.color}33`,
+              }}
+            >
+              {partner.name.split(" ")[0]}
+            </span>
+          }
+        />
       </div>
       <p className="text-white/90 text-[11px] sm:text-xs font-medium leading-snug">{partner.name}</p>
     </div>

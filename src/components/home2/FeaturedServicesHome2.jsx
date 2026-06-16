@@ -7,6 +7,7 @@ import { fetchServices } from "@/store/slices/servicesSlice";
 import { useBookableServices, useFeaturedServices } from "@/hooks/useServices";
 import FeaturedServicesSkeleton from "@/components/skeletons/FeaturedServicesSkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
+import AppImage from "@/components/common/AppImage";
 import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 
@@ -72,9 +73,15 @@ export default function FeaturedServicesHome2() {
               {services.map((s) => (
                 <div key={s.id} className="shrink-0 px-2" style={{ width: `${pct}%` }}>
                   <article className="home2-card overflow-hidden h-full flex flex-col">
-                    <div className="h-36 bg-[var(--h2-surface)] relative">
+                    <div className="h-36 bg-[var(--h2-surface)] relative overflow-hidden">
                       {s.image ? (
-                        <img src={s.image} alt="" className="w-full h-full object-cover" />
+                        <AppImage
+                          src={s.image}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                          className="object-cover"
+                        />
                       ) : (
                         <div className="ue-skeleton w-full h-full rounded-none" />
                       )}

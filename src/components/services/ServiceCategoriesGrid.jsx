@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import { useServiceCategories } from "@/hooks/useServices";
 
 function CategoryCard({ category }) {
@@ -14,10 +15,11 @@ function CategoryCard({ category }) {
         {category.image ? (
           <Image
             src={category.image}
-            alt=""
+            alt={category.label}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
             className="object-cover"
+            unoptimized={shouldUnoptimizeImage(category.image)}
           />
         ) : (
           <div

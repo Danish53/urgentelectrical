@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
@@ -40,6 +41,7 @@ function ServiceProductImage({ service, fit = "cover" }) {
           priority
           sizes="(max-width: 1023px) 100vw, 400px"
           className={objectClass}
+          unoptimized={shouldUnoptimizeImage(service.image)}
           onError={() => setFailed(true)}
         />
       ) : (
@@ -127,6 +129,7 @@ function ServiceSlimHeroImage({ service }) {
           priority
           sizes="(max-width: 899px) 100vw, (min-width: 900px) 380px, 34vw"
           className="home1-service-slim-img"
+          unoptimized={shouldUnoptimizeImage(service.image)}
           onError={() => setFailed(true)}
         />
       ) : (
@@ -356,7 +359,7 @@ function buildContentSections(service) {
     });
   }
 
-  if (service.includes.length > 0) {
+  if ((service.includes?.length ?? 0) > 0) {
     items.push({
       id: "included",
       title: "What's included",
@@ -379,7 +382,7 @@ function buildContentSections(service) {
     });
   }
 
-  if (service.features.length > 0) {
+  if ((service.features?.length ?? 0) > 0) {
     items.push({
       id: "benefits",
       title: "Key benefits",
@@ -397,7 +400,7 @@ function buildContentSections(service) {
     });
   }
 
-  if (service.faqs.length > 0) {
+  if ((service.faqs?.length ?? 0) > 0) {
     items.push({
       id: "faqs",
       title: "Frequently asked questions",

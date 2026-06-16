@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import AppImage from "@/components/common/AppImage";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
 import { useFeaturedServices } from "@/hooks/useServices";
@@ -39,26 +40,25 @@ function CartIcon() {
 }
 
 function ServiceImage({ service }) {
-  const [failed, setFailed] = useState(false);
-
   return (
     <div className="relative h-[140px] sm:h-[152px] rounded-xl mb-4 shrink-0 overflow-hidden">
-      {!failed && (
-        <img
-          src={service.image}
-          alt=""
-          className="h-full w-full object-cover"
-          onError={() => setFailed(true)}
-        />
-      )}
-      <div
-        className={`absolute inset-0 flex flex-col items-center justify-center gap-1 ${failed ? "flex" : "hidden"}`}
-        style={{ backgroundColor: service.color }}
-        aria-hidden={!failed}
-      >
-        <span className="text-white text-xs font-semibold tracking-wide">Your image here</span>
-        <span className="text-white/70 text-[10px] px-2 text-center">{service.image}</span>
-      </div>
+      <AppImage
+        src={service.image}
+        alt=""
+        fill
+        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px"
+        className="object-cover"
+        fallback={
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1"
+            style={{ backgroundColor: service.color }}
+            aria-hidden="true"
+          >
+            <span className="text-white text-xs font-semibold tracking-wide">Your image here</span>
+            <span className="text-white/70 text-[10px] px-2 text-center">{service.image}</span>
+          </div>
+        }
+      />
     </div>
   );
 }

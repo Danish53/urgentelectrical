@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 
 /**
  * Section image with gradient fallback when file is missing.
@@ -32,6 +33,7 @@ export default function Home2Image({ src, alt, className = "object-cover", prior
       className={className}
       sizes={sizes}
       priority={priority}
+      unoptimized={shouldUnoptimizeImage(src)}
       onError={() => setFailed(true)}
     />
   );

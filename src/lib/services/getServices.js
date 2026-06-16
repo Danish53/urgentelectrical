@@ -5,10 +5,15 @@ import {
 } from "@/lib/services/buildBookableService";
 import { buildBookableServiceFromDetailApi } from "@/lib/services/buildBookableServiceFromDetail";
 import { getServiceCategories } from "@/lib/services/getServiceCategories";
-import { resolveServiceDetailSlug } from "@/lib/services/resolveServiceDetailSlug";
+import {
+  resolveServiceApiSlugCandidates,
+  resolveServiceDetailSlug,
+} from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 import { fetchRelatedServices } from "@/services/relatedServicesApiService";
+
+const RELATED_FETCH_TIMEOUT_MS = 2500;
 
 /**
  * Fetch bookable services (server or client). Returns [] if API fails.
@@ -74,21 +79,48 @@ function resolveSlugForDetailRequest(requestedSlug, apiList) {
   return match ? resolveServiceSlugFromApi(match) : null;
 }
 
+/**
+ * @param {import("@/lib/services/buildBookableServiceFromDetail").ReturnType<typeof buildBookableServiceFromDetailApi>} service
+ * @param {Awaited<ReturnType<typeof getServiceCategories>>["categoryMap"]} categoryMap
+ */
+async function fetchRelatedWithTimeout(service, categoryMap) {
+  try {
+    const related = await Promise.race([
+      fetchRelatedServices(service.slug, categoryMap, {
+        excludeSlug: service.slug,
+        limit: 8,
+      }),
+      new Promise((resolve) => {
+        setTimeout(() => resolve([]), RELATED_FETCH_TIMEOUT_MS);
+      }),
+    ]);
+    return Array.isArray(related) ? related : [];
+  } catch {
+    return [];
+  }
+}
+
 async function loadServiceDetail(slug) {
   const [{ categoryMap }, api] = await Promise.all([getServiceCategories(), fetchServiceBySlug(slug)]);
   const service = buildBookableServiceFromDetailApi(api, categoryMap);
-
-  let related = await fetchRelatedServices(service.slug, categoryMap, {
-    excludeSlug: service.slug,
-    limit: 8,
-  });
-
-  if (!related.length) {
-    const all = await getBookableServices();
-    related = getRelatedServicesFromList(service, all, 8);
-  }
+  const related = await fetchRelatedWithTimeout(service, categoryMap);
 
   return { service, related };
+}
+
+function uniqueSlugCandidates(slug) {
+  const normalized = String(slug ?? "").trim();
+  if (!normalized) return [];
+
+  const fromResolver = resolveServiceApiSlugCandidates(normalized);
+  const detailSlug = resolveServiceDetailSlug(normalized);
+  const merged = [...fromResolver, normalized];
+
+  if (detailSlug && detailSlug !== normalized) {
+    merged.push(detailSlug, ...resolveServiceApiSlugCandidates(detailSlug));
+  }
+
+  return merged.filter((value, index, list) => value && list.indexOf(value) === index);
 }
 
 /** Fetch one service by slug from GET /services/{slug}. */
@@ -96,29 +128,22 @@ export async function getServiceDetailBySlug(slug) {
   const normalized = String(slug ?? "").trim();
   if (!normalized) return null;
 
-  try {
-    return await loadServiceDetail(normalized);
-  } catch {
-    /* fall through — try resolving legacy / title-based slugs */
+  for (const candidate of uniqueSlugCandidates(normalized)) {
+    try {
+      return await loadServiceDetail(candidate);
+    } catch {
+      continue;
+    }
   }
 
   try {
     const { services: apiList } = await fetchServicesList();
     const resolved = resolveSlugForDetailRequest(normalized, apiList);
-    if (resolved && resolved !== normalized) {
+    if (resolved) {
       return await loadServiceDetail(resolved);
     }
   } catch {
     /* no match */
-  }
-
-  const detailSlug = resolveServiceDetailSlug(normalized);
-  if (detailSlug && detailSlug !== normalized) {
-    try {
-      return await loadServiceDetail(detailSlug);
-    } catch {
-      /* no match */
-    }
   }
 
   return null;

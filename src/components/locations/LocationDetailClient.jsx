@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
@@ -23,6 +24,7 @@ function LocationHeroImage({ location }) {
           priority
           sizes="(max-width: 1023px) 100vw, 480px"
           className="object-cover"
+          unoptimized={shouldUnoptimizeImage(location.image)}
           onError={() => setFailed(true)}
         />
       ) : (

@@ -57,8 +57,11 @@ function buildApiVariants(apiVariants) {
 
 function resolveImage(api, name) {
   const fromApi = api.image?.trim();
-  if (fromApi && (fromApi.startsWith("http") || fromApi.startsWith("/"))) {
-    return fromApi;
+  if (fromApi) {
+    if (fromApi.startsWith("http") || fromApi.startsWith("/")) {
+      return fromApi;
+    }
+    return `https://www.urgentelectrical.services/${fromApi.replace(/^\/+/, "")}`;
   }
   return FALLBACK_META[name]?.image ?? "/featured/pat.jpg";
 }

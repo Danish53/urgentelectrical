@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
+import AppImage from "@/components/common/AppImage";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { getPolicyImageUrl } from "@/services/policyApiService";
 
@@ -19,18 +20,17 @@ function PolicyCard({ policy, index }) {
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
-      <div className="relative">
+      <div className="relative h-52 w-full overflow-hidden">
         {imageUrl ? (
-          <img
+          <AppImage
             src={imageUrl}
             alt={policy.title}
-            className="h-52 w-full object-cover transition duration-500 group-hover:scale-[1.02]"
-            width={640}
-            height={320}
-            loading="lazy"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition duration-500 group-hover:scale-[1.02]"
           />
         ) : (
-          <div className="h-52 w-full bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#374151]" />
+          <div className="h-full w-full bg-gradient-to-br from-[#111827] via-[#1f2937] to-[#374151]" />
         )}
         <p className="absolute left-4 top-4 inline-flex items-center rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.08em] text-[#475569]">
           Policy {formatPolicyNumber(index)}

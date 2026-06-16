@@ -4724,6 +4724,17 @@
   margin-top: 0.5rem;
 }
 
+.home1-blog-sidebar-card--muted .home1-btn-outline {
+  color: #111827;
+  border-color: #111827;
+}
+
+.home1-blog-sidebar-card--muted .home1-btn-outline:hover {
+  background: rgba(17, 24, 39, 0.06);
+  border-color: #000;
+  color: #000;
+}
+
 .home1-blog-sidebar-trust {
   list-style: none;
   margin: 0;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import { IconArrow } from "@/components/home1/icons";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { getDisplayPrice, getVatSuffix } from "@/lib/pricing";
@@ -32,6 +33,7 @@ export default function ServiceCard({ service, imagePriority = false }) {
             className="object-cover"
             priority={imagePriority}
             loading={imagePriority ? undefined : "lazy"}
+            unoptimized={shouldUnoptimizeImage(service.image)}
             onError={() => setFailed(true)}
           />
         ) : (

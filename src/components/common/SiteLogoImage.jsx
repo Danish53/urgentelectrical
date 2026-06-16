@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 
 /**
  * @param {{
@@ -11,8 +12,6 @@ import Image from "next/image";
  * }} props
  */
 export default function SiteLogoImage({ src, alt, width, height, className = "", priority = false }) {
-  const isRemote = src.startsWith("http");
-
   return (
     <Image
       src={src}
@@ -21,7 +20,7 @@ export default function SiteLogoImage({ src, alt, width, height, className = "",
       height={height}
       className={className}
       priority={priority}
-      unoptimized={isRemote}
+      unoptimized={shouldUnoptimizeImage(src)}
     />
   );
 }

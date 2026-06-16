@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
 import { useBookableServices, useFeaturedServices } from "@/hooks/useServices";
@@ -167,6 +168,7 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
             className="object-cover"
             priority={imagePriority}
             loading={imagePriority ? undefined : "lazy"}
+            unoptimized={shouldUnoptimizeImage(service.image)}
             onError={() => setFailed(true)}
           />
         ) : (

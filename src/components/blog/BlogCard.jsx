@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { getBlogImageAlt } from "@/data/blogs";
+import AppImage from "@/components/common/AppImage";
 import { IconArrow } from "@/components/home1/icons";
 
 export default function BlogCard({ post, featured = false }) {
-  const [failed, setFailed] = useState(false);
-
   return (
     <article
       className={`home1-card home1-card-shine overflow-hidden group h-full flex flex-col ${
@@ -19,24 +18,22 @@ export default function BlogCard({ post, featured = false }) {
           featured ? "sm:w-[42%] h-52 sm:h-auto min-h-[200px]" : "h-48"
         }`}
       >
-        {!failed ? (
-          <img
-            src={post.image}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          <div
-            className="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold px-4 text-center"
-            style={{ backgroundColor: post.color }}
-            aria-hidden="true"
-          >
-            {post.categoryLabel}
-          </div>
-        )}
+        <AppImage
+          src={post.image}
+          alt={getBlogImageAlt(post)}
+          fill
+          sizes={featured ? "(max-width: 640px) 100vw, 42vw" : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"}
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          fallback={
+            <div
+              className="absolute inset-0 flex items-center justify-center text-white text-sm font-semibold px-4 text-center"
+              style={{ backgroundColor: post.color }}
+              aria-hidden="true"
+            >
+              {post.categoryLabel}
+            </div>
+          }
+        />
         <span className="absolute top-3 left-3 text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-md bg-black/60 text-white backdrop-blur-sm">
           {post.categoryLabel}
         </span>

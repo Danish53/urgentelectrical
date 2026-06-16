@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAppDispatch } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
@@ -10,9 +9,9 @@ import ServicesLoadError from "@/components/services/ServicesLoadError";
 import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 import Slider from "./Slider";
+import AppImage from "@/components/common/AppImage";
 
 function ServiceSlideCard({ service }) {
-  const [imgFail, setImgFail] = useState(false);
   const price = service.priceIncVat ?? service.price;
 
   return (
@@ -22,17 +21,22 @@ function ServiceSlideCard({ service }) {
           {service.tag}
         </span>
       ) : null}
-      <div className="home2-service-slide-image">
-        {!imgFail && service.image ? (
-          <img src={service.image} alt="" onError={() => setImgFail(true)} />
-        ) : (
-          <div
-            className="w-full h-full flex flex-col items-center justify-center text-white text-sm font-semibold px-4 text-center"
-            style={{ backgroundColor: service.color }}
-          >
-            {service.name}
-          </div>
-        )}
+      <div className="home2-service-slide-image relative overflow-hidden">
+        <AppImage
+          src={service.image}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover"
+          fallback={
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center text-white text-sm font-semibold px-4 text-center"
+              style={{ backgroundColor: service.color }}
+            >
+              {service.name}
+            </div>
+          }
+        />
       </div>
       <div className="home2-service-slide-body">
         <h3 className="font-bold text-[var(--h2-navy)] text-[15px] leading-snug mb-2 line-clamp-2 min-h-[2.75rem]">

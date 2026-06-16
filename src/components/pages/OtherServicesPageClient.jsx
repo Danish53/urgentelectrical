@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 import CTAHome1 from "@/components/home1/CTAHome1";
 import ListSearchBar from "@/components/common/ListSearchBar";
+import AppImage from "@/components/common/AppImage";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
 import { getPageImageUrl } from "@/services/pagesApiService";
@@ -25,9 +26,15 @@ function OtherServiceCard({ page }) {
 
   return (
     <article className="home1-other-service-card">
-      <div className="home1-other-service-card-media">
+      <div className="home1-other-service-card-media relative">
         {imageUrl ? (
-          <img src={imageUrl} alt={page.title} width={640} height={360} loading="lazy" />
+          <AppImage
+            src={imageUrl}
+            alt={page.title}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 320px"
+            className="object-cover"
+          />
         ) : null}
       </div>
       <div className="home1-other-service-card-body">

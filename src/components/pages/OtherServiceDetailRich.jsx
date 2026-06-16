@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 import CTAHome1 from "@/components/home1/CTAHome1";
+import AppImage from "@/components/common/AppImage";
 import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { SERVICE_AREAS } from "@/data/areas";
@@ -103,8 +104,15 @@ export default function OtherServiceDetailRich({
             ) : null}
 
             {heroImage ? (
-              <figure className="home1-page-detail-hero-media">
-                <img src={heroImage} alt={layout.title} className="home1-page-detail-hero-img" loading="eager" />
+              <figure className="home1-page-detail-hero-media relative">
+                <AppImage
+                  src={heroImage}
+                  alt={layout.title}
+                  width={1200}
+                  height={520}
+                  priority
+                  className="home1-page-detail-hero-img"
+                />
                 {/* <figcaption className="home1-page-detail-hero-caption">
                   NICEIC approved fault finding across Nottingham &amp; the East Midlands
                 </figcaption> */}

@@ -5,12 +5,17 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "www.urgentelectrical.services",
-        pathname: "/serviceImage/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "www.urgentelectrical.services",
-        pathname: "/service-categories/**",
+        hostname: "urgentelectrical.services",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
       },
     ],
   },
