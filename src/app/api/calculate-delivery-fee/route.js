@@ -19,5 +19,18 @@ export async function POST(request) {
     body: { postcode },
   });
 
-  return NextResponse.json(result.data, { status: result.status });
+  const payload = result.data;
+  if (
+    payload &&
+    typeof payload === "object" &&
+    typeof payload.message === "string" &&
+    /<!doctype|<html/i.test(payload.message)
+  ) {
+    return NextResponse.json(
+      { error: "Unable to calculate delivery fee. Please try again." },
+      { status: 502 }
+    );
+  }
+
+  return NextResponse.json(payload, { status: result.status });
 }

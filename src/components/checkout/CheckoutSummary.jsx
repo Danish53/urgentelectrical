@@ -25,6 +25,7 @@ import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
  *   deliveryFeeLoading?: boolean,
  *   deliveryFeeResolved?: boolean,
  *   deliveryFeeOutOfRange?: boolean,
+ *   deliveryFeeError?: string,
  * }} props
  */
 export default function CheckoutSummary({
@@ -42,6 +43,7 @@ export default function CheckoutSummary({
   deliveryFeeLoading = false,
   deliveryFeeResolved = false,
   deliveryFeeOutOfRange = false,
+  deliveryFeeError = "",
 }) {
   const { incVat } = useVatPreference();
   const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
@@ -59,11 +61,13 @@ export default function CheckoutSummary({
   const travelPrice =
     deliveryFeeLoading
       ? "Calculating…"
-      : deliveryFeeOutOfRange
-        ? "Unavailable"
-        : !deliveryFeeResolved && postcode
-          ? "—"
-          : formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc);
+      : deliveryFeeError
+        ? "—"
+        : deliveryFeeOutOfRange
+          ? "Unavailable"
+          : !deliveryFeeResolved && postcode
+            ? "—"
+            : formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc);
 
   async function handleApplyCoupon() {
     const code = couponCode.trim().toUpperCase();
@@ -224,11 +228,20 @@ export default function CheckoutSummary({
             <li>
               <span className="home1-checkout-summary-line-label">{lineItems.travel.label}</span>
               <span
-                className={`home1-checkout-summary-line-price${deliveryFeeOutOfRange ? " is-muted" : ""}`}
+                className={`home1-checkout-summary-line-price${
+                  deliveryFeeOutOfRange || deliveryFeeError ? " is-muted" : ""
+                }`}
               >
                 {travelPrice}
               </span>
             </li>
+            {deliveryFeeError ? (
+              <li className="home1-checkout-summary-line-note">
+                <span className="home1-checkout-summary-delivery-error" role="alert">
+                  {deliveryFeeError}
+                </span>
+              </li>
+            ) : null}
             {discount > 0 ? (
               <li className="home1-checkout-summary-line-discount">
                 <span className="home1-checkout-summary-line-label">

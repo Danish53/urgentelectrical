@@ -55,8 +55,7 @@ import {
   logPaymentIntentDebug,
 } from "@/lib/checkout/logPaymentIntentDebug";
 import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
-import { parseDeliveryFeeResponse, isDeliveryFeeOutOfRange } from "@/lib/checkout/parseDeliveryFeeResponse";
-import { getApiErrorMessage } from "@/lib/api/errors";
+import { getDeliveryFeeApiErrorMessage, parseDeliveryFeeResult } from "@/lib/checkout/parseDeliveryFeeResponse";
 import { calculateDeliveryFee } from "@/services/checkoutApiService";
 
 const EMPTY_DETAILS = {
@@ -95,6 +94,7 @@ export default function CheckoutPageClient() {
   const [selectedTime, setSelectedTime] = useState("");
   const [details, setDetails] = useState(EMPTY_DETAILS);
   const [stepError, setStepError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({ billingPostcode: "", sitePostcode: "" });
   const [processing, setProcessing] = useState(false);
   const [complete, setComplete] = useState(false);
   const [handlingBankReturn, setHandlingBankReturn] = useState(false);
@@ -102,6 +102,7 @@ export default function CheckoutPageClient() {
   const [deliveryFeeFromApi, setDeliveryFeeFromApi] = useState(0);
   const [deliveryFeeResolved, setDeliveryFeeResolved] = useState(false);
   const [deliveryFeeOutOfRange, setDeliveryFeeOutOfRange] = useState(false);
+  const [deliveryFeeError, setDeliveryFeeError] = useState("");
   const [deliveryFeeLoading, setDeliveryFeeLoading] = useState(false);
   const lastFetchedPostcodeRef = useRef("");
 
@@ -247,28 +248,41 @@ export default function CheckoutPageClient() {
       setDeliveryFeeFromApi(0);
       setDeliveryFeeResolved(false);
       setDeliveryFeeOutOfRange(false);
-      return null;
+      setDeliveryFeeError("");
+      return { ok: false, code: "api_error", message: "Please enter a postcode." };
     }
 
     setDeliveryFeeLoading(true);
     setDeliveryFeeOutOfRange(false);
+    setDeliveryFeeError("");
 
     try {
       const feeResponse = await calculateDeliveryFee({ postcode: normalized });
-      if (isDeliveryFeeOutOfRange(feeResponse)) {
-        lastFetchedPostcodeRef.current = normalized;
+      const result = parseDeliveryFeeResult(feeResponse);
+
+      lastFetchedPostcodeRef.current = normalized;
+
+      if (!result.ok) {
         setDeliveryFeeFromApi(0);
         setDeliveryFeeResolved(false);
-        setDeliveryFeeOutOfRange(true);
-        return null;
+        setDeliveryFeeOutOfRange(result.code === "out_of_range");
+        setDeliveryFeeError(result.message);
+        return result;
       }
 
-      const fee = parseDeliveryFeeResponse(feeResponse);
-      lastFetchedPostcodeRef.current = normalized;
-      setDeliveryFeeFromApi(fee);
+      setDeliveryFeeFromApi(result.fee);
       setDeliveryFeeResolved(true);
       setDeliveryFeeOutOfRange(false);
-      return fee;
+      setDeliveryFeeError("");
+      return result;
+    } catch (err) {
+      const message = getDeliveryFeeApiErrorMessage(err);
+      lastFetchedPostcodeRef.current = normalized;
+      setDeliveryFeeFromApi(0);
+      setDeliveryFeeResolved(false);
+      setDeliveryFeeOutOfRange(false);
+      setDeliveryFeeError(message);
+      return { ok: false, code: "api_error", message };
     } finally {
       setDeliveryFeeLoading(false);
     }
@@ -291,6 +305,7 @@ export default function CheckoutPageClient() {
       setDeliveryFeeFromApi(0);
       setDeliveryFeeResolved(false);
       setDeliveryFeeOutOfRange(false);
+      setDeliveryFeeError("");
       return;
     }
 
@@ -299,16 +314,13 @@ export default function CheckoutPageClient() {
       setDeliveryFeeFromApi(0);
       setDeliveryFeeResolved(false);
       setDeliveryFeeOutOfRange(false);
+      setDeliveryFeeError("");
     }
 
     if (lastFetchedPostcodeRef.current === normalized) return;
 
     const timer = window.setTimeout(() => {
-      refreshDeliveryFee(postcode).catch(() => {
-        setDeliveryFeeFromApi(0);
-        setDeliveryFeeResolved(false);
-        setDeliveryFeeOutOfRange(false);
-      });
+      refreshDeliveryFee(postcode);
     }, 600);
 
     return () => window.clearTimeout(timer);
@@ -454,11 +466,35 @@ export default function CheckoutPageClient() {
     }));
   }, [isLoggedIn, authUser]);
 
+  function handleDetailsChange(next) {
+    setDetails(next);
+
+    const billingPostcode = readCheckoutAddress(next, "billing").postcode.trim();
+    const sitePostcode = readCheckoutAddress(next, "site").postcode.trim();
+
+    setFieldErrors((prev) => ({
+      billingPostcode: billingPostcode ? "" : prev.billingPostcode,
+      sitePostcode: sitePostcode ? "" : prev.sitePostcode,
+    }));
+
+    if (billingPostcode) {
+      setDeliveryFeeError("");
+    }
+  }
+
   function validateStep2() {
     const { firstName, lastName, email, phone, password, passwordConfirmation } = details;
     const billing = readCheckoutAddress(details, "billing");
     const siteSameAsBilling = details.siteSameAsBilling !== false;
     const site = siteSameAsBilling ? billing : readCheckoutAddress(details, "site");
+
+    const missingBillingPostcode = !billing.postcode.trim();
+    const missingSitePostcode = !siteSameAsBilling && !site.postcode.trim();
+    const nextFieldErrors = {
+      billingPostcode: missingBillingPostcode ? "Please enter a postcode." : "",
+      sitePostcode: missingSitePostcode ? "Please enter a postcode." : "",
+    };
+    setFieldErrors(nextFieldErrors);
 
     if (
       !firstName.trim() ||
@@ -466,14 +502,27 @@ export default function CheckoutPageClient() {
       !email.trim() ||
       !phone.trim() ||
       !billing.address ||
-      !billing.postcode
+      missingBillingPostcode
     ) {
-      setStepError("Please complete all required fields.");
+      const onlyPostcodeMissing =
+        missingBillingPostcode &&
+        firstName.trim() &&
+        lastName.trim() &&
+        email.trim() &&
+        phone.trim() &&
+        billing.address;
+
+      setStepError(onlyPostcodeMissing ? "" : "Please complete all required fields.");
       return false;
     }
 
-    if (!siteSameAsBilling && (!site.address || !site.postcode)) {
-      setStepError("Please complete the site address or choose Yes to use billing address.");
+    if (!siteSameAsBilling && (!site.address || missingSitePostcode)) {
+      const onlySitePostcodeMissing = missingSitePostcode && site.address;
+      setStepError(
+        onlySitePostcodeMissing
+          ? ""
+          : "Please complete the site address or choose Yes to use billing address."
+      );
       return false;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -495,6 +544,7 @@ export default function CheckoutPageClient() {
       }
     }
     setStepError("");
+    setFieldErrors({ billingPostcode: "", sitePostcode: "" });
     return true;
   }
 
@@ -509,15 +559,15 @@ export default function CheckoutPageClient() {
     const billing = readCheckoutAddress(details, "billing");
     const postcode = billing.postcode.trim();
     if (!postcode) {
-      setStepError("Please enter a billing postcode.");
+      setFieldErrors((prev) => ({ ...prev, billingPostcode: "Please enter a postcode." }));
+      setStepError("");
       return;
     }
 
     const normalizedPostcode = postcode.toUpperCase();
-    if (deliveryFeeOutOfRange && lastFetchedPostcodeRef.current === normalizedPostcode) {
-      setStepError(
-        "We are unable to service this postcode. Please contact us or use a different billing address."
-      );
+    if (deliveryFeeError && lastFetchedPostcodeRef.current === normalizedPostcode) {
+      setFieldErrors((prev) => ({ ...prev, billingPostcode: deliveryFeeError }));
+      setStepError(deliveryFeeError);
       return;
     }
 
@@ -525,19 +575,13 @@ export default function CheckoutPageClient() {
 
     let fee = deliveryFeeFromApi;
     if (!deliveryFeeResolved || lastFetchedPostcodeRef.current !== normalizedPostcode) {
-      try {
-        const refreshedFee = await refreshDeliveryFee(postcode);
-        if (refreshedFee == null) {
-          setStepError(
-            "We are unable to service this postcode. Please contact us or use a different billing address."
-          );
-          return;
-        }
-        fee = refreshedFee;
-      } catch (err) {
-        setStepError(getApiErrorMessage(err, "Could not calculate delivery fee for this postcode."));
+      const feeResult = await refreshDeliveryFee(postcode);
+      if (!feeResult.ok) {
+        setFieldErrors((prev) => ({ ...prev, billingPostcode: feeResult.message }));
+        setStepError(feeResult.message);
         return;
       }
+      fee = feeResult.fee;
     }
 
     const updatedLineItems = buildCheckoutLineItems(service, fee, selectedVariant, {
@@ -682,11 +726,16 @@ export default function CheckoutPageClient() {
                       ) : step === 2 ? (
                         <CheckoutDetailsStep
                           details={details}
-                          onChange={setDetails}
+                          onChange={handleDetailsChange}
                           isLoggedIn={isLoggedIn}
+                          fieldErrors={{
+                            ...fieldErrors,
+                            billingPostcode: fieldErrors.billingPostcode || deliveryFeeError,
+                          }}
                           onBack={() => {
                             setStep(1);
                             setStepError("");
+                            setFieldErrors({ billingPostcode: "", sitePostcode: "" });
                           }}
                           onContinue={handleContinueToPayment}
                           error={stepError || (validateStatus === "failed" ? validateError : "")}
@@ -790,6 +839,7 @@ export default function CheckoutPageClient() {
                       deliveryFeeLoading={deliveryFeeLoading}
                       deliveryFeeResolved={deliveryFeeResolved}
                       deliveryFeeOutOfRange={deliveryFeeOutOfRange}
+                      deliveryFeeError={deliveryFeeError}
                     />
                   </div>
                 </div>

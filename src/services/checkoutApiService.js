@@ -39,6 +39,7 @@ async function checkoutFetch(path, options = {}) {
   if (!response.ok) {
     const message =
       data?.message ||
+      data?.error ||
       (data?.errors && typeof data.errors === "object"
         ? Object.values(data.errors).flat().filter(Boolean).join(" ")
         : null) ||

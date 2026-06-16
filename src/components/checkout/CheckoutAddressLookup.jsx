@@ -32,6 +32,7 @@ function IconSearch({ className = "w-4 h-4" }) {
  *   onOpenSavedAddresses?: () => void,
  *   selectedSiteLabel?: string,
  *   onClearSavedSite?: () => void,
+ *   postcodeError?: string,
  * }} props
  */
 export default function CheckoutAddressLookup({
@@ -43,6 +44,7 @@ export default function CheckoutAddressLookup({
   onOpenSavedAddresses,
   selectedSiteLabel = "",
   onClearSavedSite,
+  postcodeError = "",
 }) {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -54,6 +56,8 @@ export default function CheckoutAddressLookup({
   const values = readCheckoutAddress(details, variant);
   const showAddressSelect = addressOptions.length > 0 && !addressPicked;
   const showSavedSearch = variant === "site" && isLoggedIn;
+  const displayPostcodeError = postcodeError || lookupError;
+  const postcodeErrorId = `${idPrefix}-postcode-error`;
 
   function patchAddress(valuesPatch) {
     onChange(writeCheckoutAddress(details, variant, valuesPatch));
@@ -158,7 +162,7 @@ export default function CheckoutAddressLookup({
               aria-readonly="true"
             />
           </div>
-          <div>
+          <div className="home1-checkout-field home1-checkout-field--postcode">
             <label htmlFor={`${idPrefix}-postcode`} className={labelClass}>
               Post code<span className="text-[#d3231f]">*</span>
             </label>
@@ -173,9 +177,11 @@ export default function CheckoutAddressLookup({
                     handleFind();
                   }
                 }}
-                className={inputClass}
+                className={`${inputClass}${displayPostcodeError ? " home1-checkout-input--error" : ""}`}
                 autoComplete="postal-code"
                 required
+                aria-invalid={displayPostcodeError ? "true" : undefined}
+                aria-describedby={displayPostcodeError ? postcodeErrorId : undefined}
               />
               <button
                 type="button"
@@ -197,35 +203,34 @@ export default function CheckoutAddressLookup({
                 )}
               </button>
             </div>
+            {displayPostcodeError ? (
+              <p id={postcodeErrorId} className="home1-checkout-field-error" role="alert">
+                {displayPostcodeError}
+                {lookupSuggestions.length ? (
+                  <span className="home1-checkout-address-lookup-suggestions">
+                    {" "}
+                    Did you mean:{" "}
+                    {lookupSuggestions.map((suggestion, index) => (
+                      <button
+                        key={suggestion}
+                        type="button"
+                        className="home1-checkout-address-suggestion"
+                        onClick={() => {
+                          handlePostcodeChange(suggestion);
+                          setLookupError("");
+                          setLookupSuggestions([]);
+                        }}
+                      >
+                        {suggestion}
+                        {index < lookupSuggestions.length - 1 ? ", " : ""}
+                      </button>
+                    ))}
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
           </div>
         </div>
-
-        {lookupError ? (
-          <p className="home1-checkout-address-lookup-error" role="alert">
-            {lookupError}
-            {lookupSuggestions.length ? (
-              <span className="home1-checkout-address-lookup-suggestions">
-                {" "}
-                Did you mean:{" "}
-                {lookupSuggestions.map((suggestion, index) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    className="home1-checkout-address-suggestion"
-                    onClick={() => {
-                      handlePostcodeChange(suggestion);
-                      setLookupError("");
-                      setLookupSuggestions([]);
-                    }}
-                  >
-                    {suggestion}
-                    {index < lookupSuggestions.length - 1 ? ", " : ""}
-                  </button>
-                ))}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
 
         {showAddressSelect ? (
           <div className="home1-checkout-address-select-wrap">

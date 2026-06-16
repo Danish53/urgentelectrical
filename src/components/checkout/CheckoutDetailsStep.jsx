@@ -15,6 +15,7 @@ export default function CheckoutDetailsStep({
   onBack,
   onContinue,
   error,
+  fieldErrors = {},
   submitting = false,
   isLoggedIn = false,
 }) {
@@ -167,6 +168,7 @@ export default function CheckoutDetailsStep({
           onChange={onChange}
           variant="billing"
           sectionTitle="Billing Address"
+          postcodeError={fieldErrors.billingPostcode}
         />
 
         <CheckoutSiteSameToggle value={siteSameAsBilling} onChange={handleSiteSameChange} />
@@ -181,6 +183,7 @@ export default function CheckoutDetailsStep({
             selectedSiteLabel={selectedSiteLabel}
             onClearSavedSite={() => setSelectedSiteLabel("")}
             onOpenSavedAddresses={() => setSiteModalOpen(true)}
+            postcodeError={fieldErrors.sitePostcode}
           />
         ) : null}
 

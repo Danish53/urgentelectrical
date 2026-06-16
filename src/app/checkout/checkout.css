@@ -1652,6 +1652,21 @@
   font-size: 14px;
 }
 
+.home1-checkout-summary-line-note {
+  display: block;
+  padding-top: 0;
+  border-bottom: none;
+}
+
+.home1-checkout-summary-delivery-error {
+  display: block;
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: #b91c1c;
+}
+
 .home1-checkout-summary-total {
   display: flex;
   justify-content: space-between;
@@ -2464,11 +2479,21 @@
   padding-right: 2rem;
 }
 
-.home1-checkout-address-lookup-error {
-  margin: 0;
+.home1-checkout-address-lookup-error,
+.home1-checkout-field-error {
+  margin: 0.35rem 0 0;
   font-size: 12px;
   line-height: 1.45;
   color: #b91c1c;
+}
+
+.home1-checkout-input--error {
+  border-color: #d3231f !important;
+  box-shadow: 0 0 0 1px rgba(211, 35, 31, 0.12);
+}
+
+.home1-checkout-field--postcode {
+  min-width: 0;
 }
 
 .home1-checkout-address-suggestion {
