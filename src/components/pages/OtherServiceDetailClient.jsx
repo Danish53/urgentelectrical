@@ -14,6 +14,7 @@ import { getPageImageUrl } from "@/services/pagesApiService";
 export default function OtherServiceDetailClient({ page, loadError = "", relatedLinks = [] }) {
   const slug = page?.slug ?? "";
   const richLayout = getPageDetailLayout(slug, page);
+  const isApiPage = page?.source === "other-services";
   const imageUrl = getPageImageUrl(page);
 
   const updatedAt = page.updated_at
@@ -28,7 +29,7 @@ export default function OtherServiceDetailClient({ page, loadError = "", related
     <OtherServiceDetailRich
       layout={richLayout}
       loadError={loadError}
-      imageUrl={imageUrl || richLayout.image}
+      imageUrl={isApiPage ? imageUrl : imageUrl || richLayout.image}
       updatedAt={updatedAt}
       relatedLinks={relatedLinks}
     />

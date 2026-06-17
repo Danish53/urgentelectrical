@@ -1,4 +1,9 @@
-import { OTHER_SERVICES_PUBLIC_PATH, PAGES_API } from "@/constants/pagesApi";
+import {
+  OTHER_SERVICES_API_PATH,
+  OTHER_SERVICES_DETAIL_PATH,
+  OTHER_SERVICES_PUBLIC_PATH,
+  PAGES_API,
+} from "@/constants/pagesApi";
 import { ApiError } from "@/lib/api/errors";
 import { apiRequest } from "@/lib/api/client";
 import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
@@ -113,6 +118,11 @@ async function fetchPublicCmsPageBySlug(slug) {
  *   seo_title?: string,
  *   seo_description?: string,
  *   updated_at?: string,
+ *   benefits?: string[],
+ *   common_signs?: string[],
+ *   how_it_work?: { topic?: string, description?: string, title?: string, text?: string }[],
+ *   faqs?: { q: string, a: string }[],
+ *   source?: "other-services",
  * }} ApiInfoPageDetail
  */
 
@@ -160,9 +170,166 @@ export function normalizeOtherServiceListItem(item) {
     title: displayName,
     full_title: displayName !== fullTitle ? fullTitle : undefined,
     slug: normalizePageSlug(item),
-    description: "",
+    description: typeof item.description === "string" ? item.description.trim() : "",
     page_image: typeof item.page_image === "string" ? item.page_image : undefined,
   };
+}
+
+/**
+ * @param {Record<string, unknown>} data
+ * @returns {ApiInfoPageDetail}
+ */
+export function normalizeOtherServiceDetailItem(data) {
+  const fullTitle = String(data.title ?? "Service page").trim() || "Service page";
+  const displayName =
+    (typeof data.page_display_name === "string" && data.page_display_name.trim()) || fullTitle;
+  const description = typeof data.description === "string" ? data.description.trim() : "";
+
+  /** @type {string[] | undefined} */
+  const benefits = Array.isArray(data.benefits)
+    ? data.benefits
+        .filter((item) => typeof item === "string" && item.trim())
+        .map((item) => String(item).trim())
+    : undefined;
+
+  /** @type {string[] | undefined} */
+  const common_signs = Array.isArray(data.common_signs)
+    ? data.common_signs
+        .filter((item) => typeof item === "string" && item.trim())
+        .map((item) => String(item).trim())
+    : undefined;
+
+  /** @type {ApiInfoPageDetail["how_it_work"]} */
+  const how_it_work = Array.isArray(data.how_it_work)
+    ? data.how_it_work
+        .filter((item) => item && typeof item === "object")
+        .map((item) => {
+          const row = /** @type {Record<string, unknown>} */ (item);
+          return {
+            topic: String(row.topic ?? row.title ?? "").trim(),
+            description: String(row.description ?? row.text ?? "").trim(),
+          };
+        })
+        .filter((item) => item.topic || item.description)
+    : undefined;
+
+  /** @type {ApiInfoPageDetail["faqs"] | undefined} */
+  let faqs;
+  if (data.faqs && typeof data.faqs === "object") {
+    const faqRecord = /** @type {Record<string, unknown>} */ (data.faqs);
+    const questions = Array.isArray(faqRecord.question) ? faqRecord.question : [];
+    const answers = Array.isArray(faqRecord.answer) ? faqRecord.answer : [];
+    faqs = questions
+      .map((question, index) => ({
+        q: String(question ?? "").trim(),
+        a: String(answers[index] ?? "").trim(),
+      }))
+      .filter((item) => item.q);
+  }
+
+  return {
+    id: Number(data.id) || 0,
+    title: displayName,
+    full_title: displayName !== fullTitle ? fullTitle : undefined,
+    slug: normalizePageSlug(data),
+    description,
+    page_image: typeof data.page_image === "string" ? data.page_image : undefined,
+    seo_title: typeof data.seo_title === "string" ? data.seo_title : undefined,
+    seo_description: typeof data.seo_description === "string" ? data.seo_description : undefined,
+    detail: description,
+    long_description: description || undefined,
+    benefits,
+    common_signs,
+    how_it_work,
+    faqs,
+    updated_at: typeof data.updated_at === "string" ? data.updated_at : undefined,
+    source: "other-services",
+  };
+}
+
+/**
+ * @param {unknown} payload
+ * @returns {ApiInfoPageDetail | null}
+ */
+export function parseOtherServiceDetailResponse(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  const record = /** @type {Record<string, unknown>} */ (payload);
+  let data = null;
+
+  if (record.status === true && record.data && typeof record.data === "object") {
+    data = /** @type {Record<string, unknown>} */ (record.data);
+  } else if (record.success === true && record.data && typeof record.data === "object") {
+    data = /** @type {Record<string, unknown>} */ (record.data);
+  } else if ("slug" in record || "title" in record) {
+    data = record;
+  }
+
+  if (!data) return null;
+  return normalizeOtherServiceDetailItem(data);
+}
+
+/**
+ * GET /api/other-services/{slug}
+ * @param {string} slug
+ * @param {RequestInit} [fetchOptions]
+ */
+async function fetchOtherServiceDetailPayload(slug, fetchOptions = {}) {
+  const encoded = encodeURIComponent(slug);
+  const urls = [
+    `${getPublicSiteOrigin()}${OTHER_SERVICES_DETAIL_PATH}/${encoded}`,
+    `${getPublicSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}/${encoded}`,
+  ];
+
+  for (const url of urls) {
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        ...fetchOptions,
+      });
+
+      if (!response.ok) continue;
+
+      const text = await response.text();
+      if (!text) continue;
+
+      return JSON.parse(text);
+    } catch {
+      /* try next URL */
+    }
+  }
+
+  try {
+    const payload = await apiRequest(`${OTHER_SERVICES_API_PATH}/${encoded}`, { method: "GET" });
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {string} slug
+ * @returns {Promise<ApiInfoPageDetail | null>}
+ */
+export async function fetchOtherServiceBySlug(slug) {
+  const urlSlug = String(slug ?? "").trim();
+  if (!urlSlug) return null;
+
+  const isServer = typeof window === "undefined";
+  let payload;
+
+  try {
+    payload = await fetchOtherServiceDetailPayload(
+      urlSlug,
+      isServer ? { next: { revalidate: 3600 } } : {}
+    );
+  } catch {
+    return null;
+  }
+
+  const page = parseOtherServiceDetailResponse(payload);
+  return page ? { ...page, slug: urlSlug } : null;
 }
 
 /**
@@ -386,6 +553,9 @@ export async function fetchPageBySlug(slug) {
   if (!urlSlug) {
     throw new ApiError("Page slug is required.", { status: 400 });
   }
+
+  const otherService = await fetchOtherServiceBySlug(urlSlug);
+  if (otherService) return otherService;
 
   const encoded = encodeURIComponent(urlSlug);
 

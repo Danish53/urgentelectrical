@@ -781,6 +781,60 @@
   text-decoration: none;
 }
 
+.home1-orders-card-btn--cancel,
+.home1-order-detail-btn--cancel {
+  border-color: #d3231f;
+  color: #d3231f;
+}
+
+.home1-orders-card-btn--cancel:hover:not(:disabled),
+.home1-order-detail-btn--cancel:hover:not(:disabled) {
+  background: rgba(211, 35, 31, 0.08);
+  border-color: #b81e1a;
+  color: #b81e1a;
+}
+
+/* Order cancel modal */
+.home1-order-cancel-modal {
+  max-width: 28rem;
+}
+
+.home1-order-cancel-modal-ref {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--home1-muted);
+}
+
+.home1-order-cancel-modal-lead {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--home1-muted);
+}
+
+.home1-order-cancel-modal-note {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.home1-order-cancel-modal-error {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #d3231f;
+}
+
+.home1-order-cancel-modal-submit {
+  background: #d3231f !important;
+  border-color: #d3231f !important;
+}
+
+.home1-order-cancel-modal-submit:hover:not(:disabled) {
+  background: #b81e1a !important;
+  border-color: #b81e1a !important;
+}
+
 /* Profile */
 .home1-profile-hero {
   display: flex;

@@ -59,12 +59,12 @@ export default function OtherServiceDetailRich({
 }) {
   const heroImage = imageUrl || layout.image;
   const related = relatedLinks.length ? relatedLinks : layout.related;
+  const isApiPage = layout.source === "other-services";
   const sections = [
-    { id: "overview", label: "Overview" },
+    layout.paragraphs.length ? { id: "overview", label: "Overview" } : null,
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
     layout.process.length ? { id: "process", label: "How it works" } : null,
     layout.symptoms.length ? { id: "symptoms", label: "Common signs" } : null,
-    // layout.includes.length ? { id: "included", label: "Included" } : null,
     layout.faqs.length ? { id: "faqs", label: "FAQs" } : null,
   ].filter(Boolean);
 
@@ -82,14 +82,16 @@ export default function OtherServiceDetailRich({
             <Link href="/pages" className="home1-page-detail-back">
               ← All other services
             </Link>
-            <p className="home1-page-detail-eyebrow">{layout.category}</p>
+            {layout.category ? <p className="home1-page-detail-eyebrow">{layout.category}</p> : null}
             <h1 className="home1-page-detail-title">{layout.title}</h1>
-            <p className="home1-page-detail-lead">{layout.lead}</p>
+            {layout.lead ? <p className="home1-page-detail-lead">{layout.lead}</p> : null}
+            {layout.trustPills.length ? (
             <ul className="home1-page-detail-pills" aria-label="Service highlights">
               {layout.trustPills.map((pill) => (
                 <li key={pill}>{pill}</li>
               ))}
             </ul>
+            ) : null}
             {updatedAt ? <p className="home1-page-detail-date">Updated {updatedAt}</p> : null}
           </div>
         </section>
@@ -119,11 +121,11 @@ export default function OtherServiceDetailRich({
               </figure>
             ) : null}
 
-            <p className="home1-service-slim-foot-trust-caption">
-              <span>
-                NICEIC approved fault finding across Nottingham &amp; the East Midlands
-              </span>
-            </p>
+            {heroImage && layout.title ? (
+              <p className="home1-service-slim-foot-trust-caption">
+                <span>{layout.title}</span>
+              </p>
+            ) : null}
 
 
             <div className="home1-page-detail-layout">
@@ -141,6 +143,7 @@ export default function OtherServiceDetailRich({
                   </nav>
                 ) : null}
 
+                {layout.paragraphs.length ? (
                 <article className="home1-page-detail-card" id="overview">
                   <header className="home1-page-detail-card-head">
                     <span className="home1-page-detail-card-num">01</span>
@@ -162,6 +165,7 @@ export default function OtherServiceDetailRich({
                     </ul>
                   ) : null}
                 </article>
+                ) : null}
 
                 {layout.features.length ? (
                   <section className="home1-page-detail-card" id="benefits">

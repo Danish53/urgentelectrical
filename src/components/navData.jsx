@@ -1,8 +1,8 @@
-/** Nav label → other-services page slug (GET /pages/{slug}; falls back to /services data) */
+/** Nav label → other-services page slug (`GET /api/other-services/{slug}` → `/pages/{slug}`) */
 const SLUG = {
   emergency: "emergency-response-24-7",
   eicr: "electrical-installation-condition-report-eicr",
-  pat: "portable-appliance-testing-pat",
+  pat: "portable-appliance-testing-pat-test",
   fireAlarm: "fire-alarm-inspection-and-testing",
   emergencyLighting: "emergency-lighting-periodic-inspection-and-testing",
   faultFinding: "domestic-electrical-fault-investigation",

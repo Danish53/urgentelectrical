@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatMoney, formatLongDate } from "@/components/checkout/checkoutUtils";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { ORDER_STATUS_META } from "@/lib/orders/orderFilters";
+import { canCancelOrder } from "@/lib/orders/orderCancel";
 
 function formatBookedAt(isoDate) {
   if (!isoDate) return "—";
@@ -31,9 +32,17 @@ function capitalize(value) {
  *   order: import("@/lib/orders/orderTypes").OrderDetail | null,
  *   loading?: boolean,
  *   error?: string | null,
+ *   onCancel?: (order: import("@/lib/orders/orderTypes").OrderDetail) => void,
  * }} props
  */
-export default function OrderDetailModal({ open, onClose, order, loading = false, error = null }) {
+export default function OrderDetailModal({
+  open,
+  onClose,
+  order,
+  loading = false,
+  error = null,
+  onCancel,
+}) {
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -52,6 +61,7 @@ export default function OrderDetailModal({ open, onClose, order, loading = false
 
   const statusMeta = order ? ORDER_STATUS_META[order.status] : null;
   const statusLabel = order?.statusLabel || statusMeta?.label;
+  const showCancel = canCancelOrder(order);
   const visitDate = order?.visitDate ? new Date(`${order.visitDate}T12:00:00`) : null;
   const displayRef = order?.reference || order?.id;
 
@@ -215,7 +225,16 @@ export default function OrderDetailModal({ open, onClose, order, loading = false
         </div>
 
         <footer className="home1-order-detail-foot">
-          {order?.status === "completed" || order?.status === "cancelled" ? (
+          {showCancel ? (
+            <button
+              type="button"
+              className="home1-btn-outline home1-order-detail-btn home1-order-detail-btn--cancel"
+              onClick={() => onCancel?.(order)}
+              disabled={loading}
+            >
+              Cancel order
+            </button>
+          ) : order?.status === "completed" || order?.status === "cancelled" ? (
             <Link href="/checkout" className="home1-btn-primary home1-order-detail-btn">
               Book again
             </Link>

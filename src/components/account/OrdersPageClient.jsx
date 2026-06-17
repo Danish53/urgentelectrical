@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import AccountLayout from "@/components/account/AccountLayout";
 import OrderDetailModal from "@/components/account/OrderDetailModal";
+import OrderCancelModal from "@/components/account/OrderCancelModal";
 import OrdersListSkeleton from "@/components/skeletons/OrdersListSkeleton";
 import BlogPagination from "@/components/blog/BlogPagination";
 import { formatMoney, formatLongDate } from "@/components/checkout/checkoutUtils";
@@ -14,7 +15,9 @@ import {
   getOrderStats,
   orderMatchesFilter,
 } from "@/lib/orders/orderFilters";
-import { toastError } from "@/lib/toast";
+import { canCancelOrder } from "@/lib/orders/orderCancel";
+import { toastError, toastSuccess } from "@/lib/toast";
+import { requestOrderCancellation } from "@/services/ordersApiService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearOrderDetail, loadOrderDetail, loadOrders } from "@/store/slices/ordersSlice";
 import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
@@ -61,14 +64,16 @@ function OrderStatusBadge({ order }) {
  * @param {{
  *   order: import("@/lib/orders/orderTypes").OrderSummary,
  *   onViewDetails: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
+ *   onCancel?: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
  *   detailLoading?: boolean,
  * }} props
  */
-function OrderCard({ order, onViewDetails, detailLoading = false }) {
+function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
   const visitDate = order.visitDate
     ? new Date(`${order.visitDate}T12:00:00`)
   : null;
   const displayRef = order.reference || order.id;
+  const showCancel = canCancelOrder(order);
 
   return (
     <article className="home1-orders-card home1-card">
@@ -140,7 +145,15 @@ function OrderCard({ order, onViewDetails, detailLoading = false }) {
           {detailLoading ? <ButtonSpinner /> : null}
           {detailLoading ? "Loading…" : "Order details"}
         </button>
-        {order.status === "completed" || order.status === "cancelled" ? (
+        {showCancel ? (
+          <button
+            type="button"
+            className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--cancel"
+            onClick={() => onCancel?.(order)}
+          >
+            Cancel order
+          </button>
+        ) : order.status === "completed" || order.status === "cancelled" ? (
           <Link href="/checkout" className="home1-btn-primary home1-orders-card-btn">
             Book again
           </Link>
@@ -189,6 +202,8 @@ export default function OrdersPageClient() {
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [detailOpen, setDetailOpen] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelSaving, setCancelSaving] = useState(false);
   const listAnchorRef = useRef(null);
 
   const initialLoading = (status === "loading" || status === "idle") && orders.length === 0;
@@ -235,6 +250,33 @@ export default function OrdersPageClient() {
     if (detailLoading) return;
     setDetailOpen(false);
     dispatch(clearOrderDetail());
+  }
+
+  function openCancelModal(order) {
+    setCancelTarget(order);
+  }
+
+  function closeCancelModal() {
+    if (cancelSaving) return;
+    setCancelTarget(null);
+  }
+
+  async function handleConfirmCancel(note) {
+    if (!cancelTarget?.id) return;
+    setCancelSaving(true);
+    try {
+      await requestOrderCancellation(cancelTarget.id, note);
+      toastSuccess("Your cancellation request has been submitted.");
+      setCancelTarget(null);
+      if (detailOpen && detailOrderId === cancelTarget.id) {
+        closeOrderDetail();
+      }
+      dispatch(loadOrders({ page: pagination?.currentPage ?? 1 }));
+    } catch (err) {
+      toastError(err, "Could not cancel this order.");
+    } finally {
+      setCancelSaving(false);
+    }
   }
 
   function goToPage(page) {
@@ -323,17 +365,23 @@ export default function OrdersPageClient() {
         >
           {filteredOrders.map((order) => (
             <li key={order.id}>
-              <OrderCard
-                order={order}
-                onViewDetails={openOrderDetail}
-                detailLoading={detailLoading && detailOrderId === order.id}
-              />
+                <OrderCard
+                  order={order}
+                  onViewDetails={openOrderDetail}
+                  onCancel={openCancelModal}
+                  detailLoading={detailLoading && detailOrderId === order.id}
+                />
             </li>
           ))}
         </ul>
       ) : null}
 
-      {!initialLoading && status !== "failed" && pagination && pagination.lastPage > 1 ? (
+      {!initialLoading &&
+      status !== "failed" &&
+      activeFilter === "all" &&
+      filteredOrders.length > 0 &&
+      pagination &&
+      pagination.lastPage > 1 ? (
         <div className="home1-orders-pagination">
           {pagination.from && pagination.to ? (
             <p className="home1-orders-pagination-summary">
@@ -373,6 +421,15 @@ export default function OrdersPageClient() {
         order={detail}
         loading={detailLoading}
         error={detailError}
+        onCancel={openCancelModal}
+      />
+
+      <OrderCancelModal
+        open={Boolean(cancelTarget)}
+        order={cancelTarget}
+        onClose={closeCancelModal}
+        onSubmit={handleConfirmCancel}
+        saving={cancelSaving}
       />
     </AccountLayout>
   );

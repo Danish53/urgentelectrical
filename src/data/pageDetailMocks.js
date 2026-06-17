@@ -103,6 +103,11 @@ export const PAGE_SLUG_META = {
       "Mixed office and kitchen appliances",
     ],
   },
+  "portable-appliance-testing-pat-test": {
+    category: "Commercial",
+    image: "/featured/pat.jpg",
+    priceHint: "PAT testing with fixed-price options",
+  },
   "fire-alarm-inspection-and-testing": {
     category: "Commercial",
     image: "/featured/fire-alarm.jpg",
@@ -265,6 +270,26 @@ function pickRelated(slug) {
   return pool.slice(0, 4);
 }
 
+function splitDescriptionParagraphs(text) {
+  if (!text || typeof text !== "string") return [];
+  return text
+    .split(/\r?\n\r?\n+/)
+    .map((part) => part.replace(/\r\n/g, " ").trim())
+    .filter(Boolean);
+}
+
+/**
+ * @param {import("@/services/pagesApiService").ApiInfoPageDetail["how_it_work"]} items
+ */
+function mapHowItWorkSteps(items) {
+  if (!items?.length) return null;
+  return items.map((item, index) => ({
+    step: String(index + 1).padStart(2, "0"),
+    title: String(item.topic ?? item.title ?? `Step ${index + 1}`).trim(),
+    text: String(item.description ?? item.text ?? "").trim(),
+  }));
+}
+
 function getGenericParagraphs(title) {
   return [
     `Our ${title} service is delivered by NICEIC approved electricians across Nottingham and the East Midlands.`,
@@ -280,7 +305,8 @@ function getGenericParagraphs(title) {
 export function getPageDetailLayout(slug, page = null) {
   const resolved = resolvePageDetailSlug(slug, page);
   const extra = SERVICE_DETAIL_EXTRA[resolved] ?? null;
-  const meta = PAGE_SLUG_META[resolved] ?? {};
+  const meta = PAGE_SLUG_META[resolved] ?? PAGE_SLUG_META[slug] ?? {};
+  const isApiPage = page?.source === "other-services";
 
   const fallbackTitle = page?.title?.trim() || titleFromSlug(resolved || slug);
   const title =
@@ -288,35 +314,76 @@ export function getPageDetailLayout(slug, page = null) {
     extra?.metaTitle?.replace(/\s*\|.*$/, "").trim() ||
     fallbackTitle;
 
-  const lead =
-    page?.description?.trim() ||
-    page?.seo_description?.trim() ||
-    extra?.metaDescription ||
-    `Professional ${fallbackTitle} from NICEIC approved engineers in Nottingham and the East Midlands.`;
+  const descriptionParagraphs = splitDescriptionParagraphs(page?.description);
 
-  const paragraphs =
-    extra?.longDescription?.length ? extra.longDescription : getGenericParagraphs(title);
+  const lead = isApiPage
+    ? page?.seo_description?.trim() || descriptionParagraphs[0] || ""
+    : page?.seo_description?.trim() ||
+      descriptionParagraphs[0] ||
+      extra?.metaDescription ||
+      `Professional ${fallbackTitle} from NICEIC approved engineers in Nottingham and the East Midlands.`;
 
-  const features = extra?.features?.length ? extra.features : DEFAULT_FEATURES;
-  const includes = extra?.includes?.length ? extra.includes : DEFAULT_INCLUDES;
-  const faqs = extra?.faqs?.length ? extra.faqs : DEFAULT_FAQS;
+  const paragraphs = isApiPage
+    ? descriptionParagraphs
+    : descriptionParagraphs.length > 1
+      ? descriptionParagraphs
+      : descriptionParagraphs.length === 1
+        ? [...descriptionParagraphs, ...getGenericParagraphs(title).slice(1)]
+        : extra?.longDescription?.length
+          ? extra.longDescription
+          : getGenericParagraphs(title);
+
+  const features = isApiPage
+    ? page?.benefits?.length
+      ? page.benefits
+      : []
+    : page?.benefits?.length
+      ? page.benefits
+      : extra?.features?.length
+        ? extra.features
+        : DEFAULT_FEATURES;
+
+  const includes = isApiPage ? [] : extra?.includes?.length ? extra.includes : DEFAULT_INCLUDES;
+
+  const faqs = isApiPage
+    ? page?.faqs?.length
+      ? page.faqs
+      : []
+    : page?.faqs?.length
+      ? page.faqs
+      : extra?.faqs?.length
+        ? extra.faqs
+        : DEFAULT_FAQS;
+
+  const process = isApiPage
+    ? mapHowItWorkSteps(page?.how_it_work) ?? []
+    : mapHowItWorkSteps(page?.how_it_work) ?? meta.process ?? DEFAULT_PROCESS;
+
+  const symptoms = isApiPage
+    ? page?.common_signs?.length
+      ? page.common_signs
+      : []
+    : page?.common_signs?.length
+      ? page.common_signs
+      : meta.symptoms ?? DEFAULT_SYMPTOMS;
 
   return {
-    slug: resolved || slug,
+    slug: page?.slug || resolved || slug,
+    source: page?.source,
     title,
     lead,
     paragraphs,
     features,
     includes,
     faqs,
-    category: meta.category ?? "Service guide",
-    image: meta.image ?? "/featured/pat.jpg",
-    priceHint: meta.priceHint ?? "Fixed pricing — book online for details",
+    category: isApiPage ? "" : meta.category ?? "Service guide",
+    image: isApiPage ? "" : meta.image ?? "/featured/pat.jpg",
+    priceHint: isApiPage ? "" : meta.priceHint ?? "Fixed pricing — book online for details",
     bookHref: `/services/${resolved || slug}`,
     trustPills: DEFAULT_TRUST_PILLS,
-    process: meta.process ?? DEFAULT_PROCESS,
-    symptoms: meta.symptoms ?? DEFAULT_SYMPTOMS,
-    related: pickRelated(resolved || slug),
-    keywords: extra?.keywords ?? [],
+    process,
+    symptoms,
+    related: isApiPage ? [] : pickRelated(resolved || slug),
+    keywords: isApiPage ? [] : extra?.keywords ?? [],
   };
 }

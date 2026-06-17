@@ -12,6 +12,7 @@ export const DETAIL_SLUG_ALIASES = {
   /** Navbar menu slugs (CMS) → canonical service copy slug */
   "domestic-electrician": "domestic-electrical-fault-investigation",
   "commercial-electrician-nottingham": "portable-appliance-testing-pat",
+  "portable-appliance-testing-pat-test": "portable-appliance-testing-pat",
   "industrial-electrician-nottingham": "electrical-installation-condition-report-eicr",
   "planned-electrical-maintenance-nottingham": "domestic-electrical-fault-investigation",
   "electrical-certificates-nottingham": "electrical-installation-condition-report-eicr",
