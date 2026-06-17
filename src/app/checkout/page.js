@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import CheckoutPageClient from "@/components/checkout/CheckoutPageClient";
 import { buildCheckoutMetadata } from "@/data/checkoutPage";
 import "../home1/home1.css";
+import "../account/account.css";
 import "./checkout.css";
 
 const meta = buildCheckoutMetadata();

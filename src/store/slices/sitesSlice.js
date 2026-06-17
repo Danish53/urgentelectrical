@@ -41,17 +41,30 @@ export const createSite = createAsyncThunk(
   async (/** @type {import("@/lib/sites/siteForm").SiteFormValues} */ form, { rejectWithValue, getState }) => {
     try {
       const created = await siteApi.createSiteAddress(formToApiPayload(form));
+      const createdSite =
+        created && typeof created === "object" && created.id != null
+          ? apiRecordToSavedSite(/** @type {Record<string, unknown>} */ (created))
+          : null;
       const page = getState().sites.pagination?.currentPage ?? 1;
       let result = await loadSitesFromApi(page);
 
-      if (!result.sites.length && created && typeof created === "object" && created.id != null) {
+      if (!result.sites.length && createdSite) {
         result = {
-          sites: [apiRecordToSavedSite(/** @type {Record<string, unknown>} */ (created))],
+          sites: [createdSite],
           pagination: result.pagination,
         };
+      } else if (createdSite) {
+        const idx = result.sites.findIndex((s) => String(s.id) === String(createdSite.id));
+        if (idx === -1) {
+          result = { ...result, sites: [createdSite, ...result.sites] };
+        } else {
+          const sites = [...result.sites];
+          sites[idx] = createdSite;
+          result = { ...result, sites };
+        }
       }
 
-      return result;
+      return { ...result, page, createdSite };
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error, "Could not add this site."));
     }

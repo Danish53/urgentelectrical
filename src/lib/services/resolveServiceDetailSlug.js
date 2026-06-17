@@ -74,11 +74,29 @@ export function resolveServiceApiSlugCandidates(slug) {
   const trimmed = String(slug ?? "").trim();
   if (!trimmed) return [];
 
+  const candidates = new Set([trimmed]);
+
   const resolved = resolveServiceDetailSlug(trimmed);
-  const candidates = new Set([trimmed, resolved]);
+  if (resolved) candidates.add(resolved);
 
   if (DETAIL_SLUG_ALIASES[trimmed]) candidates.add(DETAIL_SLUG_ALIASES[trimmed]);
+
   if (SERVICE_API_SLUG_OVERRIDES[resolved]) candidates.add(SERVICE_API_SLUG_OVERRIDES[resolved]);
+  if (SERVICE_API_SLUG_OVERRIDES[trimmed]) candidates.add(SERVICE_API_SLUG_OVERRIDES[trimmed]);
+
+  for (const [canonical, apiSlug] of Object.entries(SERVICE_API_SLUG_OVERRIDES)) {
+    if (canonical === trimmed || apiSlug === trimmed) {
+      candidates.add(canonical);
+      candidates.add(apiSlug);
+    }
+  }
+
+  for (const [alias, canonical] of Object.entries(DETAIL_SLUG_ALIASES)) {
+    if (alias === trimmed || canonical === trimmed) {
+      candidates.add(alias);
+      candidates.add(canonical);
+    }
+  }
 
   return [...candidates].filter(Boolean);
 }

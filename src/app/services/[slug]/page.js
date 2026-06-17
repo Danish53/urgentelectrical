@@ -5,6 +5,7 @@ import { getBookableServices, getServiceDetailBySlug } from "@/lib/services/getS
 import "../../home1/home1.css";
 
 export const revalidate = 3600;
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const services = await getBookableServices();

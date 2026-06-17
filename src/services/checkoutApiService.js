@@ -1,4 +1,5 @@
 import { CHECKOUT_PROXY } from "@/constants/checkoutApi";
+import { buildCreatePaymentIntentPayload } from "@/lib/checkout/buildCreatePaymentIntentPayload";
 import { ApiError } from "@/lib/api/errors";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
 
@@ -89,11 +90,11 @@ export async function validateOrderData(payload) {
 export async function createPaymentIntent(amount, options = {}) {
   return checkoutFetch(CHECKOUT_PROXY.createPaymentIntent, {
     method: "POST",
-    body: {
+    body: buildCreatePaymentIntentPayload({
       amount,
       currency: options.currency ?? "gbp",
-      automatic_payment_methods: true,
-    },
+      ...options,
+    }),
   });
 }
 

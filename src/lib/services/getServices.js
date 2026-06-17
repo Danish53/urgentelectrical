@@ -1,6 +1,5 @@
 import {
   buildBookableServicesFromApi,
-  DETAIL_SLUG_ALIASES,
   resolveServiceSlugFromApi,
 } from "@/lib/services/buildBookableService";
 import { buildBookableServiceFromDetailApi } from "@/lib/services/buildBookableServiceFromDetail";
@@ -64,16 +63,12 @@ function resolveSlugForDetailRequest(requestedSlug, apiList) {
   const normalized = requestedSlug.trim();
   if (!normalized) return null;
 
-  const alias = DETAIL_SLUG_ALIASES[normalized];
+  const candidates = new Set(resolveServiceApiSlugCandidates(normalized));
 
   const match = apiList.find((item) => {
     const apiSlug = resolveServiceSlugFromApi(item);
     const generated = serviceSlug(String(item.title ?? "").trim() || "Electrical service");
-    return (
-      apiSlug === normalized ||
-      generated === normalized ||
-      (alias && (apiSlug === alias || generated === alias))
-    );
+    return candidates.has(apiSlug) || candidates.has(generated);
   });
 
   return match ? resolveServiceSlugFromApi(match) : null;

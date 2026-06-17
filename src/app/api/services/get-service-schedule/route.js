@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { GET_SERVICE_SCHEDULE_PATH } from "@/constants/serviceScheduleApi";
+import { isApiDateString, normalizeApiDate } from "@/lib/schedules";
 import { getBearerFromRequest } from "@/lib/api/proxyAuth";
 import { upstreamJsonRequest } from "@/lib/api/upstreamProxy";
 
@@ -12,17 +13,24 @@ export async function POST(request) {
   }
 
   const serviceId = body?.service_id;
-  const selectedDate = body?.selected_date;
+  const normalizedDate = normalizeApiDate(body?.selected_date);
 
   if (serviceId == null || serviceId === "") {
     return NextResponse.json({ message: "service_id is required." }, { status: 422 });
   }
-  if (!selectedDate || typeof selectedDate !== "string") {
+  if (!normalizedDate) {
     return NextResponse.json({ message: "selected_date is required." }, { status: 422 });
   }
 
+  if (!isApiDateString(normalizedDate)) {
+    return NextResponse.json(
+      { message: "selected_date must be YYYY-MM-DD (e.g. 2026-06-17)." },
+      { status: 422 }
+    );
+  }
+
   const result = await upstreamJsonRequest("POST", GET_SERVICE_SCHEDULE_PATH, {
-    body: { service_id: Number(serviceId), selected_date: selectedDate },
+    body: { service_id: Number(serviceId), selected_date: normalizedDate },
     authorization: getBearerFromRequest(request),
   });
 

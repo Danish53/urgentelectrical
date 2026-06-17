@@ -1,14 +1,56 @@
 /** @typedef {{ id: string, day: string, startTime: string, endTime: string, label: string, value: string, crmScheduleKey?: string | null }} ScheduleSlot */
 
+const API_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * Checkout schedule API date format: DD/MM/YYYY (e.g. 12/12/2000)
- * @param {Date} date
+ * API date format: YYYY-MM-DD string (e.g. "2026-06-17") for Laravel + Stripe slots.
+ * @param {Date | string | null | undefined} value
+ * @returns {string}
+ */
+export function normalizeApiDate(value) {
+  if (value == null || value === "") return "";
+
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return "";
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, "0");
+    const d = String(value.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  const text = String(value).trim();
+  if (!text) return "";
+
+  if (API_DATE_RE.test(text)) return text;
+
+  const dmy = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (dmy) {
+    const [, day, month, year] = dmy;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T/.test(text)) {
+    const parsed = new Date(text);
+    if (!Number.isNaN(parsed.getTime())) {
+      return normalizeApiDate(parsed);
+    }
+  }
+
+  return text;
+}
+
+/**
+ * @param {string} value
+ */
+export function isApiDateString(value) {
+  return API_DATE_RE.test(String(value ?? "").trim());
+}
+
+/**
+ * @param {Date | string | null | undefined} date
  */
 export function formatScheduleRequestDate(date) {
-  const d = String(date.getDate()).padStart(2, "0");
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const y = date.getFullYear();
-  return `${d}/${m}/${y}`;
+  return normalizeApiDate(date);
 }
 
 /**

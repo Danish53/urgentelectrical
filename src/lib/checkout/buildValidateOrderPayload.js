@@ -1,14 +1,11 @@
-import { getScheduleSlotsForDate } from "@/lib/schedules";
+import { getScheduleSlotsForDate, normalizeApiDate } from "@/lib/schedules";
 import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
 
 /**
- * @param {Date} date
+ * @param {Date | string | null | undefined} date
  */
 export function formatCheckoutApiDate(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  return normalizeApiDate(date);
 }
 
 /**
@@ -66,7 +63,7 @@ export function buildValidateOrderPayload({
   const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
   const amount = Math.max(0, serviceSubTotal + deliveryFee - discountAmount);
 
-  const sameAsBilling = details.siteSameAsBilling !== false;
+  const sameAsBilling = details.siteSameAsBilling === true;
   const billing = readCheckoutAddress(details, "billing");
   const site = sameAsBilling ? billing : readCheckoutAddress(details, "site");
 

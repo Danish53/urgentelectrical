@@ -56,7 +56,7 @@ export default function LocationsLeafletMap({ className = "" }) {
   }, [locations]);
 
   if (!mounted) {
-    return <div className="home1-locations-search-slim__map-loading" aria-hidden="true" />;
+    return <div className="home1-locations-map__loading" aria-hidden="true" />;
   }
 
   return (

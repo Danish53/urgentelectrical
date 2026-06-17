@@ -40,17 +40,6 @@ export default function SiteDetailFields({ site }) {
           <SiteFieldItem label="Description" value={site.description || "—"} fullWidth />
         </SiteFieldGrid>
       </section>
-
-      <section className="home1-sites-detail-section">
-        <h3 className="home1-sites-detail-section-title">Record</h3>
-        <SiteFieldGrid columns={3}>
-          <SiteFieldItem label="ID" value={site.id || "—"} />
-          <SiteFieldItem label="User ID" value={site.userId || "—"} />
-          <SiteFieldItem label="Added by" value={site.addedBy || "—"} />
-          <SiteFieldItem label="Created at" value={formatSiteTimestamp(site.createdAt)} />
-          <SiteFieldItem label="Updated at" value={formatSiteTimestamp(site.updatedAt)} />
-        </SiteFieldGrid>
-      </section>
     </div>
   );
 }

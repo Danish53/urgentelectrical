@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import { AUTH_INPUT_CLASS, AUTH_LABEL_CLASS } from "@/components/login/authFormStyles";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { EMPTY_SITE_FORM } from "@/lib/sites/siteForm";
@@ -28,6 +29,7 @@ function Field({ id, label, optional, children }) {
  *   mode?: "create" | "edit",
  *   initialForm?: import("@/lib/sites/siteForm").SiteFormValues,
  *   siteName?: string,
+ *   hideContactDetails?: boolean,
  * }} props
  */
 export default function CreateSiteModal({
@@ -38,6 +40,7 @@ export default function CreateSiteModal({
   mode = "create",
   initialForm,
   siteName = "",
+  hideContactDetails = false,
 }) {
   const titleId = useId();
   const [form, setForm] = useState(EMPTY_SITE_FORM);
@@ -68,12 +71,13 @@ export default function CreateSiteModal({
   }
 
   async function handleSubmit(e) {
-    e.preventDefault();
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
     if (!form.postcode.trim() || !form.addressLine1.trim() || !form.townCity.trim()) return;
     await onSubmit(form);
   }
 
-  return (
+  const modal = (
     <div className="home1-sites-modal-root" role="presentation">
       <button
         type="button"
@@ -193,6 +197,8 @@ export default function CreateSiteModal({
               <span>Use as my default address</span>
             </label>
 
+            {!hideContactDetails ? (
+              <>
             <div className="home1-sites-modal-divider">
               <p className="home1-sites-modal-divider-label">Contact details</p>
             </div>
@@ -268,6 +274,8 @@ export default function CreateSiteModal({
                 disabled={saving}
               />
             </Field>
+              </>
+            ) : null}
           </div>
 
           <footer className="home1-sites-modal-foot">
@@ -280,9 +288,10 @@ export default function CreateSiteModal({
               Cancel
             </button>
             <button
-              type="submit"
+              type="button"
               className="home1-btn-primary home1-sites-modal-btn inline-flex items-center justify-center gap-2"
               disabled={saving}
+              onClick={handleSubmit}
             >
               {saving ? <ButtonSpinner /> : null}
               {saving ? "Saving…" : isEdit ? "Update site" : "Add site"}
@@ -292,4 +301,6 @@ export default function CreateSiteModal({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }

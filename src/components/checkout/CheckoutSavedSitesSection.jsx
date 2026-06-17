@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import AccountLayout from "@/components/account/AccountLayout";
 import CreateSiteModal from "@/components/account/CreateSiteModal";
 import SiteCardSummary from "@/components/account/SiteCardSummary";
 import BlogPagination from "@/components/blog/BlogPagination";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
+import SitesListSkeleton from "@/components/skeletons/SitesListSkeleton";
 import { siteToForm } from "@/lib/sites/siteForm";
 import { matchesSiteSearch } from "@/lib/sites/matchesSiteSearch";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -18,9 +17,8 @@ import {
   fetchSites,
   updateSite,
 } from "@/store/slices/sitesSlice";
-import SitesListSkeleton from "@/components/skeletons/SitesListSkeleton";
-import { IconCalendar } from "@/components/home1/icons";
 import "@/components/skeletons/skeleton.css";
+import { IconCalendar } from "@/components/home1/icons";
 
 function IconSearch({ className = "w-4 h-4" }) {
   return (
@@ -39,22 +37,54 @@ function IconPlus({ className = "w-4 h-4" }) {
   );
 }
 
+function IconPencil({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M12 20h9" strokeLinecap="round" />
+      <path
+        d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * @param {{
  *   site: import("@/lib/sites/siteTypes").SavedSite,
- *   onUpdate: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
- *   busy?: boolean,
+ *   selected: boolean,
+ *   onSelect: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
+ *   onEdit: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
  * }} props
  */
-function SiteCard({ site, onUpdate, busy = false }) {
+function CheckoutSiteSelectCard({ site, selected, onSelect, onEdit }) {
+  const title = site.addressLine1 || site.name;
+
+  function handleKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect(site);
+    }
+  }
+
   return (
     <article
-      className={`home1-sites-card home1-card${site.primary ? " home1-sites-card--default" : ""}`}
+      role="radio"
+      aria-checked={selected}
+      tabIndex={0}
+      onClick={() => onSelect(site)}
+      onKeyDown={handleKeyDown}
+      className={`home1-sites-card home1-card home1-sites-card--checkout-select${site.primary ? " home1-sites-card--default" : ""}${selected ? " is-selected" : ""}`}
     >
-      <div className="home1-sites-card-head">
-        <div className="min-w-0">
+      <div className="home1-checkout-site-card-top">
+        <span className="home1-checkout-site-check" aria-hidden="true">
+          <span className={`home1-checkout-site-check__box${selected ? " is-checked" : ""}`} />
+        </span>
+
+        <div className="home1-checkout-site-card-title-wrap min-w-0">
           <h2 className="home1-sites-card-title">
-            {site.addressLine1 || site.name}
+            {title}
             {site.primary ? (
               <span className="home1-sites-primary-badge" title="Default site address">
                 Default site
@@ -62,80 +92,55 @@ function SiteCard({ site, onUpdate, busy = false }) {
             ) : null}
           </h2>
         </div>
+
+        {selected ? (
+          <button
+            type="button"
+            className="home1-checkout-site-edit-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit(site);
+            }}
+            aria-label={`Update ${title}`}
+          >
+            <IconPencil className="home1-checkout-site-edit-btn__icon" />
+          </button>
+        ) : (
+          <span className="home1-checkout-site-edit-spacer" aria-hidden="true" />
+        )}
       </div>
 
       <SiteCardSummary site={site} />
-
-      <div className="home1-sites-card-actions">
-        <Link
-          href={`/account/sites/${site.id}`}
-          className="home1-btn-outline home1-sites-btn"
-          aria-label={`View details for ${site.addressLine1 || site.name}`}
-        >
-          View details
-        </Link>
-        <button
-          type="button"
-          className="home1-btn-primary home1-sites-btn home1-sites-btn--update"
-          onClick={() => onUpdate(site)}
-          disabled={busy || !site.id}
-          aria-label={`Update ${site.addressLine1 || site.name}`}
-        >
-          Update
-        </button>
-      </div>
     </article>
   );
 }
 
-function SitesEmpty({ onCreate, disabled }) {
-  return (
-    <div className="home1-sites-empty home1-card">
-      <div className="home1-sites-empty-icon" aria-hidden="true">
-        <IconCalendar className="w-8 h-8" />
-      </div>
-      <h2 className="home1-sites-empty-title">No saved sites yet</h2>
-      <p className="home1-sites-empty-text">
-        Add your first job location to speed up checkout and keep addresses in one place.
-      </p>
-      <button
-        type="button"
-        className="home1-sites-add-btn"
-        onClick={onCreate}
-        disabled={disabled}
-      >
-        <IconPlus className="home1-sites-add-btn__icon" />
-        Add New Site
-      </button>
-    </div>
-  );
-}
-
-export default function SitesPageClient() {
+/**
+ * @param {{
+ *   selectedSiteId?: string | null,
+ *   onSelectSite: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
+ *   selectionError?: string,
+ * }} props
+ */
+export default function CheckoutSavedSitesSection({
+  selectedSiteId = null,
+  onSelectSite,
+  selectionError = "",
+}) {
   const dispatch = useAppDispatch();
+  const searchId = useId();
+  const listAnchorRef = useRef(null);
   const { sites, status, error, pagination, saving, saveError } = useAppSelector((state) => state.sites);
 
+  const [searchQuery, setSearchQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const listAnchorRef = useRef(null);
-  const searchId = useId();
 
   const initialLoading = (status === "loading" || status === "idle") && sites.length === 0;
   const pageLoading = status === "loading" && sites.length > 0;
-  const busy = saving;
-
   const totalCount = pagination?.total ?? sites.length;
-  const defaultSite = sites.find((s) => s.primary);
-
-  const stats = useMemo(
-    () => ({
-      total: totalCount,
-      hasDefault: Boolean(defaultSite),
-    }),
-    [totalCount, defaultSite]
-  );
+  const busy = saving;
 
   const filteredSites = useMemo(
     () => sites.filter((site) => matchesSiteSearch(site, searchQuery)),
@@ -149,13 +154,20 @@ export default function SitesPageClient() {
     dispatch(fetchSites({ page: 1 }));
   }, [dispatch]);
 
+  function goToPage(page) {
+    if (!pagination || pageLoading) return;
+    if (page < 1 || page > pagination.lastPage || page === pagination.currentPage) return;
+    dispatch(fetchSites({ page }));
+    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   function openCreateModal() {
     setEditingId(null);
     setEditForm(null);
     setModalOpen(true);
   }
 
-  function openUpdateModal(site) {
+  function openEditModal(site) {
     const id = String(site.id ?? "").trim();
     if (!id) {
       toastError("This site cannot be updated (missing ID).");
@@ -179,57 +191,60 @@ export default function SitesPageClient() {
     dispatch(clearSitesSaveError());
   }
 
-  async function handleSubmitSite(form) {
+  async function handleCreateSite(form) {
     dispatch(clearSitesSaveError());
-
     try {
-      if (editingId) {
-        await dispatch(updateSite({ id: editingId, form })).unwrap();
-        toastSuccess(form.isDefault ? "Default site updated." : "Site updated successfully.");
-      } else {
-        await dispatch(createSite(form)).unwrap();
-        toastSuccess(form.isDefault ? "Default site saved." : "Site added successfully.");
+      const payload = await dispatch(createSite(form)).unwrap();
+      toastSuccess(form.isDefault ? "Default site saved." : "Site added successfully.");
+      closeModal();
+      setSearchQuery("");
+
+      const created =
+        payload.createdSite ||
+        payload.sites?.find(
+          (site) =>
+            (site.addressLine1 || site.name || "").trim().toLowerCase() ===
+            form.addressLine1.trim().toLowerCase()
+        );
+
+      if (created) {
+        onSelectSite(created);
       }
-      setModalOpen(false);
-      setEditingId(null);
-      setEditForm(null);
     } catch (err) {
       toastError(err, "Could not save site.");
     }
   }
 
-  function goToPage(page) {
-    if (!pagination || pageLoading) return;
-    if (page < 1 || page > pagination.lastPage || page === pagination.currentPage) return;
+  async function handleUpdateSite(form) {
+    if (!editingId) return;
+    dispatch(clearSitesSaveError());
+    try {
+      const payload = await dispatch(updateSite({ id: editingId, form })).unwrap();
+      toastSuccess(form.isDefault ? "Default site updated." : "Site updated successfully.");
+      closeModal();
+      const updated = payload.sites?.find((s) => String(s.id) === editingId);
+      if (updated && String(selectedSiteId) === editingId) {
+        onSelectSite(updated);
+      }
+    } catch (err) {
+      toastError(err, "Could not update site.");
+    }
+  }
 
-    dispatch(fetchSites({ page }));
-    listAnchorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  function handleSubmitSite(form) {
+    if (editingId) {
+      return handleUpdateSite(form);
+    }
+    return handleCreateSite(form);
   }
 
   return (
-    <AccountLayout
-      active="sites"
-      title="My sites"
-      description="Save job locations for faster checkout and better visit coordination."
-    >
-      <div className="home1-sites-stats">
-        <div className="home1-sites-stat home1-card">
-          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.total}</p>
-          <p className="home1-sites-stat-label">Saved sites</p>
-        </div>
-        <div className="home1-sites-stat home1-card home1-sites-stat--accent">
-          <p className="home1-sites-stat-value">{initialLoading ? "—" : stats.hasDefault ? "Yes" : "No"}</p>
-          <p className="home1-sites-stat-label">Default set</p>
-        </div>
-      </div>
-
-      <section className="home1-sites-panel home1-card w-full">
-        <header className="home1-sites-panel-head home1-sites-panel-head--row">
-          <div className="home1-sites-panel-intro">
-            <h2 className="home1-sites-panel-title">Saved locations</h2>
-            <p className="home1-sites-panel-lead">Use these addresses while booking services.</p>
-          </div>
-          <div className="home1-sites-toolbar">
+    <>
+      <section
+        className={`home1-sites-panel home1-card w-full home1-checkout-saved-sites${selectionError ? " home1-checkout-saved-sites--error" : ""}`}
+      >
+        <header className="home1-sites-panel-head home1-sites-panel-head--row home1-checkout-saved-sites__head">
+          <div className="home1-sites-toolbar home1-checkout-saved-sites__toolbar">
             <label htmlFor={searchId} className="sr-only">
               Search saved addresses
             </label>
@@ -245,12 +260,7 @@ export default function SitesPageClient() {
                 autoComplete="off"
               />
             </div>
-            <button
-              type="button"
-              className="home1-sites-add-btn"
-              onClick={openCreateModal}
-              disabled={busy}
-            >
+            <button type="button" className="home1-sites-add-btn" onClick={openCreateModal} disabled={busy}>
               <IconPlus className="home1-sites-add-btn__icon" />
               Add New Site
             </button>
@@ -259,7 +269,7 @@ export default function SitesPageClient() {
 
         <div ref={listAnchorRef} className="home1-sites-list-anchor" />
 
-        {initialLoading ? <SitesListSkeleton count={3} /> : null}
+        {initialLoading ? <SitesListSkeleton count={2} /> : null}
 
         {!initialLoading && status === "failed" ? (
           <div className="home1-sites-error px-4 py-6">
@@ -275,7 +285,17 @@ export default function SitesPageClient() {
         ) : null}
 
         {!initialLoading && status !== "failed" && sites.length === 0 ? (
-          <SitesEmpty onCreate={openCreateModal} disabled={saving} />
+          <div className="home1-sites-empty home1-card">
+            <div className="home1-sites-empty-icon" aria-hidden="true">
+              <IconCalendar className="w-8 h-8" />
+            </div>
+            <h2 className="home1-sites-empty-title">No saved sites yet</h2>
+            <p className="home1-sites-empty-text">Add a job location to continue with your booking.</p>
+            <button type="button" className="home1-sites-add-btn" onClick={openCreateModal} disabled={busy}>
+              <IconPlus className="home1-sites-add-btn__icon" />
+              Add New Site
+            </button>
+          </div>
         ) : null}
 
         {pageLoading ? (
@@ -291,10 +311,19 @@ export default function SitesPageClient() {
         ) : null}
 
         {!initialLoading && status !== "failed" && sites.length > 0 ? (
-          <ul className={`home1-sites-list p-0 m-0${pageLoading ? " home1-sites-list--busy" : ""}`}>
+          <ul
+            className={`home1-sites-list home1-checkout-saved-sites__list p-0 m-0${pageLoading ? " home1-sites-list--busy" : ""}`}
+            role="radiogroup"
+            aria-label="Saved site addresses"
+          >
             {filteredSites.map((site) => (
               <li key={site.id}>
-                <SiteCard site={site} onUpdate={openUpdateModal} busy={saving} />
+                <CheckoutSiteSelectCard
+                  site={site}
+                  selected={String(selectedSiteId) === String(site.id)}
+                  onSelect={onSelectSite}
+                  onEdit={openEditModal}
+                />
               </li>
             ))}
           </ul>
@@ -323,10 +352,16 @@ export default function SitesPageClient() {
             ) : null}
           </div>
         ) : null}
+
+        {selectionError ? (
+          <p className="home1-checkout-field-error home1-checkout-saved-sites__error" role="alert">
+            {selectionError}
+          </p>
+        ) : null}
       </section>
 
       {saveError ? (
-        <p className="mt-4 text-sm text-[#9f1239]" role="alert">
+        <p className="mt-3 text-sm text-[#9f1239]" role="alert">
           {saveError}
         </p>
       ) : null}
@@ -340,7 +375,8 @@ export default function SitesPageClient() {
         mode={editingId ? "edit" : "create"}
         initialForm={editForm ?? undefined}
         siteName={editingId ? (sites.find((s) => s.id === editingId)?.addressLine1 || "") : ""}
+        hideContactDetails
       />
-    </AccountLayout>
+    </>
   );
 }

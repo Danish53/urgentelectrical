@@ -1,13 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback } from "react";
 import CheckoutAddressLookup from "@/components/checkout/CheckoutAddressLookup";
-import CheckoutSiteAddressModal from "@/components/checkout/CheckoutSiteAddressModal";
+import CheckoutSavedSitesSection from "@/components/checkout/CheckoutSavedSitesSection";
 import CheckoutSiteSameToggle from "@/components/checkout/CheckoutSiteSameToggle";
-import { mapSavedSiteToCheckoutDetails } from "@/lib/checkout/mapSavedSiteToCheckoutDetails";
+import { mapSavedSiteToLoggedInCheckoutDetails } from "@/lib/checkout/mapSavedSiteToCheckoutDetails";
 
 const labelClass = "home1-checkout-label";
 const inputClass = "home1-checkout-input";
+
+function CheckoutNotesField({ details, onChange }) {
+  function set(field, value) {
+    onChange({ ...details, [field]: value });
+  }
+
+  return (
+    <div>
+      <label htmlFor="checkout-notes" className={labelClass}>
+        Notes for the engineer (optional)
+      </label>
+      <textarea
+        id="checkout-notes"
+        rows={2}
+        value={details.notes}
+        onChange={(e) => set("notes", e.target.value)}
+        className={`${inputClass} home1-checkout-textarea`}
+      />
+    </div>
+  );
+}
+
+function CheckoutStepActions({ onBack, submitting }) {
+  return (
+    <div className="home1-checkout-step-actions">
+      <button type="button" onClick={onBack} className="home1-checkout-back-btn">
+        ← Back
+      </button>
+      <button type="submit" className="home1-checkout-continue" disabled={submitting}>
+        <span>{submitting ? "Validating…" : "Continue to payment"}</span>
+        {!submitting ? <span className="home1-checkout-continue-arrow" aria-hidden="true">→</span> : null}
+      </button>
+    </div>
+  );
+}
 
 export default function CheckoutDetailsStep({
   details,
@@ -19,26 +54,56 @@ export default function CheckoutDetailsStep({
   submitting = false,
   isLoggedIn = false,
 }) {
-  const [siteModalOpen, setSiteModalOpen] = useState(false);
-  const [selectedSiteLabel, setSelectedSiteLabel] = useState("");
-  const siteSameAsBilling = details.siteSameAsBilling !== false;
+  const handleLoggedInSiteSelect = useCallback(
+    (site) => {
+      onChange(mapSavedSiteToLoggedInCheckoutDetails(site, details));
+    },
+    [details, onChange]
+  );
 
   function set(field, value) {
     onChange({ ...details, [field]: value });
   }
 
   function handleSiteSameChange(same) {
-    if (same) {
-      setSelectedSiteLabel("");
-      onChange({ ...details, siteSameAsBilling: true });
-      return;
-    }
-    onChange({ ...details, siteSameAsBilling: false });
+    onChange({ ...details, siteSameAsBilling: same });
   }
 
-  function handleSiteSelect(site) {
-    onChange(mapSavedSiteToCheckoutDetails(site, { ...details, siteSameAsBilling: false }));
-    setSelectedSiteLabel(site.name || site.address);
+  if (isLoggedIn) {
+    return (
+      <div className="home1-checkout-step-panel home1-checkout-step-panel--details">
+        <header className="home1-checkout-step-header">
+          <p className="home1-checkout-step-eyebrow">Step 2 of 3</p>
+          <h2 className="home1-checkout-step-title">Site address</h2>
+          <p className="home1-checkout-step-lead">Choose where we should carry out the work.</p>
+        </header>
+
+        <form
+          className="home1-checkout-form home1-checkout-details-form home1-checkout-details-form--logged-in"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onContinue();
+          }}
+          noValidate
+        >
+          {error ? (
+            <p className="home1-checkout-alert home1-checkout-alert--error" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <CheckoutSavedSitesSection
+            selectedSiteId={details.siteAddressId}
+            onSelectSite={handleLoggedInSiteSelect}
+            selectionError={fieldErrors.selectedSite}
+          />
+
+          <CheckoutNotesField details={details} onChange={onChange} />
+
+          <CheckoutStepActions onBack={onBack} submitting={submitting} />
+        </form>
+      </div>
+    );
   }
 
   return (
@@ -116,52 +181,48 @@ export default function CheckoutDetailsStep({
               type="tel"
               value={details.phone}
               onChange={(e) => set("phone", e.target.value)}
-              className={inputClass}
+              className="home1-checkout-input"
               autoComplete="tel"
               required
             />
           </div>
         </div>
 
-        {!isLoggedIn ? (
-          <>
-            <div className="home1-checkout-form-grid">
-              <div>
-                <label htmlFor="checkout-password" className={labelClass}>
-                  Password<span className="text-[#d3231f]">*</span>
-                </label>
-                <input
-                  id="checkout-password"
-                  type="password"
-                  value={details.password ?? ""}
-                  onChange={(e) => set("password", e.target.value)}
-                  className={inputClass}
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="checkout-password-confirm" className={labelClass}>
-                  Confirm password<span className="text-[#d3231f]">*</span>
-                </label>
-                <input
-                  id="checkout-password-confirm"
-                  type="password"
-                  value={details.passwordConfirmation ?? ""}
-                  onChange={(e) => set("passwordConfirmation", e.target.value)}
-                  className={inputClass}
-                  autoComplete="new-password"
-                  minLength={8}
-                  required
-                />
-              </div>
-            </div>
-            <p className="home1-checkout-form-hint">
-              Create a password to manage bookings in your account.
-            </p>
-          </>
-        ) : null}
+        <div className="home1-checkout-form-grid">
+          <div>
+            <label htmlFor="checkout-password" className={labelClass}>
+              Password<span className="text-[#d3231f]">*</span>
+            </label>
+            <input
+              id="checkout-password"
+              type="password"
+              value={details.password ?? ""}
+              onChange={(e) => set("password", e.target.value)}
+              className={inputClass}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="checkout-password-confirm" className={labelClass}>
+              Confirm password<span className="text-[#d3231f]">*</span>
+            </label>
+            <input
+              id="checkout-password-confirm"
+              type="password"
+              value={details.passwordConfirmation ?? ""}
+              onChange={(e) => set("passwordConfirmation", e.target.value)}
+              className={inputClass}
+              autoComplete="new-password"
+              minLength={8}
+              required
+            />
+          </div>
+        </div>
+        <p className="home1-checkout-form-hint">
+          Create a password to manage bookings in your account.
+        </p>
 
         <CheckoutAddressLookup
           details={details}
@@ -171,53 +232,26 @@ export default function CheckoutDetailsStep({
           postcodeError={fieldErrors.billingPostcode}
         />
 
-        <CheckoutSiteSameToggle value={siteSameAsBilling} onChange={handleSiteSameChange} />
+        <CheckoutSiteSameToggle
+          value={details.siteSameAsBilling ?? null}
+          onChange={handleSiteSameChange}
+          error={fieldErrors.siteSameAsBilling}
+        />
 
-        {!siteSameAsBilling ? (
+        {details.siteSameAsBilling === false ? (
           <CheckoutAddressLookup
             details={details}
             onChange={onChange}
             variant="site"
             sectionTitle="Site Address"
-            isLoggedIn={isLoggedIn}
-            selectedSiteLabel={selectedSiteLabel}
-            onClearSavedSite={() => setSelectedSiteLabel("")}
-            onOpenSavedAddresses={() => setSiteModalOpen(true)}
             postcodeError={fieldErrors.sitePostcode}
           />
         ) : null}
 
-        <div>
-          <label htmlFor="checkout-notes" className={labelClass}>
-            Notes for the engineer (optional)
-          </label>
-          <textarea
-            id="checkout-notes"
-            rows={2}
-            value={details.notes}
-            onChange={(e) => set("notes", e.target.value)}
-            className={`${inputClass} home1-checkout-textarea`}
-          />
-        </div>
+        <CheckoutNotesField details={details} onChange={onChange} />
 
-        <div className="home1-checkout-step-actions">
-          <button type="button" onClick={onBack} className="home1-checkout-back-btn">
-            ← Back
-          </button>
-          <button type="submit" className="home1-checkout-continue" disabled={submitting}>
-            <span>{submitting ? "Validating…" : "Continue to payment"}</span>
-            {!submitting ? <span className="home1-checkout-continue-arrow" aria-hidden="true">→</span> : null}
-          </button>
-        </div>
+        <CheckoutStepActions onBack={onBack} submitting={submitting} />
       </form>
-
-      {isLoggedIn && !siteSameAsBilling ? (
-        <CheckoutSiteAddressModal
-          open={siteModalOpen}
-          onClose={() => setSiteModalOpen(false)}
-          onSelect={handleSiteSelect}
-        />
-      ) : null}
     </div>
   );
 }

@@ -67,6 +67,33 @@ function resolveImage(api, name) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {string[]}
+ */
+function parseApiStringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item ?? "").trim()).filter(Boolean);
+}
+
+/**
+ * @param {unknown} longDescription
+ * @returns {string[]}
+ */
+function parseLongDescriptionFromApi(longDescription) {
+  if (typeof longDescription !== "string") return [];
+
+  const text = longDescription.replace(/\r\n/g, "\n").trim();
+  if (!text) return [];
+
+  const paragraphs = text
+    .split(/\n{2,}/)
+    .map((block) => block.trim().replace(/\n+/g, " "))
+    .filter(Boolean);
+
+  return paragraphs.length ? paragraphs : [text.replace(/\n+/g, " ")];
+}
+
+/**
  * Full service detail payload from GET /services/{slug}
  * @param {Record<string, unknown>} api
  * @param {Record<number, { slug: string, label: string, id: number }>} [categoryMap]
@@ -88,6 +115,10 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const isEmergency =
     name.toLowerCase().includes("emergency") || slug.includes("emergency");
 
+  const apiLongDescription = parseLongDescriptionFromApi(api.long_description);
+  const apiIncludes = parseApiStringList(api.included_items);
+  const apiBenefits = parseApiStringList(api.benefits);
+
   return {
     apiId: api.id,
     serviceCategoryId,
@@ -108,9 +139,11 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     variants,
     priceDisplay,
     longDescriptionHtml: null,
-    longDescription: getServiceLongDescription(extra, description, name),
-    includes: extra.includes ?? [],
-    features: extra.features ?? [],
+    longDescription: apiLongDescription.length
+      ? apiLongDescription
+      : getServiceLongDescription(extra, description, name),
+    includes: apiIncludes.length ? apiIncludes : (extra.includes ?? []),
+    features: apiBenefits.length ? apiBenefits : (extra.features ?? []),
     faqs: extra.faqs ?? [],
     schedules: Array.isArray(api.schedules) ? api.schedules : [],
     metaTitle: extra.metaTitle ?? name,

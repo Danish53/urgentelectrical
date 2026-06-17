@@ -68,7 +68,7 @@ const EMPTY_DETAILS = {
   sitePostcode: "",
   siteCounty: "",
   siteCountry: "GB",
-  siteSameAsBilling: true,
+  siteSameAsBilling: null,
 };
 
 const initialState = {

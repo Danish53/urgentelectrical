@@ -79,7 +79,8 @@ const EMPTY_DETAILS = {
   sitePostcode: "",
   siteCounty: "",
   siteCountry: "GB",
-  siteSameAsBilling: true,
+  siteSameAsBilling: null,
+  siteAddressId: "",
 };
 
 export default function CheckoutPageClient() {
@@ -94,7 +95,12 @@ export default function CheckoutPageClient() {
   const [selectedTime, setSelectedTime] = useState("");
   const [details, setDetails] = useState(EMPTY_DETAILS);
   const [stepError, setStepError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({ billingPostcode: "", sitePostcode: "" });
+  const [fieldErrors, setFieldErrors] = useState({
+    billingPostcode: "",
+    sitePostcode: "",
+    siteSameAsBilling: "",
+    selectedSite: "",
+  });
   const [processing, setProcessing] = useState(false);
   const [complete, setComplete] = useState(false);
   const [handlingBankReturn, setHandlingBankReturn] = useState(false);
@@ -299,8 +305,8 @@ export default function CheckoutPageClient() {
   }, [service?.apiId, selectedVariant?.apiVariantId, selectedVariant?.id]);
 
   useEffect(() => {
-    const postcode = String(details.postcode ?? "").trim();
-    if (postcode.length < 4) {
+    const postcode = String(details.postcode ?? "").trim().toUpperCase();
+    if (!postcode || postcode.length < 4) {
       lastFetchedPostcodeRef.current = "";
       setDeliveryFeeFromApi(0);
       setDeliveryFeeResolved(false);
@@ -309,22 +315,14 @@ export default function CheckoutPageClient() {
       return;
     }
 
-    const normalized = postcode.toUpperCase();
-    if (lastFetchedPostcodeRef.current !== normalized) {
+    if (lastFetchedPostcodeRef.current && lastFetchedPostcodeRef.current !== postcode) {
+      lastFetchedPostcodeRef.current = "";
       setDeliveryFeeFromApi(0);
       setDeliveryFeeResolved(false);
       setDeliveryFeeOutOfRange(false);
       setDeliveryFeeError("");
     }
-
-    if (lastFetchedPostcodeRef.current === normalized) return;
-
-    const timer = window.setTimeout(() => {
-      refreshDeliveryFee(postcode);
-    }, 600);
-
-    return () => window.clearTimeout(timer);
-  }, [details.postcode, refreshDeliveryFee]);
+  }, [details.postcode]);
 
   useEffect(() => {
     if (!service?.apiId || selectedDate) return;
@@ -475,6 +473,11 @@ export default function CheckoutPageClient() {
     setFieldErrors((prev) => ({
       billingPostcode: billingPostcode ? "" : prev.billingPostcode,
       sitePostcode: sitePostcode ? "" : prev.sitePostcode,
+      siteSameAsBilling:
+        next.siteSameAsBilling === true || next.siteSameAsBilling === false
+          ? ""
+          : prev.siteSameAsBilling,
+      selectedSite: next.siteAddressId ? "" : prev.selectedSite,
     }));
 
     if (billingPostcode) {
@@ -483,18 +486,58 @@ export default function CheckoutPageClient() {
   }
 
   function validateStep2() {
+    if (isLoggedIn) {
+      const site = readCheckoutAddress(details, "site");
+      const { firstName, lastName, email, phone } = details;
+      const missingSite = !details.siteAddressId || !site.address?.trim() || !site.postcode.trim();
+      const nextFieldErrors = {
+        billingPostcode: "",
+        sitePostcode: "",
+        siteSameAsBilling: "",
+        selectedSite: missingSite ? "Please select a saved location." : "",
+      };
+      setFieldErrors(nextFieldErrors);
+
+      if (missingSite) {
+        setStepError("");
+        return false;
+      }
+
+      if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim()) {
+        setStepError("Your account is missing contact details. Please update your profile and try again.");
+        return false;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+        setStepError("Please enter a valid email address.");
+        return false;
+      }
+
+      setStepError("");
+      setFieldErrors({ billingPostcode: "", sitePostcode: "", siteSameAsBilling: "", selectedSite: "" });
+      return true;
+    }
+
     const { firstName, lastName, email, phone, password, passwordConfirmation } = details;
     const billing = readCheckoutAddress(details, "billing");
-    const siteSameAsBilling = details.siteSameAsBilling !== false;
+    const siteSameChoice = details.siteSameAsBilling;
+    const siteSameAsBilling = siteSameChoice === true;
+    const siteSameUnset = siteSameChoice !== true && siteSameChoice !== false;
     const site = siteSameAsBilling ? billing : readCheckoutAddress(details, "site");
 
     const missingBillingPostcode = !billing.postcode.trim();
-    const missingSitePostcode = !siteSameAsBilling && !site.postcode.trim();
+    const missingSitePostcode = siteSameChoice === false && !site.postcode.trim();
     const nextFieldErrors = {
       billingPostcode: missingBillingPostcode ? "Please enter a postcode." : "",
       sitePostcode: missingSitePostcode ? "Please enter a postcode." : "",
+      siteSameAsBilling: siteSameUnset ? "Please select Yes or No." : "",
     };
     setFieldErrors(nextFieldErrors);
+
+    if (siteSameUnset) {
+      setStepError("");
+      return false;
+    }
 
     if (
       !firstName.trim() ||
@@ -516,7 +559,7 @@ export default function CheckoutPageClient() {
       return false;
     }
 
-    if (!siteSameAsBilling && (!site.address || missingSitePostcode)) {
+    if (siteSameChoice === false && (!site.address || missingSitePostcode)) {
       const onlySitePostcodeMissing = missingSitePostcode && site.address;
       setStepError(
         onlySitePostcodeMissing
@@ -544,7 +587,7 @@ export default function CheckoutPageClient() {
       }
     }
     setStepError("");
-    setFieldErrors({ billingPostcode: "", sitePostcode: "" });
+    setFieldErrors({ billingPostcode: "", sitePostcode: "", siteSameAsBilling: "", selectedSite: "" });
     return true;
   }
 
@@ -735,7 +778,12 @@ export default function CheckoutPageClient() {
                           onBack={() => {
                             setStep(1);
                             setStepError("");
-                            setFieldErrors({ billingPostcode: "", sitePostcode: "" });
+                            setFieldErrors({
+                              billingPostcode: "",
+                              sitePostcode: "",
+                              siteSameAsBilling: "",
+                              selectedSite: "",
+                            });
                           }}
                           onContinue={handleContinueToPayment}
                           error={stepError || (validateStatus === "failed" ? validateError : "")}

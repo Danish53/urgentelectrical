@@ -6,11 +6,16 @@ import { getAuthToken } from "@/lib/auth/tokenStorage";
 /**
  * POST /services/get-service-schedule
  * @param {number | string} serviceId
- * @param {Date} selectedDate
+ * @param {Date | string} selectedDate
  */
 export async function fetchServiceSchedule(serviceId, selectedDate) {
   if (!serviceId || !selectedDate) {
     throw new ApiError("Service and date are required.", { status: 0 });
+  }
+
+  const apiDate = formatScheduleRequestDate(selectedDate);
+  if (!apiDate) {
+    throw new ApiError("A valid date is required.", { status: 0 });
   }
 
   const headers = {
@@ -27,7 +32,7 @@ export async function fetchServiceSchedule(serviceId, selectedDate) {
       headers,
       body: JSON.stringify({
         service_id: Number(serviceId),
-        selected_date: formatScheduleRequestDate(selectedDate),
+        selected_date: apiDate,
       }),
     });
   } catch {

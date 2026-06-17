@@ -7,6 +7,7 @@ import {
   formatPaymentIntentForLog,
   logPaymentIntentDebug,
 } from "@/lib/checkout/logPaymentIntentDebug";
+import { CHECKOUT_PAYMENT_METHOD_ORDER } from "@/lib/checkout/buildCreatePaymentIntentPayload";
 import { PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
 function getCheckoutReturnUrl() {
@@ -67,6 +68,7 @@ export default function CheckoutPaymentStep({
         type: "tabs",
         defaultCollapsed: false,
       },
+      paymentMethodOrder: CHECKOUT_PAYMENT_METHOD_ORDER,
       defaultValues: {
         billingDetails: {
           name: billingName || undefined,
@@ -250,7 +252,7 @@ export default function CheckoutPaymentStep({
         {allowedMethods?.length === 1 && allowedMethods[0] === "card" ? (
           <p className="home1-checkout-payment-methods-hint" role="status">
             Only card is available on this payment session. Pay by Bank, Revolut Pay and Billie must
-            be enabled when Laravel creates the Stripe Payment Intent.
+            be included when the payment intent is created with Stripe automatic payment methods.
           </p>
         ) : null}
 
