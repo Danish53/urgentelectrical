@@ -1625,6 +1625,80 @@
   font-weight: 500;
 }
 
+.home1-checkout-summary-line-label--with-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.home1-checkout-travel-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.home1-checkout-travel-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 999px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.home1-checkout-travel-info-btn:hover,
+.home1-checkout-travel-info-btn:focus-visible {
+  color: var(--home1-red, #d3231f);
+  background: rgba(211, 35, 31, 0.08);
+  outline: none;
+}
+
+.home1-checkout-travel-info-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.home1-checkout-travel-info-tip {
+  width: min(16.5rem, calc(100vw - 2.5rem));
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.home1-checkout-travel-info-tip--portal {
+  position: fixed;
+  z-index: 10050;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+.home1-checkout-travel-info-tip--portal::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  border-left: 1px solid #e2e8f0;
+  transform: translateX(-50%) rotate(45deg);
+}
+
 .home1-checkout-summary-line-price {
   font-weight: 800;
   color: #111827;

@@ -249,7 +249,7 @@ export default function Navbar() {
               <div className="flex items-center gap-2.5 shrink-0">
                 <Link
                   href="/services"
-                  className="inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
+                  className="nav-book-now-cta inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
                 >
                   <NavIconCalendar />
                   Book
@@ -311,7 +311,7 @@ export default function Navbar() {
               <div className="flex items-center justify-end min-w-0">
                 <Link
                   href="/services"
-                  className="group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
+                  className="nav-book-now-cta group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
                   Book Now
                   <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">
@@ -334,7 +334,7 @@ export default function Navbar() {
               <Link
                 href="/services"
                 onClick={closeMobile}
-                className="inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
+                className="nav-book-now-cta inline-flex items-center gap-1.5 bg-[#111111] hover:bg-[#d32f2f] text-white text-[14px] font-semibold px-3.5 py-2 rounded-lg transition-colors"
               >
                 <NavIconCalendar />
                 Book

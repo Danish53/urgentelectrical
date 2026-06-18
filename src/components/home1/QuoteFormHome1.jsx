@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { useBookingOptions } from "@/hooks/useServices";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+import { toastError, toastSuccess } from "@/lib/toast";
+import {
+  buildContactPayloadFromCallbackForm,
+  parseContactResponseMessage,
+  submitContact,
+} from "@/services/contactService";
 import { CONTAINER, SECTION_PY } from "./constants";
 import SectionEyebrow from "./SectionEyebrow";
 import { IconArrow, IconCheck, IconPhone } from "./icons";
@@ -23,6 +30,60 @@ export default function QuoteFormHome1() {
     }
   }, [options, service]);
   const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  function resetForm() {
+    setName("");
+    setPhone("");
+    setEmail("");
+    setMessage("");
+    setSubmitted(false);
+    if (options.length) {
+      setService(options[0].name);
+    } else {
+      setService("");
+    }
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    if (submitting) return;
+
+    const trimmedName = name.trim();
+    const trimmedPhone = phone.trim();
+    const trimmedEmail = email.trim();
+    const trimmedMessage = message.trim();
+
+    if (!trimmedName || !trimmedPhone || !trimmedEmail) {
+      toastError(null, "Please enter your name, phone, and email.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = buildContactPayloadFromCallbackForm({
+        name: trimmedName,
+        phone: trimmedPhone,
+        email: trimmedEmail,
+        service,
+        message: trimmedMessage,
+      });
+      const data = await submitContact(payload);
+      const responseMessage =
+        parseContactResponseMessage(data) || "Thanks — we'll call you back as soon as possible.";
+      toastSuccess(responseMessage);
+      setSubmitted(true);
+      setName("");
+      setPhone("");
+      setEmail("");
+      setMessage("");
+    } catch (error) {
+      toastError(error, "Could not send your request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   return (
     <section
@@ -65,10 +126,26 @@ export default function QuoteFormHome1() {
 
           {/* Right — form card */}
           <div className="home1-quote-form-panel w-full min-w-0">
+            {submitted ? (
+              <div className="home1-contact-success" role="status">
+                <p className="home1-contact-success-title">Thank you</p>
+                <p className="home1-contact-success-text">
+                  Your callback request has been received. For urgent help, call{" "}
+                  <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-contact-success-link">
+                    {FOOTER_PHONE}
+                  </a>
+                  .
+                </p>
+                <button type="button" onClick={resetForm} className="home1-contact-success-btn">
+                  Send another request
+                </button>
+              </div>
+            ) : (
             <form
               className="flex flex-col gap-4 sm:gap-5"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
               aria-label="Free quote request form"
+              noValidate
             >
               <p className="text-[var(--home1-text)] font-bold text-lg mb-0 sm:mb-1">Send your details</p>
               <p className="text-[var(--home1-muted)] text-[13px] -mt-3 mb-1">
@@ -88,6 +165,7 @@ export default function QuoteFormHome1() {
                     onChange={(e) => setName(e.target.value)}
                     className="home1-quote-input"
                     placeholder="Your name"
+                    disabled={submitting}
                   />
                 </div>
                 <div className="home1-quote-field">
@@ -102,6 +180,7 @@ export default function QuoteFormHome1() {
                     onChange={(e) => setPhone(e.target.value)}
                     className="home1-quote-input"
                     placeholder="0115 000 0000"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -112,11 +191,13 @@ export default function QuoteFormHome1() {
                   id="quote-email"
                   name="email"
                   type="email"
+                  required
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="home1-quote-input"
                   placeholder="you@email.com"
+                  disabled={submitting}
                 />
               </div>
 
@@ -130,7 +211,7 @@ export default function QuoteFormHome1() {
                     name="service"
                     value={service}
                     onChange={(e) => setService(e.target.value)}
-                    disabled={!options.length}
+                    disabled={!options.length || submitting}
                     className="home1-quote-input"
                   >
                     {options.map((s) => (
@@ -152,14 +233,22 @@ export default function QuoteFormHome1() {
                   onChange={(e) => setMessage(e.target.value)}
                   className="home1-quote-input resize-y min-h-[96px]"
                   placeholder="Job details or postcode"
+                  disabled={submitting}
                 />
               </div>
 
-              <button type="submit" className="home1-btn-primary w-full text-sm py-4 mt-1">
-                Get free quote
-                <IconArrow className="w-4 h-4" />
+              <button
+                type="submit"
+                disabled={submitting}
+                className="home1-btn-primary w-full text-sm py-4 mt-1 inline-flex items-center justify-center gap-2"
+                aria-busy={submitting}
+              >
+                {submitting ? <ButtonSpinner /> : null}
+                {submitting ? "Sending…" : "Get free quote"}
+                {!submitting ? <IconArrow className="w-4 h-4" /> : null}
               </button>
             </form>
+            )}
           </div>
         </div>
       </div>

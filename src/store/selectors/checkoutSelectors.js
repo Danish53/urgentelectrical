@@ -14,3 +14,6 @@ export const selectPaymentIntentError = (s) => s.checkout.paymentIntentError;
 export const selectPaymentStatus = (s) => s.checkout.paymentStatus;
 export const selectPaymentStatusError = (s) => s.checkout.paymentStatusError;
 export const selectPaymentVerified = (s) => s.checkout.paymentVerified;
+export const selectCreateOrderStatus = (s) => s.checkout.createOrderStatus;
+export const selectCreateOrderError = (s) => s.checkout.createOrderError;
+export const selectCreatedOrder = (s) => s.checkout.createdOrder;

@@ -16,6 +16,7 @@
  * @property {string} id
  * @property {string} reference
  * @property {string} serviceName
+ * @property {string} serviceSlug
  * @property {string} category
  * @property {OrderStatus} status
  * @property {string} statusLabel

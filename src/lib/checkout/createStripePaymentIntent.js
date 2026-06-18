@@ -1,5 +1,6 @@
 import {
   buildCreatePaymentIntentPayload,
+  resolvePaymentMethodConfigurationId,
   toStripeMinorUnits,
 } from "@/lib/checkout/buildCreatePaymentIntentPayload";
 
@@ -23,7 +24,7 @@ export async function createStripePaymentIntentDirect(body) {
   params.set("automatic_payment_methods[enabled]", "true");
   params.set("automatic_payment_methods[allow_redirects]", "always");
 
-  const configurationId = process.env.STRIPE_PAYMENT_METHOD_CONFIGURATION_ID?.trim();
+  const configurationId = resolvePaymentMethodConfigurationId();
   if (configurationId) {
     params.set("payment_method_configuration", configurationId);
   }

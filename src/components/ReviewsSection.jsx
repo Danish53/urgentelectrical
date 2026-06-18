@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CUSTOMER_REVIEWS, REVIEWS_RATING } from "@/data/reviews";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const DARK = "#1a1a1a";
 const RED = "#d32f2f";
 const SLIDE_MS = 900;

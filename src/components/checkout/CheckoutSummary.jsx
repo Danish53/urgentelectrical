@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { formatMoney } from "@/components/checkout/checkoutUtils";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
@@ -8,6 +9,115 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { parseApplyCouponResponse } from "@/lib/checkout/parseCouponResponse";
 import { formatGbpDisplay, getDisplayPrice, getVatSuffix } from "@/lib/pricing";
 import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
+
+const TRAVEL_CHARGE_INFO =
+  "No travel fee within 20 miles. For locations outside this radius, a travel charge will be added automatically based on distance.";
+
+function TravelChargeInfoTooltip() {
+  const [open, setOpen] = useState(false);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef(null);
+  const tipRef = useRef(null);
+
+  const updatePosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    setCoords({
+      top: rect.bottom + 8,
+      left: rect.left + rect.width / 2,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    updatePosition();
+
+    function handlePointerDown(event) {
+      const target = event.target;
+      if (
+        buttonRef.current?.contains(target) ||
+        tipRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setOpen(false);
+    }
+
+    function handleReposition() {
+      updatePosition();
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+    };
+  }, [open, updatePosition]);
+
+  const tooltip =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <span
+            ref={tipRef}
+            id="checkout-travel-charge-tooltip"
+            role="tooltip"
+            className="home1-checkout-travel-info-tip home1-checkout-travel-info-tip--portal"
+            style={{ top: coords.top, left: coords.left }}
+          >
+            {TRAVEL_CHARGE_INFO}
+          </span>,
+          document.body
+        )
+      : null;
+
+  return (
+    <>
+      <span className="home1-checkout-travel-info">
+        <button
+          ref={buttonRef}
+          type="button"
+          className="home1-checkout-travel-info-btn"
+          aria-label="Travel charge information"
+          aria-expanded={open}
+          aria-controls="checkout-travel-charge-tooltip"
+          onClick={() => {
+            setOpen((value) => {
+              const next = !value;
+              if (next) {
+                requestAnimationFrame(updatePosition);
+              }
+              return next;
+            });
+          }}
+        >
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="home1-checkout-travel-info-icon">
+            <circle cx="10" cy="10" r="8.25" stroke="currentColor" strokeWidth="1.5" />
+            <path
+              d="M10 9.25v4.5M10 6.75h.01"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+            />
+          </svg>
+        </button>
+      </span>
+      {tooltip}
+    </>
+  );
+}
 
 /**
  * @param {{
@@ -60,13 +170,13 @@ export default function CheckoutSummary({
 
   const travelPrice =
     deliveryFeeLoading
-      ? "Calculating…"
+      ? "calculating..."
       : deliveryFeeError
-        ? "—"
+        ? "0"
         : deliveryFeeOutOfRange
           ? "Unavailable"
           : !deliveryFeeResolved && postcode
-            ? "—"
+            ? "0"
             : formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc);
 
   async function handleApplyCoupon() {
@@ -226,7 +336,10 @@ export default function CheckoutSummary({
               </span>
             </li>
             <li>
-              <span className="home1-checkout-summary-line-label">{lineItems.travel.label}</span>
+              <span className="home1-checkout-summary-line-label home1-checkout-summary-line-label--with-info">
+                <span>{lineItems.travel.label}</span>
+                <TravelChargeInfoTooltip />
+              </span>
               <span
                 className={`home1-checkout-summary-line-price${
                   deliveryFeeOutOfRange || deliveryFeeError ? " is-muted" : ""

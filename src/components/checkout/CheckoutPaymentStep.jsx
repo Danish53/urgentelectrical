@@ -108,7 +108,8 @@ export default function CheckoutPaymentStep({
     }
 
     if (onCheckPaymentStatus) {
-      await onCheckPaymentStatus(intentId);
+      const ok = await onCheckPaymentStatus(intentId);
+      if (!ok) return;
     }
 
     onComplete({ paymentIntentId: intentId });
@@ -249,10 +250,15 @@ export default function CheckoutPaymentStep({
           </div>
         </div>
 
-        {allowedMethods?.length === 1 && allowedMethods[0] === "card" ? (
+        {allowedMethods?.length &&
+        !allowedMethods.some((method) =>
+          ["pay_by_bank", "revolut_pay", "billie"].includes(method)
+        ) ? (
           <p className="home1-checkout-payment-methods-hint" role="status">
-            Only card is available on this payment session. Pay by Bank, Revolut Pay and Billie must
-            be included when the payment intent is created with Stripe automatic payment methods.
+            Card{allowedMethods.includes("link") ? " and Link" : ""} are available on this payment
+            session. To show Pay by Bank, Revolut Pay and Billie tabs, enable them in Stripe
+            Dashboard → Settings → Payment methods (GBP) and use the same payment method
+            configuration when creating the payment intent.
           </p>
         ) : null}
 

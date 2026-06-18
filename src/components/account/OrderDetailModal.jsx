@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { formatMoney, formatLongDate } from "@/components/checkout/checkoutUtils";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
-import { ORDER_STATUS_META } from "@/lib/orders/orderFilters";
+import { getOrderServiceDetailHref } from "@/lib/orders/orderServiceHref";
 import { canCancelOrder } from "@/lib/orders/orderCancel";
 
 function formatBookedAt(isoDate) {
@@ -64,6 +64,7 @@ export default function OrderDetailModal({
   const showCancel = canCancelOrder(order);
   const visitDate = order?.visitDate ? new Date(`${order.visitDate}T12:00:00`) : null;
   const displayRef = order?.reference || order?.id;
+  const bookAgainHref = getOrderServiceDetailHref(order);
 
   return (
     <div className="home1-order-detail-root" role="presentation">
@@ -235,7 +236,7 @@ export default function OrderDetailModal({
               Cancel order
             </button>
           ) : order?.status === "completed" || order?.status === "cancelled" ? (
-            <Link href="/checkout" className="home1-btn-primary home1-order-detail-btn">
+            <Link href={bookAgainHref} className="home1-btn-primary home1-order-detail-btn">
               Book again
             </Link>
           ) : (

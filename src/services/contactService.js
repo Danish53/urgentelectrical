@@ -56,3 +56,26 @@ export function parseContactResponseMessage(data) {
   }
   return null;
 }
+
+/**
+ * Map home page callback form fields to contact-us API payload.
+ * @param {{ name: string, phone: string, email: string, service?: string, message?: string }} fields
+ */
+export function buildContactPayloadFromCallbackForm({ name, phone, email, service = "", message = "" }) {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  const first_name = parts[0] ?? "";
+  const last_name = parts.length > 1 ? parts.slice(1).join(" ") : "—";
+
+  const commentLines = [
+    service ? `Service: ${String(service).trim()}` : "",
+    phone ? `Phone: ${String(phone).trim()}` : "",
+    message ? `Message: ${String(message).trim()}` : "",
+  ].filter(Boolean);
+
+  return {
+    first_name,
+    last_name,
+    email: String(email).trim(),
+    comment: commentLines.join("\n") || "Callback request from home page.",
+  };
+}

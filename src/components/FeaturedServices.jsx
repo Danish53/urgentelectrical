@@ -7,8 +7,9 @@ import { fetchServices } from "@/store/slices/servicesSlice";
 import { useFeaturedServices } from "@/hooks/useServices";
 import FeaturedServicesSkeleton from "@/components/skeletons/FeaturedServicesSkeleton";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const BRAND_RED = "#E32B2B";
 const NAVY = "#2D3748";
 const SLIDE_MS = 900;

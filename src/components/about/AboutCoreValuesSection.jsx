@@ -57,17 +57,16 @@ function ValueItem({ value }) {
 
 function ValuesHub() {
   return (
-    <div className="home1-about-values-hub relative mx-auto" aria-hidden="true">
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#ffebee] via-white to-[#f8fafc] border border-[#e5e7eb] shadow-[inset_0_0_40px_rgba(211,35,31,0.06)]" />
-      <div className="relative aspect-square w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] mx-auto flex items-center justify-center p-8">
-        <div className="text-center">
-          <span className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#d3231f] text-white mb-3">
-            <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <div className="home1-about-values-hub" aria-hidden="true">
+      <div className="home1-about-values-hub__ring">
+        <div className="home1-about-values-hub__content">
+          <span className="home1-about-values-hub__icon">
+            <svg className="home1-about-values-hub__icon-svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M13 2L3 14h8l-1 8 10-12h-7l1-8z" />
             </svg>
           </span>
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#d3231f]">Since 2012</p>
-          <p className="text-[13px] font-semibold text-[#64748b] mt-1">NICEIC approved</p>
+          <p className="home1-about-values-hub__eyebrow">Since 2012</p>
+          <p className="home1-about-values-hub__label">NICEIC approved</p>
         </div>
       </div>
     </div>
@@ -92,7 +91,7 @@ export default function AboutCoreValuesSection() {
             ))}
           </div>
 
-          <div className="home1-about-values-center py-8 lg:py-0">
+          <div className="home1-about-values-center">
             <ValuesHub />
           </div>
 

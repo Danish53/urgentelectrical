@@ -1,7 +1,8 @@
 import ServiceCategoriesGrid from "@/components/services/ServiceCategoriesGrid";
 import { COMMERCIAL_BADGES, COMMERCIAL_STATS } from "@/data/commercialSection";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const RED = "#d32f2f";
 const DARK = "#1a1a1a";
 const DIVIDER = "#eeeeee";

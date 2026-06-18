@@ -200,7 +200,7 @@ export default function HeroHome1() {
               </a>
               <Link
                 href="/services"
-                className="home1-btn-primary text-[13px] sm:text-sm py-2.5 px-3 sm:py-3 sm:px-5 whitespace-nowrap shrink-0"
+                className="hero-cta-shine home1-btn-primary text-[13px] sm:text-sm py-2.5 px-3 sm:py-3 sm:px-5 whitespace-nowrap shrink-0"
               >
                 Book online
                 <IconArrow className="w-4 h-4 shrink-0" />
@@ -297,7 +297,7 @@ export default function HeroHome1() {
               <div className="px-3 sm:px-0">
                 <button
                   type="submit"
-                  className="w-full flex items-center justify-center gap-2 sm:gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[14px] sm:text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+                  className="hero-cta-shine w-full flex items-center justify-center gap-2 sm:gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[14px] sm:text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0"
                 >
                   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                     <circle cx="11" cy="11" r="7" />

@@ -45,6 +45,22 @@ export const checkPaymentStatus = createAsyncThunk(
   }
 );
 
+/**
+ * @param {import("@/lib/checkout/buildValidateOrderPayload").buildValidateOrderPayload extends (...args: infer A) => void ? A[0] : never} params
+ */
+export const createOrder = createAsyncThunk(
+  "checkout/createOrder",
+  async (params, { rejectWithValue }) => {
+    try {
+      const payload = buildValidateOrderPayload(params);
+      const data = await checkoutApi.createOrder(payload);
+      return data;
+    } catch (error) {
+      return rejectWithValue(getApiErrorMessage(error, "Could not create order."));
+    }
+  }
+);
+
 const EMPTY_DETAILS = {
   firstName: "",
   lastName: "",
@@ -103,6 +119,9 @@ const initialState = {
   paymentStatus: "idle",
   paymentStatusError: null,
   paymentVerified: false,
+  createOrderStatus: "idle",
+  createOrderError: null,
+  createdOrder: null,
 };
 
 const checkoutSlice = createSlice({
@@ -181,6 +200,9 @@ const checkoutSlice = createSlice({
       state.paymentStatus = "idle";
       state.paymentStatusError = null;
       state.paymentVerified = false;
+      state.createOrderStatus = "idle";
+      state.createOrderError = null;
+      state.createdOrder = null;
     },
     resetCheckout() {
       return initialState;
@@ -233,6 +255,21 @@ const checkoutSlice = createSlice({
         state.paymentStatus = "failed";
         state.paymentStatusError = action.payload ?? "Payment verification failed.";
         state.paymentVerified = false;
+      })
+
+      .addCase(createOrder.pending, (state) => {
+        state.createOrderStatus = "loading";
+        state.createOrderError = null;
+      })
+      .addCase(createOrder.fulfilled, (state, action) => {
+        state.createOrderStatus = "succeeded";
+        state.createdOrder = action.payload;
+        const { token } = parseAuthResponse(action.payload);
+        if (token) setAuthToken(token);
+      })
+      .addCase(createOrder.rejected, (state, action) => {
+        state.createOrderStatus = "failed";
+        state.createOrderError = action.payload ?? "Could not create order.";
       });
   },
 });

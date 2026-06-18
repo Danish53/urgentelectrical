@@ -8,3 +8,5 @@ Add partner logo images here (PNG/JPG recommended):
   fire-exit.png
 
 Until added, colored placeholders show automatically.
+
+After adding the files, set PARTNER_LOGOS_ENABLED = true in src/data/partners.js.

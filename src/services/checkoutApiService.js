@@ -107,3 +107,14 @@ export async function checkPaymentStatus(paymentIntentId) {
     body: { payment_intent_id: paymentIntentId },
   });
 }
+
+/**
+ * POST /orders — create booking after successful payment.
+ * @param {Record<string, unknown>} payload
+ */
+export async function createOrder(payload) {
+  return checkoutFetch(CHECKOUT_PROXY.createOrder, {
+    method: "POST",
+    body: payload,
+  });
+}

@@ -1,7 +1,8 @@
 import Link from "next/link";
+import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const RED = "#c41e1e";
 
 function IconPhone() {

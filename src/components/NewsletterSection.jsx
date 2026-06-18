@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { NEWSLETTER_BENEFITS } from "@/data/newsletter";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const CARD_BG = "#222222";
 const RED = "#E74C3C";
 const INPUT_BG = "#1a1a1a";

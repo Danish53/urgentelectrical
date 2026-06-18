@@ -1,9 +1,10 @@
 "use client";
 
 import AppImage from "@/components/common/AppImage";
+import { CONTAINER } from "@/components/home1/constants";
 import { PARTNERS } from "@/data/partners";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const CARD_BG = "#222222";
 const RED = "#E74C3C";
 

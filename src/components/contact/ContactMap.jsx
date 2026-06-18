@@ -7,13 +7,14 @@ import {
   CONTACT_MAP_LINK,
   CONTACT_MAP_RATING,
 } from "@/data/contactPage";
+import { CONTAINER } from "@/components/home1/constants";
 
 export default function ContactMap() {
   const { site } = useWebsiteGeneralData();
 
   return (
     <section className="home1-contact-map-section bg-[#eef0f2]" aria-label="Office location map">
-      <div className="w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
+      <div className={CONTAINER}>
         <div className="home1-contact-map-card">
           <div className="home1-contact-map-frame">
             <iframe

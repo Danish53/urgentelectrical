@@ -1,4 +1,4 @@
-/** @typedef {import("@/lib/orders/orderTypes").OrderStatus} OrderStatus */
+import { pickServiceSlugFromOrderApi } from "@/lib/orders/orderServiceHref";
 /** @typedef {import("@/lib/orders/orderTypes").OrderSummary} OrderSummary */
 /** @typedef {import("@/lib/orders/orderTypes").OrderDetail} OrderDetail */
 /** @typedef {import("@/lib/orders/orderTypes").OrdersPagination} OrdersPagination */
@@ -239,6 +239,7 @@ export function apiToOrderSummary(api) {
     id: normalizeOrderApiId(api),
     reference: normalizeOrderReference(api),
     serviceName: pickServiceName(api),
+    serviceSlug: pickServiceSlugFromOrderApi(api),
     category: String(api.category ?? api.service_category ?? api.category_name ?? "").trim(),
     status: normalizeOrderStatus(rawStatus),
     statusLabel: formatOrderStatusLabel(rawStatus) || "Confirmed",

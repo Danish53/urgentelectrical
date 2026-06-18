@@ -27,6 +27,7 @@ import {
   validateOrderData,
   createPaymentIntent,
   checkPaymentStatus,
+  createOrder,
 } from "@/store/slices/Checkoutslice";
 import {
   selectClientSecret,
@@ -37,6 +38,7 @@ import {
   selectPaymentIntentStatus,
   selectPaymentIntentError,
   selectPaymentStatusError,
+  selectCreateOrderError,
 } from "@/store/selectors/checkoutSelectors";
 import { useBookableServices } from "@/hooks/useServices";
 import { useCheckoutServiceDetail } from "@/hooks/useCheckoutServiceDetail";
@@ -125,6 +127,7 @@ export default function CheckoutPageClient() {
   const paymentIntentStatus = useAppSelector(selectPaymentIntentStatus);
   const paymentIntentError = useAppSelector(selectPaymentIntentError);
   const paymentStatusError = useAppSelector(selectPaymentStatusError);
+  const createOrderError = useAppSelector(selectCreateOrderError);
   const { isLoggedIn } = useAuthSession();
   const authUser = useAppSelector(selectAuthUser);
   const { bookable, loading: servicesLoading, failed: servicesFailed, error: servicesError } =
@@ -177,6 +180,59 @@ export default function CheckoutPageClient() {
     const discount = appliedCoupon?.discountAmount ?? 0;
     return Math.max(0, subtotal - discount).toFixed(2);
   }, [lineItems.totalInc, appliedCoupon]);
+
+  const buildOrderParams = useCallback(
+    (intentId) => ({
+      service,
+      variant: selectedVariant,
+      selectedDate,
+      selectedTime,
+      schedules: scheduleSlots,
+      details: { ...details, isGuest: !isLoggedIn },
+      lineItems,
+      paymentIntentId: intentId,
+      coupon: appliedCoupon,
+    }),
+    [
+      service,
+      selectedVariant,
+      selectedDate,
+      selectedTime,
+      scheduleSlots,
+      details,
+      isLoggedIn,
+      lineItems,
+      appliedCoupon,
+    ]
+  );
+
+  const finalizeBookingAfterPayment = useCallback(
+    async (intentId) => {
+      if (!intentId) {
+        setStepError("Payment could not be confirmed. Please contact support.");
+        return false;
+      }
+
+      if (!service?.apiId) {
+        setStepError("Service is not available for booking. Please go back and try again.");
+        return false;
+      }
+
+      await dispatch(checkPaymentStatus(intentId));
+
+      const result = await dispatch(createOrder(buildOrderParams(intentId)));
+      if (createOrder.rejected.match(result)) {
+        setStepError(
+          result.payload ??
+            "Your payment succeeded but we could not create the order. Please contact support with your payment reference."
+        );
+        return false;
+      }
+
+      return true;
+    },
+    [dispatch, service?.apiId, buildOrderParams]
+  );
 
   const paymentCouponSnapshotRef = useRef(null);
 
@@ -416,10 +472,14 @@ export default function CheckoutPageClient() {
         ) {
           const intentId = paymentIntent?.id ?? returnedPaymentIntentId;
           if (intentId) {
-            await dispatch(checkPaymentStatus(intentId));
+            const created = await finalizeBookingAfterPayment(intentId);
+            if (created) {
+              setComplete(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              setStep(3);
+            }
           }
-          setComplete(true);
-          window.scrollTo({ top: 0, behavior: "smooth" });
         } else {
           setStepError("Payment was not completed. Please try again.");
           setStep(3);
@@ -448,7 +508,7 @@ export default function CheckoutPageClient() {
     return () => {
       cancelled = true;
     };
-  }, [searchParams, dispatch, stripePromise]);
+  }, [searchParams, dispatch, stripePromise, finalizeBookingAfterPayment]);
 
   useEffect(() => {
     if (!isLoggedIn || !authUser) return;
@@ -674,12 +734,12 @@ export default function CheckoutPageClient() {
   }
 
   async function handleCheckPaymentStatus(intentId) {
-    const result = await dispatch(checkPaymentStatus(intentId));
-    if (checkPaymentStatus.rejected.match(result)) {
-      // Stripe already confirmed payment — don't block success if backend auth fails.
-      return false;
+    setProcessing(true);
+    try {
+      return await finalizeBookingAfterPayment(intentId);
+    } finally {
+      setProcessing(false);
     }
-    return true;
   }
 
   function handlePaymentComplete() {
@@ -795,7 +855,7 @@ export default function CheckoutPageClient() {
                         />
                       ) : clientSecret && stripePromise ? (
                         <Elements
-                          key={clientSecret}
+                          key={`${clientSecret}:${stripePublishableKey || "default"}`}
                           stripe={stripePromise}
                           options={{
                             clientSecret,
@@ -849,6 +909,7 @@ export default function CheckoutPageClient() {
                               stepError ||
                               paymentIntentError ||
                               paymentStatusError ||
+                              createOrderError ||
                               ""
                             }
                             processing={processing}

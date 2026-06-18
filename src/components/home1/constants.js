@@ -14,15 +14,15 @@ export const BRAND = {
   white: "#FFFFFF",
 };
 
-export const CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+/** Shared horizontal gutters — aligned with blog cards on mobile */
+export const PAGE_GUTTERS = "px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
 
-/** Tighter side padding on service detail (mobile) */
-export const SERVICE_DETAIL_CONTAINER =
-  "w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
+export const CONTAINER = `w-full max-w-[1440px] mx-auto ${PAGE_GUTTERS}`;
 
-/** Services index — same mobile-friendly gutters as detail pages */
-export const SERVICES_PAGE_CONTAINER =
-  "w-full max-w-[1440px] mx-auto px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
+/** Service / blog / detail pages — same track as main site container */
+export const SERVICE_DETAIL_CONTAINER = CONTAINER;
+
+export const SERVICES_PAGE_CONTAINER = CONTAINER;
 
 /** Checkout — full width on mobile; side padding from sm+ */
 export const CHECKOUT_PAGE_CONTAINER =

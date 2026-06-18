@@ -1,6 +1,5 @@
 import { LOCAL_COLUMNS } from "@/data/localElectrician";
-
-const CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+import { CONTAINER } from "@/components/home1/constants";
 const MAROON = "#8B1A1A";
 
 function IconHome() {

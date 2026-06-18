@@ -7,6 +7,14 @@ export const CHECKOUT_PAYMENT_METHOD_ORDER = [
 ];
 
 /**
+ * Dashboard payment method configuration (pmc_…) with Pay by Bank, Revolut Pay, Billie enabled.
+ * Set STRIPE_PAYMENT_METHOD_CONFIGURATION_ID in server env.
+ */
+export function resolvePaymentMethodConfigurationId() {
+  return process.env.STRIPE_PAYMENT_METHOD_CONFIGURATION_ID?.trim() || "";
+}
+
+/**
  * Normalise create-payment-intent body for Laravel → Stripe.
  * Uses dynamic payment methods so Dashboard-enabled methods (Revolut Pay, Billie, Pay by Bank) appear.
  *
@@ -15,8 +23,11 @@ export const CHECKOUT_PAYMENT_METHOD_ORDER = [
 export function buildCreatePaymentIntentPayload(body = {}) {
   const amount = Number(body.amount);
   const currency = String(body.currency ?? "gbp").toLowerCase();
+  const configurationId =
+    (typeof body.payment_method_configuration === "string" && body.payment_method_configuration.trim()) ||
+    resolvePaymentMethodConfigurationId();
 
-  return {
+  const payload = {
     ...body,
     amount,
     currency,
@@ -25,6 +36,12 @@ export function buildCreatePaymentIntentPayload(body = {}) {
       allow_redirects: "always",
     },
   };
+
+  if (configurationId) {
+    payload.payment_method_configuration = configurationId;
+  }
+
+  return payload;
 }
 
 /**

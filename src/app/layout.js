@@ -29,7 +29,7 @@
 
 
 
-import { Plus_Jakarta_Sans, Playfair_Display, Anton } from "next/font/google";
+import { Plus_Jakarta_Sans, Anton } from "next/font/google";
 import AppProviders from "@/components/providers/AppProviders";
 import { getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
@@ -38,20 +38,19 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
-  style: ["normal", "italic"],
-});
-
-/** Impact-style display — Emergency section headline */
+/** Legacy /home1 emergency headline only — single weight, no preload on every page */
 const anton = Anton({
   variable: "--font-anton",
   subsets: ["latin"],
   weight: ["400"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: true,
 });
 
 export const metadata = {
@@ -115,7 +114,7 @@ export default function RootLayout({ children }) {
   const site = getSiteUrl();
 
   return (
-    <html lang="en-GB">
+    <html lang="en-GB" data-scroll-behavior="smooth">
       <head>
         {/* Structured data – LocalBusiness */}
         <script
@@ -180,7 +179,10 @@ export default function RootLayout({ children }) {
           }}
         />
       </head>
-      <body className={`${plusJakarta.variable} ${playfair.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}>
+      <body
+        className={`${plusJakarta.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}
+        suppressHydrationWarning
+      >
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

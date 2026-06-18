@@ -255,7 +255,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                className="flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+                className="hero-cta-shine flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0"
               >
                 <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <circle cx="11" cy="11" r="7" />

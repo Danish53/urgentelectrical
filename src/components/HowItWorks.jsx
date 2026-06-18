@@ -3,8 +3,9 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { HOW_IT_WORKS_STEPS } from "@/data/howItWorks";
 import { STAGGER_CONTAINER, STAGGER_ITEM, STAGGER_VIEWPORT } from "@/lib/motion";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const BRAND_RED = "#D3231F";
 const LINE_COLOR = "#f3d4d4";
 

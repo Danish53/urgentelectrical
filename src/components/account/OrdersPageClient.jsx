@@ -15,6 +15,7 @@ import {
   getOrderStats,
   orderMatchesFilter,
 } from "@/lib/orders/orderFilters";
+import { getOrderServiceDetailHref } from "@/lib/orders/orderServiceHref";
 import { canCancelOrder } from "@/lib/orders/orderCancel";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { requestOrderCancellation } from "@/services/ordersApiService";
@@ -154,7 +155,10 @@ function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
             Cancel order
           </button>
         ) : order.status === "completed" || order.status === "cancelled" ? (
-          <Link href="/checkout" className="home1-btn-primary home1-orders-card-btn">
+          <Link
+            href={getOrderServiceDetailHref(order)}
+            className="home1-btn-primary home1-orders-card-btn"
+          >
             Book again
           </Link>
         ) : (
@@ -179,8 +183,8 @@ function OrdersEmpty({ filterLabel }) {
           ? "You have not placed any bookings yet. Book online in minutes."
           : `You do not have any ${filterLabel.toLowerCase()} right now.`}
       </p>
-      <Link href="/checkout" className="home1-btn-primary inline-flex items-center gap-2">
-        Book a service
+      <Link href="/services" className="home1-btn-primary inline-flex items-center gap-2">
+        Browse services
         <IconArrow className="w-4 h-4" aria-hidden="true" />
       </Link>
     </div>

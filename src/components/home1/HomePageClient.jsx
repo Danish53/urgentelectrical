@@ -1,22 +1,24 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar.jsx";
-import Footer from "@/components/Footer.jsx";
-import FloatingCTA from "@/components/FloatingCTA.jsx";
 import MotionSection from "@/components/MotionSection.jsx";
 import Hero from "@/components/Hero.jsx";
 import TrustedCertificationsHome1 from "@/components/home1/TrustedCertificationsHome1";
 import CompanyStatsHome1 from "@/components/home1/CompanyStatsHome1";
-import FeaturedServicesHome1 from "@/components/home1/FeaturedServicesHome1";
-import EmergencyHome1 from "@/components/home1/EmergencyHome1";
-import WhyChooseUsHome1 from "@/components/home1/WhyChooseUsHome1";
-import AboutCompanyHome1 from "@/components/home1/AboutCompanyHome1";
-import ProjectsHome1 from "@/components/home1/ProjectsHome1";
-import HowItWorksHome1 from "@/components/home1/HowItWorksHome1";
-import TestimonialsHome1 from "@/components/home1/TestimonialsHome1";
-import FAQHome1 from "@/components/home1/FAQHome1";
-import QuoteFormHome1 from "@/components/home1/QuoteFormHome1";
-import CTAHome1 from "@/components/home1/CTAHome1";
+
+const FeaturedServicesHome1 = dynamic(() => import("@/components/home1/FeaturedServicesHome1"));
+const EmergencyHome1 = dynamic(() => import("@/components/home1/EmergencyHome1"));
+const WhyChooseUsHome1 = dynamic(() => import("@/components/home1/WhyChooseUsHome1"));
+const AboutCompanyHome1 = dynamic(() => import("@/components/home1/AboutCompanyHome1"));
+const ProjectsHome1 = dynamic(() => import("@/components/home1/ProjectsHome1"));
+const HowItWorksHome1 = dynamic(() => import("@/components/home1/HowItWorksHome1"));
+const TestimonialsHome1 = dynamic(() => import("@/components/home1/TestimonialsHome1"));
+const FAQHome1 = dynamic(() => import("@/components/home1/FAQHome1"));
+const QuoteFormHome1 = dynamic(() => import("@/components/home1/QuoteFormHome1"));
+const CTAHome1 = dynamic(() => import("@/components/home1/CTAHome1"));
+const Footer = dynamic(() => import("@/components/Footer.jsx"));
+const FloatingCTA = dynamic(() => import("@/components/FloatingCTA.jsx"));
 
 export default function HomePageClient() {
   return (

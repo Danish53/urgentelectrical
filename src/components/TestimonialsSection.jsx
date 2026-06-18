@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTestimonials } from "@/hooks/useTestimonials";
 import TestimonialAvatar from "@/components/testimonials/TestimonialAvatar";
+import { CONTAINER } from "@/components/home1/constants";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const BG = "#e1e6e4";
 const NAVY = "#1e293b";
 const RED = "#e64a19";

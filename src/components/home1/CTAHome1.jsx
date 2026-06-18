@@ -1,39 +1,32 @@
 import Link from "next/link";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { CONTAINER, SECTION_PY } from "./constants";
+import { CONTAINER } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
 
 export default function CTAHome1({ bookHref = "/services" }) {
   return (
     <section
       id="cta"
-      className={`${SECTION_PY} bg-[var(--home1-surface)] overflow-x-clip scroll-mt-28`}
+      className="home1-cta-section bg-[var(--home1-surface)] overflow-x-clip scroll-mt-28"
       aria-labelledby="home1-cta-heading"
     >
       <div className={CONTAINER}>
-        <div className="relative rounded-[28px] overflow-hidden home1-section-red px-8 py-12 sm:px-14 sm:py-16 text-center">
-          <div
-            className="absolute inset-0 opacity-[0.08]"
-            style={{
-              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-              backgroundSize: "28px 28px",
-            }}
-            aria-hidden="true"
-          />
-          <div className="relative z-10 max-w-2xl mx-auto">
-            <span className="home1-eyebrow home1-eyebrow--light mb-5 mx-auto">Get help now</span>
-            <h2 id="home1-cta-heading" className="text-white text-[28px] sm:text-[36px] font-extrabold mb-4 leading-tight">
+        <div className="home1-cta-card home1-section-red">
+          <div className="home1-cta-pattern" aria-hidden="true" />
+          <div className="home1-cta-inner">
+            <span className="home1-eyebrow home1-eyebrow--light home1-cta-eyebrow">Get help now</span>
+            <h2 id="home1-cta-heading" className="home1-cta-heading">
               Need an electrician right now?
             </h2>
-            <p className="text-white/85 text-[15px] leading-relaxed mb-8">
+            <p className="home1-cta-text">
               Call for immediate emergency response or book online — same-day service confirmed in minutes.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-btn-white">
+            <div className="home1-cta-actions">
+              <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-btn-white home1-cta-btn">
                 <IconPhone />
                 {FOOTER_PHONE}
               </a>
-              <Link href={bookHref} className="home1-btn-outline">
+              <Link href={bookHref} className="home1-btn-outline home1-cta-btn">
                 Book online
                 <IconArrow />
               </Link>

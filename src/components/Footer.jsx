@@ -1,5 +1,6 @@
 "use client";
 
+import { CONTAINER } from "@/components/home1/constants";
 import Link from "next/link";
 import FooterServicesLinks from "@/components/footer/FooterServicesLinks";
 import FooterLegalLinks from "@/components/footer/FooterLegalLinks";
@@ -7,7 +8,7 @@ import SiteLogoImage from "@/components/common/SiteLogoImage";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { FOOTER_COMPANY, FOOTER_AREAS, FOOTER_BADGES } from "@/data/footer";
 
-const SECTION_CONTAINER = "w-full max-w-[1440px] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16";
+const SECTION_CONTAINER = CONTAINER;
 const RED = "#e63946";
 const BG = "#0a0a0a";
 
