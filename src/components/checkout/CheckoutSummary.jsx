@@ -170,7 +170,7 @@ export default function CheckoutSummary({
 
   const travelPrice =
     deliveryFeeLoading
-      ? "calculating..."
+      ? "...."
       : deliveryFeeError
         ? "0"
         : deliveryFeeOutOfRange
