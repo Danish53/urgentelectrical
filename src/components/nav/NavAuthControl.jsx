@@ -19,21 +19,22 @@ function NavIconArrowRight() {
 }
 
 /**
- * @param {{ variant?: "desktop" | "mobile", onNavigate?: () => void }} props
+ * @param {{ variant?: "desktop" | "mobile", onNavigate?: () => void, className?: string }} props
  */
-export default function NavAuthControl({ variant = "desktop", onNavigate }) {
+export default function NavAuthControl({ variant = "desktop", onNavigate, className = "" }) {
   const { ready, isLoggedIn } = useAuthSession();
+  const desktopClass = `${DESKTOP_CLASS} ${className}`.trim();
 
   if (!ready) {
     return variant === "mobile" ? null : (
-      <span className={`${DESKTOP_CLASS} opacity-0 pointer-events-none`} aria-hidden>
+      <span className={`${desktopClass} opacity-0 pointer-events-none`} aria-hidden>
         Login
       </span>
     );
   }
 
   if (isLoggedIn) {
-    return <NavUserMenu variant={variant} onNavigate={onNavigate} />;
+    return <NavUserMenu variant={variant} onNavigate={onNavigate} menuClassName={className} />;
   }
 
   if (variant === "mobile") {
@@ -46,7 +47,7 @@ export default function NavAuthControl({ variant = "desktop", onNavigate }) {
   }
 
   return (
-    <Link href="/login" className={`${DESKTOP_CLASS} hover:text-[#3d3b39]`}>
+    <Link href="/login" className={`${desktopClass} hover:text-[#3d3b39]`}>
       Login
     </Link>
   );

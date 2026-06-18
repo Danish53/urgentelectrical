@@ -74,9 +74,9 @@ function NavUserDropdown({ displayName, onNavigate, onLogout }) {
 }
 
 /**
- * @param {{ variant?: "desktop" | "mobile", onNavigate?: () => void }} props
+ * @param {{ variant?: "desktop" | "mobile", onNavigate?: () => void, menuClassName?: string }} props
  */
-export default function NavUserMenu({ variant = "desktop", onNavigate }) {
+export default function NavUserMenu({ variant = "desktop", onNavigate, menuClassName = "" }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectAuthUser);
@@ -158,7 +158,7 @@ export default function NavUserMenu({ variant = "desktop", onNavigate }) {
     >
       <button
         type="button"
-        className={`${NAV_MENU_ITEM} ${open ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
+        className={`${NAV_MENU_ITEM} ${menuClassName} ${open ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
         aria-expanded={open}
         aria-haspopup="true"
       >

@@ -13,6 +13,9 @@ import { NAV_DROPDOWN_SUBTITLES } from "./navData";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { useNavMenu } from "@/hooks/useNavMenu";
 
+const NAV_MENU_ITEM_MID =
+  "max-[1199px]:px-2 max-[1199px]:text-[13px] max-[1199px]:gap-1";
+
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -63,9 +66,12 @@ function NavIconBookArrow() {
 
 function BrandLogo({ compact = false }) {
   const logoSize = compact ? 40 : 46;
+  const textVisibilityClass = compact
+    ? "flex"
+    : "hidden min-[1200px]:flex";
 
   return (
-    <Link href="/" className="inline-flex items-center gap-2.5 shrink-0">
+    <Link href="/" className="inline-flex items-center gap-2.5 shrink-0 min-w-0" title="Urgent Electrical Services">
       <Image
         src="/logo.jpg"
         alt="Urgent Electrical Services"
@@ -74,7 +80,7 @@ function BrandLogo({ compact = false }) {
         className="shrink-0 object-contain"
         priority
       />
-      <span className="flex flex-col justify-center text-left">
+      <span className={`${textVisibilityClass} flex-col justify-center text-left min-w-0`}>
         <span
           className={`font-bold text-[#111827] leading-[1.15] whitespace-nowrap ${
             compact ? "text-[14px]" : "text-[15px]"
@@ -267,25 +273,25 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Desktop: equal left/right space — logo | menu center | Book Now */}
-            <div className="hidden lg:grid lg:grid-cols-[1fr_auto_1fr] lg:items-center min-h-[72px] py-3 w-full">
+            {/* Desktop: logo | centered menu | Book Now */}
+            <div className="hidden lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-3 xl:gap-5 min-h-[72px] py-3 w-full">
               <div className="flex items-center justify-start min-w-0">
                 <BrandLogo />
               </div>
 
-              <nav className="flex items-center justify-center gap-x-0.5 px-2 ml-[60px]">
+              <nav className="flex items-center justify-center min-w-0 flex-wrap gap-x-0 px-1 xl:px-2">
                 {navGroups.map((group) => {
                   const isOpen = activeMenu === group.label;
                   return (
                     <div
                       key={group.slug ?? group.label}
-                      className="relative"
+                      className="relative shrink-0"
                       onMouseEnter={() => setActiveMenu(group.label)}
                       onMouseLeave={() => setActiveMenu(null)}
                     >
                       <button
                         type="button"
-                        className={`${NAV_MENU_ITEM} ${isOpen ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
+                        className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} ${isOpen ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
                       >
                         {group.label}
                         <NavIconChevron open={isOpen} />
@@ -299,19 +305,19 @@ export default function Navbar() {
                 {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Services
                 </a> */}
-                <Link href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                <Link href="/blog" className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} hover:text-[#3d3b39]`}>
                   Blogs
                 </Link>
-                <Link href="/contact-us" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
+                <Link href="/contact-us" className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} hover:text-[#3d3b39]`}>
                   Contact
                 </Link>
-                <NavAuthControl variant="desktop" />
+                <NavAuthControl variant="desktop" className={NAV_MENU_ITEM_MID} />
               </nav>
 
-              <div className="flex items-center justify-end min-w-0">
+              <div className="flex items-center justify-end min-w-0 shrink-0">
                 <Link
                   href="/services"
-                  className="nav-book-now-cta group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
+                  className="nav-book-now-cta group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] max-[1199px]:text-[13px] font-semibold px-5 max-[1199px]:px-3.5 py-2.5 max-[1199px]:py-2 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
                   Book Now
                   <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">
