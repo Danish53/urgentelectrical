@@ -1,22 +1,69 @@
 import { fetchOrderById } from "@/services/ordersApiService";
-import { CONTACT_BUSINESS_NAME } from "@/data/contactPage";
 
 const PAGE_W = 612;
 const PAGE_H = 792;
 const MARGIN = 32;
 const CONTENT_W = PAGE_W - MARGIN * 2;
+const HEADER_HEIGHT_SCALE = 0.88;
 const VAT_RATE = 0.2;
 const INVOICE_HEADER_SRC = "/Invoice-Header.svg";
-const INVOICE_STAMP_SRC = "/stamp.png";
 const HEADER_RENDER_SCALE = 3;
-const STAMP_RENDER_SCALE = 2;
-const STAMP_DRAW_W = 128;
 
 const INVOICE_META = {
-  boxW: 250,
+  boxW: 198,
+  rowH: 24,
+  rowCount: 3,
+  gutter: 22,
+  padX: 10,
+};
+
+const TOTALS_META = {
   rowH: 26,
-  gutter: 18,
-  padX: 14,
+  finalRowH: 38,
+  size: 9,
+  padX: 10,
+};
+
+const PAYMENT_TERMS = {
+  deposit:
+    "A 60% deposit is required upfront before work commences. Work will only start once payment has been received. The remaining 40% is due upon completion of the works, unless otherwise agreed in advance.",
+  latePaymentLabel: "Late Payment:",
+  latePaymentText: "Fees may apply to balances outstanding after 30 days, unless otherwise agreed in writing.",
+  accountDetails:
+    "Account Details: Urgent Electrical Services Limited | Sort Code: 40-35-18 | Account Number: 24686934",
+};
+
+const PAYMENT_TERMS_LAYOUT = {
+  pad: 28,
+  headingSize: 11,
+  bodySize: 9,
+  lineH: 14,
+  gapAfterHeading: 10,
+  gapAfterDivider: 20,
+  sectionGap: 18,
+};
+
+const CUSTOMER_TEXT_INDENT = 8;
+
+/** Type1 Helvetica widths (1/1000 em) for accurate right-alignment */
+const AFM_HELV = {
+  " ": 278, "-": 278, ".": 278, "0": 556, "1": 556, "2": 556, "3": 556, "4": 556,
+  "5": 556, "6": 556, "7": 556, "8": 556, "9": 556, A: 667, B: 667, C: 722, D: 722,
+  E: 667, F: 611, G: 778, H: 722, I: 278, J: 556, K: 667, L: 611, M: 833, N: 722,
+  O: 722, P: 667, Q: 722, R: 722, S: 667, T: 611, U: 722, V: 667, W: 944, X: 667,
+  Y: 667, Z: 611, a: 556, b: 556, c: 500, d: 556, e: 556, f: 278, g: 556, h: 556,
+  i: 222, j: 222, k: 500, l: 222, m: 833, n: 556, o: 556, p: 556, q: 556, r: 333,
+  s: 500, t: 278, u: 556, v: 500, w: 722, x: 500, y: 500, z: 500,
+};
+
+const AFM_HELV_BOLD = {
+  " ": 278, "-": 283, ".": 278, "0": 556, "1": 556, "2": 556, "3": 556, "4": 556,
+  "5": 556, "6": 556, "7": 556, "8": 556, "9": 556, A: 722, B: 667, C: 722, D: 722,
+  E: 667, F: 611, G: 778, H: 722, I: 278, J: 556, K: 722, L: 611, M: 833, N: 722,
+  O: 722, P: 667, Q: 722, R: 722, S: 667, T: 611, U: 722, V: 667, W: 944, X: 667,
+  Y: 667, Z: 611, a: 556, b: 611, c: 556, d: 611, e: 556, f: 333, g: 611, h: 611,
+  i: 278, j: 278, k: 556, l: 278, m: 889, n: 611, o: 611, p: 611, q: 611, r: 389,
+  s: 556, t: 333, u: 611, v: 556, w: 778, x: 556, y: 556, z: 500,
 };
 
 const C = {
@@ -26,11 +73,21 @@ const C = {
   green: { r: 0, g: 176 / 255, b: 0 },
   orange: { r: 244 / 255, g: 196 / 255, b: 97 / 255 },
   grey: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
+  siteBar: { r: 242 / 255, g: 242 / 255, b: 242 / 255 },
+  tableHeaderBar: { r: 232 / 255, g: 232 / 255, b: 232 / 255 },
+  termsBg: { r: 247 / 255, g: 247 / 255, b: 247 / 255 },
+  termsBorder: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
+  termsDivider: { r: 238 / 255, g: 238 / 255, b: 238 / 255 },
+  termsText: { r: 68 / 255, g: 68 / 255, b: 68 / 255 },
   black: { r: 0, g: 0, b: 0 },
   white: { r: 1, g: 1, b: 1 },
   ink: { r: 0.12, g: 0.12, b: 0.12 },
   tableHeader: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
 };
+
+function getTotalsStackHeight() {
+  return TOTALS_META.rowH * 3 + TOTALS_META.finalRowH;
+}
 
 function getInvoiceMetaLayout() {
   const boxX = PAGE_W - MARGIN - INVOICE_META.boxW;
@@ -39,13 +96,23 @@ function getInvoiceMetaLayout() {
     boxX,
     rowH: INVOICE_META.rowH,
     customerLineEndX: boxX - INVOICE_META.gutter,
-    stackHeight: INVOICE_META.rowH * 4,
+    stackHeight: INVOICE_META.rowH * INVOICE_META.rowCount,
   };
+}
+
+/** @param {string} text @param {number} size @param {string} [font] */
+function measureTextWidth(text, size, font = "F1") {
+  const table = font === "F2" ? AFM_HELV_BOLD : AFM_HELV;
+  let units = 0;
+  for (const ch of sanitizePdfText(String(text))) {
+    units += table[ch] ?? (ch === "£" ? 556 : 600);
+  }
+  return (units / 1000) * size;
 }
 
 /** @param {string} text @param {number} size @param {boolean} [bold] */
 function estimateTextWidth(text, size, bold = false) {
-  return String(text).length * size * (bold ? 0.58 : 0.52);
+  return measureTextWidth(text, size, bold ? "F2" : "F1");
 }
 
 /**
@@ -136,6 +203,27 @@ function formatShortDate(value) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+/** @param {string | Date | undefined} value */
+function formatInvoiceMetaDate(value) {
+  const d =
+    value instanceof Date
+      ? value
+      : value
+        ? new Date(String(value).includes("T") ? value : `${value}T12:00:00`)
+        : new Date();
+  if (Number.isNaN(d.getTime())) return "N/A";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+/** @param {string} line */
+function isPostcodeLine(line) {
+  const trimmed = String(line).trim();
+  return /^[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}$/i.test(trimmed) || /\b[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}\b/i.test(trimmed);
+}
+
 /** @param {string | undefined} isoDate @param {string | undefined} time */
 function formatScheduledLabel(isoDate, time) {
   if (!isoDate) return "N/A";
@@ -163,7 +251,8 @@ function formatAddressLines(addr) {
   if (name) lines.push(name);
   if (line1 || line2) lines.push([line1, line2].filter(Boolean).join(", "));
   if (town) lines.push(town);
-  if (county || postCode) lines.push([county, postCode].filter(Boolean).join(" "));
+  if (county) lines.push(county);
+  if (postCode) lines.push(postCode);
   if (country) {
     lines.push(country.toUpperCase() === "GB" ? "United Kingdom (UK)" : country);
   }
@@ -223,14 +312,6 @@ async function loadRasterImageAsset(src, logicalW, scale) {
 
 async function loadHeaderAsset() {
   return loadRasterImageAsset(INVOICE_HEADER_SRC, CONTENT_W, HEADER_RENDER_SCALE);
-}
-
-async function loadStampAsset() {
-  try {
-    return await loadRasterImageAsset(INVOICE_STAMP_SRC, STAMP_DRAW_W, STAMP_RENDER_SCALE);
-  } catch {
-    return null;
-  }
 }
 
 function encodeLatin1(text) {
@@ -315,8 +396,8 @@ class InvoicePdfWriter {
   /** @param {string} text @param {number} rightX @param {number} yTop */
   textRight(text, rightX, yTop, opts = {}) {
     const size = opts.size ?? 8;
-    const bold = (opts.font ?? "F1") === "F2";
-    this.text(text, rightX - estimateTextWidth(text, size, bold), yTop, { ...opts, size });
+    const font = opts.font ?? "F1";
+    this.text(text, rightX - measureTextWidth(text, size, font), yTop, { ...opts, size, font });
   }
 
   /** @param {number} cx @param {number} cyTop @param {number} r */
@@ -346,7 +427,8 @@ function drawBrandHeader(pdf, header) {
   if (!header) return yTop;
 
   const drawW = CONTENT_W;
-  const drawH = (header.height / header.width) * drawW;
+  const naturalH = (header.height / header.width) * drawW;
+  const drawH = naturalH * HEADER_HEIGHT_SCALE;
   pdf.drawImage("Header", drawW, drawH, x, yTop);
   return yTop + drawH;
 }
@@ -360,7 +442,7 @@ function drawBrandHeader(pdf, header) {
  * @param {{ r: number, g: number, b: number }} bg
  * @param {string} left
  * @param {string} right
- * @param {{ leftBold?: boolean, rightBold?: boolean, textColor?: { r: number, g: number, b: number }, rightX?: number }} [opts]
+ * @param {{ leftBold?: boolean, rightBold?: boolean, textColor?: { r: number, g: number, b: number }, rightX?: number, padX?: number, size?: number, leftLines?: string[] }} [opts]
  */
 function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
   pdf.fillColor(bg);
@@ -368,27 +450,24 @@ function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
   const padX = opts.padX ?? INVOICE_META.padX;
   const size = opts.size ?? 8;
   const textY = yTop + (h + size * 0.32) / 2;
-  const leftX = x + padX;
-  const rightEdge = opts.rightEdge ?? x + w - padX;
+  const leftFont = opts.leftBold ? "F2" : "F1";
+  const rightFont = opts.rightBold ? "F2" : "F1";
+  const color = opts.textColor ?? C.black;
+  const valueRightX = x + w - padX;
+  const leftLines = opts.leftLines;
 
-  pdf.text(left, leftX, textY, {
-    font: opts.leftBold ? "F2" : "F1",
-    size,
-    color: opts.textColor ?? C.black,
-  });
-
-  let rightSize = size;
-  const leftWidth = estimateTextWidth(left, size, opts.leftBold);
-  const maxRightW = rightEdge - leftX - leftWidth - 12;
-  while (rightSize > 6.5 && estimateTextWidth(right, rightSize, opts.rightBold) > maxRightW) {
-    rightSize -= 0.5;
+  if (leftLines?.length) {
+    const lineGap = size + 1.5;
+    const stackH = leftLines.length * lineGap - 1.5;
+    const startY = yTop + (h - stackH) / 2 + size * 0.72;
+    leftLines.forEach((line, index) => {
+      pdf.text(line, x + padX, startY + index * lineGap, { font: leftFont, size, color });
+    });
+  } else {
+    pdf.text(left, x + padX, textY, { font: leftFont, size, color });
   }
 
-  pdf.text(right, rightEdge - estimateTextWidth(right, rightSize, opts.rightBold), textY, {
-    font: opts.rightBold ? "F2" : "F1",
-    size: rightSize,
-    color: opts.textColor ?? C.black,
-  });
+  pdf.textRight(String(right ?? ""), valueRightX, textY, { font: rightFont, size, color });
 }
 
 /**
@@ -399,40 +478,37 @@ function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
  */
 function drawInvoiceMetaStack(pdf, yTop, ctx, layout) {
   const { boxW, boxX, rowH } = layout;
-  const padX = INVOICE_META.padX;
-  const rightEdge = boxX + boxW - padX;
+  const metaSize = 9;
+  const titleSize = 12;
+  const titleY = yTop + (rowH + titleSize * 0.32) / 2;
 
   pdf.fillColor(C.red);
   pdf.fillRectTop(boxX, yTop, boxW, rowH);
-  pdf.text("INVOICE", boxX + padX, yTop + (rowH + 12 * 0.32) / 2, {
+  const invoiceTitleW = measureTextWidth("INVOICE", titleSize, "F2");
+  pdf.text("INVOICE", boxX + (boxW - invoiceTitleW) / 2, titleY, {
     font: "F2",
-    size: 12,
+    size: titleSize,
     color: C.white,
   });
 
-  drawMetaRow(pdf, boxX, yTop + rowH, boxW, rowH, C.yellow, "INVOICE NUMBER:", ctx.reference, {
+  drawMetaRow(pdf, boxX, yTop + rowH, boxW, rowH, C.yellow, "Invoice Number", ctx.reference, {
     leftBold: true,
     rightBold: true,
-    rightEdge,
-  });
-  drawMetaRow(pdf, boxX, yTop + rowH * 2, boxW, rowH, C.grey, "INVOICE DATE:", ctx.invoiceDate, {
-    leftBold: true,
-    rightBold: true,
-    rightEdge,
+    size: metaSize,
   });
   drawMetaRow(
     pdf,
     boxX,
-    yTop + rowH * 3,
+    yTop + rowH * 2,
     boxW,
     rowH,
-    C.green,
-    "SCHEDULED:",
-    ctx.scheduledLabel,
-    { leftBold: true, rightBold: true, rightEdge }
+    C.grey,
+    "Invoice Date",
+    ctx.invoiceDateDisplay,
+    { leftBold: true, rightBold: true, size: metaSize }
   );
 
-  return yTop + rowH * 4;
+  return yTop + rowH * INVOICE_META.rowCount;
 }
 
 /**
@@ -442,23 +518,28 @@ function drawInvoiceMetaStack(pdf, yTop, ctx, layout) {
  * @param {ReturnType<typeof getInvoiceMetaLayout>} layout
  */
 function drawCustomerDetails(pdf, yTop, lines, layout) {
-  const headingY = yTop + 12;
+  const headingY = yTop + 10;
+  const dividerY = headingY + 5;
+  const contentX = MARGIN + CUSTOMER_TEXT_INDENT;
+  const lineEndX = layout.customerLineEndX;
+
   pdf.text("CUSTOMER DETAILS", MARGIN, headingY, { font: "F2", size: 11, color: C.black });
   pdf.lineWidth(0.75);
   pdf.strokeColor(C.black);
-  pdf.lineTop(MARGIN, headingY + 5, layout.customerLineEndX, headingY + 5);
+  pdf.lineTop(MARGIN, dividerY, lineEndX, dividerY);
 
-  let y = headingY + 22;
+  let y = dividerY + 14;
   lines.forEach((line, index) => {
-    pdf.text(line, MARGIN, y, {
-      font: index === 0 ? "F2" : "F1",
-      size: index === 0 ? 10 : 9.5,
+    const bold = index === 0 || isPostcodeLine(line);
+    pdf.text(line, contentX, y, {
+      font: bold ? "F2" : "F1",
+      size: bold ? 10 : 9.5,
       color: C.ink,
     });
-    y += 15;
+    y += 14;
   });
 
-  return y + 4;
+  return { endY: y + 6, dividerY };
 }
 
 /**
@@ -467,18 +548,32 @@ function drawCustomerDetails(pdf, yTop, lines, layout) {
  * @param {string} address
  */
 function drawSiteAddress(pdf, yTop, address) {
-  const barH = 20;
-  pdf.fillColor(C.grey);
-  pdf.fillRectTop(MARGIN, yTop, CONTENT_W, barH);
-  pdf.text("Site Address", MARGIN + 8, yTop + 14, { font: "F2", size: 9.5, color: C.black });
+  const padX = 10;
+  const padY = 7;
+  const headingSize = 9.5;
+  const addressSize = 9.5;
+  const headingGap = 14;
+  const lineGap = 12;
 
-  let y = yTop + barH + 14;
-  wrapText(address, 90).forEach((line) => {
-    pdf.text(line, MARGIN + 4, y, { size: 9.5, color: C.ink });
-    y += 13;
-  });
+  const addressLines = wrapText(address || "", 88);
+  const lineCount = Math.max(1, addressLines.length);
+  const boxH = padY + headingSize + headingGap + lineCount * lineGap + padY;
 
-  return y + 8;
+  pdf.fillColor(C.siteBar);
+  pdf.fillRectTop(MARGIN, yTop, CONTENT_W, boxH);
+
+  const headingY = yTop + padY + headingSize;
+  pdf.text("Site Address", MARGIN + padX, headingY, { font: "F2", size: headingSize, color: C.black });
+
+  let y = headingY + headingGap;
+  for (const line of addressLines.length ? addressLines : [""]) {
+    if (line) {
+      pdf.text(line, MARGIN + padX, y, { font: "F1", size: addressSize, color: C.black });
+    }
+    y += lineGap;
+  }
+
+  return yTop + boxH + 6;
 }
 
 /**
@@ -486,14 +581,16 @@ function drawSiteAddress(pdf, yTop, address) {
  * @param {number} tableW
  */
 function getTableColumns(tableX, tableW) {
-  const pad = 8;
+  const pad = 12;
+  const descW = Math.round(tableW * 0.52);
+  const numericW = tableW - pad * 2 - descW;
   const colW = {
-    qty: 28,
-    unit: 58,
-    amount: 50,
-    vatRate: 48,
-    vatAmt: 58,
-    total: 54,
+    qty: Math.round(numericW * 0.105),
+    unit: Math.round(numericW * 0.185),
+    amount: Math.round(numericW * 0.185),
+    vatRate: Math.round(numericW * 0.155),
+    vatAmt: Math.round(numericW * 0.185),
+    total: Math.round(numericW * 0.185),
   };
 
   /** @type {Record<string, { left: number, right: number, width: number }>} */
@@ -506,7 +603,25 @@ function getTableColumns(tableX, tableW) {
     edge -= width;
   }
 
-  return { pad, cols, descX: tableX + pad, descMaxW: edge - tableX - pad - 6 };
+  return { pad, cols, descX: tableX + pad, descMaxW: descW - pad };
+}
+
+/**
+ * @param {InvoicePdfWriter} pdf
+ * @param {{ left: number, right: number }} col
+ * @param {string[]} lines
+ * @param {number} blockTop
+ * @param {number} blockH
+ * @param {{ size?: number, font?: string, color?: { r: number, g: number, b: number } }} [opts]
+ */
+function drawColumnHeaderStack(pdf, col, lines, blockTop, blockH, opts = {}) {
+  const size = opts.size ?? 9;
+  const lineGap = size + 1.5;
+  const stackH = lines.length * lineGap - 1.5;
+  const startY = blockTop + (blockH - stackH) / 2 + size * 0.72;
+  lines.forEach((line, index) => {
+    drawInColumn(pdf, col, line, startY + index * lineGap, { ...opts, size });
+  });
 }
 
 /**
@@ -517,55 +632,53 @@ function getTableColumns(tableX, tableW) {
 function drawServiceTable(pdf, yTop, rows) {
   const tableX = MARGIN;
   const tableW = CONTENT_W;
-  const headerH = 22;
-  const rowH = 26;
-  const headerSize = 7.5;
-  const cellSize = 8;
-  const { pad, cols, descX, descMaxW } = getTableColumns(tableX, tableW);
-
-  pdf.fillColor(C.tableHeader);
-  pdf.fillRectTop(tableX, yTop, tableW, headerH);
-  const headerTextY = yTop + 15;
+  const headerH = 36;
+  const rowMinH = 34;
+  const headerSize = 9;
+  const cellSize = 9;
+  const lineH = 14;
+  const { cols, descX, descMaxW } = getTableColumns(tableX, tableW);
+  const descMaxChars = Math.max(28, Math.floor(descMaxW / (cellSize * 0.48)));
+  const cellOpts = { font: "F1", size: cellSize, color: C.black };
   const headerOpts = { font: "F2", size: headerSize, color: C.black };
 
-  pdf.text("DESCRIPTION", descX, headerTextY, headerOpts);
-  drawInColumn(pdf, cols.qty, "QTY", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.unit, "UNIT COST", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.amount, "AMOUNT", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.vatRate, "VAT RATE", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.vatAmt, "VAT AMOUNT", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.total, "TOTAL", headerTextY, headerOpts);
+  pdf.fillColor(C.tableHeaderBar);
+  pdf.fillRectTop(tableX, yTop, tableW, headerH);
+  const headerTextY = yTop + (headerH + headerSize * 0.32) / 2;
 
-  pdf.strokeColor(C.black);
-  pdf.lineWidth(0.75);
-  pdf.lineTop(tableX, yTop + headerH, tableX + tableW, yTop + headerH);
+  pdf.text("Description", descX, headerTextY, headerOpts);
+  drawInColumn(pdf, cols.qty, "Qty", headerTextY, headerOpts);
+  drawInColumn(pdf, cols.unit, "Unit", headerTextY, headerOpts);
+  drawInColumn(pdf, cols.amount, "Amount", headerTextY, headerOpts);
+  drawColumnHeaderStack(pdf, cols.vatRate, ["VAT", "Rate"], yTop, headerH, headerOpts);
+  drawColumnHeaderStack(pdf, cols.vatAmt, ["VAT", "Amount"], yTop, headerH, headerOpts);
+  drawInColumn(pdf, cols.total, "Total", headerTextY, headerOpts);
 
   let y = yTop + headerH;
   rows.forEach((row) => {
-    y += rowH;
-    const textY = y - 10;
-    const descLines = wrapText(row.description, Math.floor(descMaxW / 4.2));
-    pdf.text(descLines[0] ?? row.description, descX, textY, { size: cellSize, color: C.ink });
-    if (descLines.length > 1) {
-      pdf.text(descLines.slice(1).join(" "), descX, textY + 11, { size: cellSize, color: C.ink });
-    }
+    const descLines = wrapText(row.description, descMaxChars);
+    const rowH = Math.max(rowMinH, 18 + descLines.length * lineH);
 
-    drawInColumn(pdf, cols.qty, String(row.qty), textY, { size: cellSize, color: C.ink });
-    drawInColumn(pdf, cols.unit, formatPdfMoney(row.unitCost), textY, { size: cellSize, color: C.ink });
-    drawInColumn(pdf, cols.amount, formatPdfMoney(row.amount), textY, { size: cellSize, color: C.ink });
-    drawInColumn(pdf, cols.vatRate, row.vatRateLabel, textY, { size: cellSize, color: C.ink });
-    drawInColumn(pdf, cols.vatAmt, formatPdfMoney(row.vatAmount), textY, { size: cellSize, color: C.ink });
-    drawInColumn(pdf, cols.total, formatPdfMoney(row.total), textY, {
-      font: "F2",
-      size: cellSize,
-      color: C.ink,
+    pdf.fillColor(C.white);
+    pdf.fillRectTop(tableX, y, tableW, rowH);
+
+    const descStartY = y + (rowH - (descLines.length * lineH - 2)) / 2 + cellSize * 0.72;
+    descLines.forEach((line, index) => {
+      pdf.text(line, descX, descStartY + index * lineH, cellOpts);
     });
 
-    pdf.lineWidth(0.5);
-    pdf.lineTop(tableX + pad, y, tableX + tableW - pad, y);
+    const numY = y + (rowH + cellSize * 0.32) / 2;
+    drawInColumn(pdf, cols.qty, String(row.qty), numY, cellOpts);
+    drawInColumn(pdf, cols.unit, formatPdfMoney(row.unitCost), numY, cellOpts);
+    drawInColumn(pdf, cols.amount, formatPdfMoney(row.amount), numY, cellOpts);
+    drawInColumn(pdf, cols.vatRate, row.vatRateLabel, numY, cellOpts);
+    drawInColumn(pdf, cols.vatAmt, formatPdfMoney(row.vatAmount), numY, cellOpts);
+    drawInColumn(pdf, cols.total, formatPdfMoney(row.total), numY, cellOpts);
+
+    y += rowH;
   });
 
-  return y + 20;
+  return y + 16;
 }
 
 /**
@@ -575,55 +688,92 @@ function drawServiceTable(pdf, yTop, rows) {
  */
 function drawTotalsStack(pdf, yTop, totals) {
   const layout = getInvoiceMetaLayout();
-  const { boxW, boxX, rowH } = layout;
-  const rightEdge = boxX + boxW - INVOICE_META.padX;
+  const { boxW, boxX } = layout;
+  const { rowH, finalRowH, size, padX } = TOTALS_META;
+  const boldOpts = { leftBold: true, rightBold: true, size, padX };
 
-  drawMetaRow(pdf, boxX, yTop, boxW, rowH, C.white, "Amount", formatPdfMoney(totals.amount), {
-    leftBold: true,
-    rightBold: true,
-    rightEdge,
-  });
+  drawMetaRow(pdf, boxX, yTop, boxW, rowH, C.siteBar, "Amount", formatPdfMoney(totals.amount), boldOpts);
   drawMetaRow(pdf, boxX, yTop + rowH, boxW, rowH, C.green, "Discount", formatPdfMoney(totals.discount), {
-    leftBold: true,
-    rightBold: true,
-    rightEdge,
+    ...boldOpts,
+    textColor: C.white,
   });
-  drawMetaRow(pdf, boxX, yTop + rowH * 2, boxW, rowH, C.yellow, "VAT", formatPdfMoney(totals.vat), {
-    leftBold: true,
-    rightBold: true,
-    rightEdge,
-  });
+  drawMetaRow(pdf, boxX, yTop + rowH * 2, boxW, rowH, C.yellow, "VAT", formatPdfMoney(totals.vat), boldOpts);
   drawMetaRow(
     pdf,
     boxX,
     yTop + rowH * 3,
     boxW,
-    rowH,
+    finalRowH,
     C.orange,
-    "Amount Including VAT",
+    "",
     formatPdfMoney(totals.totalIncVat),
-    { leftBold: true, rightBold: true, rightEdge, size: 8 }
+    { ...boldOpts, leftLines: ["Amount Including", "VAT"] }
   );
 
-  return yTop + rowH * 4;
+  return yTop + getTotalsStackHeight();
 }
 
 /**
  * @param {InvoicePdfWriter} pdf
- * @param {{ bytes: Uint8Array, width: number, height: number } | null} stamp
  * @param {number} yTop
  */
-function drawPaidStamp(pdf, stamp, yTop) {
-  if (!stamp) return;
+function drawPaymentTermsBox(pdf, yTop) {
+  const { pad, headingSize, bodySize, lineH, gapAfterHeading, gapAfterDivider, sectionGap } =
+    PAYMENT_TERMS_LAYOUT;
+  const boxW = CONTENT_W;
+  const innerW = boxW - pad * 2;
+  const maxChars = Math.max(40, Math.floor(innerW / (bodySize * 0.47)));
+  const bodyOpts = { font: "F1", size: bodySize, color: C.termsText };
 
-  const layout = getInvoiceMetaLayout();
-  const stampDrawW = STAMP_DRAW_W;
-  const stampDrawH = (stamp.height / stamp.width) * stampDrawW;
-  const totalsH = layout.rowH * 4;
-  const stampX = MARGIN + 4;
-  const stampY = yTop + (totalsH - stampDrawH) / 2;
+  const depositLines = wrapText(PAYMENT_TERMS.deposit, maxChars);
+  const accountLines = wrapText(PAYMENT_TERMS.accountDetails, maxChars);
+  const boxH =
+    pad * 2 +
+    headingSize +
+    gapAfterHeading +
+    gapAfterDivider +
+    depositLines.length * lineH +
+    sectionGap +
+    lineH * 2 +
+    sectionGap +
+    accountLines.length * lineH;
 
-  pdf.drawImage("Stamp", stampDrawW, stampDrawH, stampX, stampY);
+  pdf.fillColor(C.termsBg);
+  pdf.fillRectTop(MARGIN, yTop, boxW, boxH);
+  pdf.lineWidth(0.75);
+  pdf.strokeColor(C.termsBorder);
+  pdf.strokeRectTop(MARGIN, yTop, boxW, boxH);
+
+  let cursor = yTop + pad;
+  const textX = MARGIN + pad;
+  const textBase = (blockTop) => blockTop + bodySize * 0.85;
+
+  pdf.text("Payment And Terms", textX, cursor + headingSize, {
+    font: "F2",
+    size: headingSize,
+    color: C.black,
+  });
+  cursor += headingSize + gapAfterHeading;
+
+  pdf.lineWidth(0.5);
+  pdf.strokeColor(C.termsDivider);
+  pdf.lineTop(textX, cursor, MARGIN + boxW - pad, cursor);
+  cursor += gapAfterDivider;
+
+  depositLines.forEach((line, index) => {
+    pdf.text(line, textX, textBase(cursor) + index * lineH, bodyOpts);
+  });
+  cursor += depositLines.length * lineH + sectionGap;
+
+  pdf.text(PAYMENT_TERMS.latePaymentLabel, textX, textBase(cursor), bodyOpts);
+  pdf.text(PAYMENT_TERMS.latePaymentText, textX, textBase(cursor) + lineH, bodyOpts);
+  cursor += lineH * 2 + sectionGap;
+
+  accountLines.forEach((line, index) => {
+    pdf.text(line, textX, textBase(cursor) + index * lineH, bodyOpts);
+  });
+
+  return yTop + boxH;
 }
 
 function buildInvoiceContextFromDetail(order) {
@@ -645,11 +795,10 @@ function buildInvoiceContextFromDetail(order) {
   const reference = order.reference || String(raw.order_id ?? "");
   const serviceName = order.serviceName || "Electrical service";
   const invoiceDate = formatShortDate(order.visitDate || raw.selected_date);
+  const invoiceDateDisplay = formatInvoiceMetaDate(order.visitDate || raw.selected_date);
   const scheduledLabel = formatScheduledLabel(order.visitDate, order.visitTime);
   const addressLines = formatAddressLines(addressRow);
-  const customerLines = addressLines.length
-    ? [CONTACT_BUSINESS_NAME, ...addressLines]
-    : [CONTACT_BUSINESS_NAME, "Customer"];
+  const customerLines = addressLines.length ? addressLines : ["Customer"];
   const siteAddress = order.address?.trim() || addressLines.slice(1).join(", ");
 
   const qty = parseMoney(detailBlock?.quantity) || 1;
@@ -675,15 +824,6 @@ function buildInvoiceContextFromDetail(order) {
       vatAmount: lineVat,
       total: lineNet + lineVat,
     },
-    {
-      description: "Travel Charge (No Charge Within 20 Miles)",
-      qty: 1,
-      unitCost: parseMoney(order.deliveryFee),
-      amount: parseMoney(order.deliveryFee),
-      vatRateLabel: "20%",
-      vatAmount: parseMoney(order.deliveryFee) * VAT_RATE,
-      total: parseMoney(order.deliveryFee) * (1 + VAT_RATE),
-    },
   ];
 
   const amountExVat = tableRows.reduce((sum, row) => sum + row.amount, 0);
@@ -693,11 +833,10 @@ function buildInvoiceContextFromDetail(order) {
   const totalIncVat =
     parseMoney(order.totalInc) > 0 ? parseMoney(order.totalInc) : netAfterDiscount + vat;
 
-  const paymentStatus = String(order.paymentStatus || raw.payment_status || "").toLowerCase();
-
   return {
     reference,
     invoiceDate,
+    invoiceDateDisplay,
     scheduledLabel,
     customerLines,
     siteAddress,
@@ -708,32 +847,28 @@ function buildInvoiceContextFromDetail(order) {
       vat,
       totalIncVat,
     },
-    showPaidStamp: paymentStatus === "paid",
   };
 }
 
-function renderInvoicePage(pdf, header, stamp, ctx) {
+function renderInvoicePage(pdf, header, ctx) {
   const headerBottom = drawBrandHeader(pdf, header);
-  const sectionY = headerBottom + 18;
+  const sectionY = headerBottom + 16;
   const layout = getInvoiceMetaLayout();
 
-  const customerEnd = drawCustomerDetails(pdf, sectionY, ctx.customerLines, layout);
-  const metaEnd = drawInvoiceMetaStack(pdf, sectionY, ctx, layout);
+  const customerBlock = drawCustomerDetails(pdf, sectionY, ctx.customerLines, layout);
+  const metaEnd = drawInvoiceMetaStack(pdf, customerBlock.dividerY, ctx, layout);
 
-  const siteY = Math.max(customerEnd, metaEnd) + 14;
+  const siteY = Math.max(customerBlock.endY, metaEnd) + 16;
   const tableY = drawSiteAddress(pdf, siteY, ctx.siteAddress);
   const afterTableY = drawServiceTable(pdf, tableY, ctx.tableRows);
 
   const totalsY = afterTableY + 24;
-  drawTotalsStack(pdf, totalsY, ctx.totals);
-
-  if (ctx.showPaidStamp) {
-    drawPaidStamp(pdf, stamp, totalsY);
-  }
+  const totalsEndY = drawTotalsStack(pdf, totalsY, ctx.totals);
+  drawPaymentTermsBox(pdf, totalsEndY + 16);
 }
 
 function assemblePdfDocument(stream, assets) {
-  const { header, stamp } = assets;
+  const { header } = assets;
   const objects = [];
 
   function addObject(parts) {
@@ -753,21 +888,11 @@ function assemblePdfDocument(stream, assets) {
     ]);
   }
 
-  let stampId = 0;
-  if (stamp) {
-    stampId = addObject([
-      `<< /Type /XObject /Subtype /Image /Width ${stamp.width} /Height ${stamp.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${stamp.bytes.length} >>\nstream\n`,
-      stamp.bytes,
-      "\nendstream",
-    ]);
-  }
-
   const streamBytes = encodeLatin1(stream);
   const contentId = addObject([`<< /Length ${streamBytes.length} >>\nstream\n`, streamBytes, "\nendstream"]);
 
   const xObjectEntries = [];
   if (headerId) xObjectEntries.push(`/Header ${headerId} 0 R`);
-  if (stampId) xObjectEntries.push(`/Stamp ${stampId} 0 R`);
   const xObjectPart = xObjectEntries.length ? `/XObject << ${xObjectEntries.join(" ")} >>` : "";
   const pageId = addObject([
     `<< /Type /Page /Parent PAGES_ID /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${xObjectPart} >> >>`,
@@ -809,11 +934,11 @@ function assemblePdfDocument(stream, assets) {
 }
 
 async function buildProfessionalInvoicePdf(order) {
-  const [header, stamp] = await Promise.all([loadHeaderAsset(), loadStampAsset()]);
+  const header = await loadHeaderAsset();
   const ctx = buildInvoiceContextFromDetail(order);
   const writer = new InvoicePdfWriter();
-  renderInvoicePage(writer, header, stamp, ctx);
-  return assemblePdfDocument(`${writer.ops.join("\n")}\n`, { header, stamp });
+  renderInvoicePage(writer, header, ctx);
+  return assemblePdfDocument(`${writer.ops.join("\n")}\n`, { header });
 }
 
 export async function downloadOrderInvoicePdf(order) {
