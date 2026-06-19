@@ -6,6 +6,7 @@ import Footer from "@/components/Footer.jsx";
 import AuthMemberGuard from "@/components/login/AuthMemberGuard";
 import AccountSidebar from "@/components/account/AccountSidebar";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
+import "@/app/account/account.css";
 
 /**
  * @param {{

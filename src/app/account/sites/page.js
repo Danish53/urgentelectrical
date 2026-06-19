@@ -1,6 +1,4 @@
 import SitesPageClient from "@/components/account/SitesPageClient";
-import "../../home1/home1.css";
-import "../account.css";
 
 export const metadata = {
   title: "My Sites | Urgent Electrical",

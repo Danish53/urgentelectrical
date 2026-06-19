@@ -138,8 +138,25 @@ export function normalizeOrderStatus(status) {
 
 /**
  * @param {Record<string, unknown>} api
+ * @returns {Record<string, unknown> | null}
+ */
+function pickOrderDetailBlock(api) {
+  const detail = api.order_detail ?? api.orderDetail;
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+    return /** @type {Record<string, unknown>} */ (detail);
+  }
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} api
  */
 function formatOrderAddress(api) {
+  const detail = pickOrderDetailBlock(api);
+  if (detail?.address && typeof detail.address === "object") {
+    return formatOrderAddress(/** @type {Record<string, unknown>} */ (detail.address));
+  }
+
   const direct =
     (typeof api.address === "string" && api.address) ||
     (typeof api.full_address === "string" && api.full_address) ||
@@ -170,6 +187,26 @@ function formatOrderAddress(api) {
  * @param {Record<string, unknown>} api
  */
 function pickServiceName(api) {
+  const detail = pickOrderDetailBlock(api);
+  if (detail) {
+    const service = detail.service;
+    if (service && typeof service === "object") {
+      const row = /** @type {Record<string, unknown>} */ (service);
+      const title = row.title ?? row.name ?? row.service_name;
+      if (typeof title === "string" && title.trim()) {
+        const variant = detail.service_varient ?? detail.service_variant;
+        if (variant && typeof variant === "object") {
+          const variantRow = /** @type {Record<string, unknown>} */ (variant);
+          const variantName = variantRow.variant_name ?? variantRow.name;
+          if (typeof variantName === "string" && variantName.trim()) {
+            return `${title.trim()} (${variantName.trim()})`;
+          }
+        }
+        return title.trim();
+      }
+    }
+  }
+
   const direct = api.service_name ?? api.service_title ?? api.title ?? api.service;
   if (typeof direct === "string" && direct.trim()) return direct.trim();
 
@@ -183,8 +220,7 @@ function pickServiceName(api) {
     }
   }
 
-  const label = formatOrderStatusLabel(api.order_status ?? api.status);
-  return label ? `${label} booking` : "Electrical booking";
+  return "Service";
 }
 
 /**
@@ -254,6 +290,7 @@ export function apiToOrderSummary(api) {
     discount,
     paymentMethod: String(api.payment_method ?? "").trim(),
     paymentStatus: String(api.payment_status ?? "").trim(),
+    raw: api,
   };
 }
 
@@ -263,15 +300,23 @@ export function apiToOrderSummary(api) {
  */
 export function apiToOrderDetail(api) {
   const summary = apiToOrderSummary(api);
-  const first = String(api.first_name ?? "").trim();
-  const last = String(api.last_name ?? "").trim();
+  const detail = pickOrderDetailBlock(api);
+  const addressRow =
+    detail?.address && typeof detail.address === "object"
+      ? /** @type {Record<string, unknown>} */ (detail.address)
+      : null;
+
+  const first = String(addressRow?.first_name ?? api.first_name ?? "").trim();
+  const last = String(addressRow?.last_name ?? api.last_name ?? "").trim();
+  const title = String(addressRow?.title ?? api.title ?? "").trim();
 
   return {
     ...summary,
     reference: normalizeOrderReference(api) || summary.reference,
-    customerName: [api.title, first, last].filter(Boolean).join(" ").trim() || undefined,
-    customerPhone: String(api.mobile ?? api.mobile_number ?? api.phone ?? "").trim() || undefined,
-    customerEmail: String(api.email ?? "").trim() || undefined,
+    address: formatOrderAddress(api) || summary.address,
+    customerName: [title, first, last].filter(Boolean).join(" ").trim() || undefined,
+    customerPhone: String(addressRow?.mobile ?? api.mobile ?? api.mobile_number ?? api.phone ?? "").trim() || undefined,
+    customerEmail: String(addressRow?.email ?? api.email ?? "").trim() || undefined,
     notes: String(api.description ?? api.notes ?? api.customer_notes ?? "").trim() || undefined,
     engineerNotes: String(api.engineer_notes ?? "").trim() || undefined,
     raw: api,
@@ -366,7 +411,7 @@ export function parseOrderDetailResponse(payload) {
   if (!payload || typeof payload !== "object") return null;
   const record = /** @type {Record<string, unknown>} */ (payload);
 
-  if (record.success === true && record.data && typeof record.data === "object") {
+  if ((record.success === true || record.status === true) && record.data && typeof record.data === "object") {
     const data = /** @type {Record<string, unknown>} */ (record.data);
     if (data.order && typeof data.order === "object") {
       return /** @type {Record<string, unknown>} */ (data.order);

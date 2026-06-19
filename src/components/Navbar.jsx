@@ -5,16 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
-import { CONTAINER } from "@/components/home1/constants";
+import { CONTAINER, NAV_SHELL } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
 import { NAV_MENU_ITEM } from "@/components/nav/navMenuStyles";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { NAV_DROPDOWN_SUBTITLES } from "./navData";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { useNavMenu } from "@/hooks/useNavMenu";
-
-const NAV_MENU_ITEM_MID =
-  "max-[1199px]:px-2 max-[1199px]:text-[13px] max-[1199px]:gap-1";
 
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (
@@ -96,12 +93,12 @@ function BrandLogo({ compact = false }) {
   );
 }
 
-function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true }) {
+function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shellClass = CONTAINER }) {
   const { site } = useWebsiteGeneralData();
 
   return (
     <div className="bg-[#f9f8f6] border-b border-[#ececec]">
-      <div className={`${CONTAINER} h-10 flex items-center justify-between text-[13px] leading-none`}>
+      <div className={`${shellClass} h-10 flex items-center justify-between text-[13px] leading-none`}>
         <div className="flex items-center gap-4 min-w-0">
           <a
             href={`tel:${site.contactNumber}`}
@@ -245,10 +242,10 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.85, ease: EASE_SMOOTH }}
       >
-        <NavTopUtilityBar incVat={incVat} onVatToggle={toggleVat} />
+        <NavTopUtilityBar incVat={incVat} onVatToggle={toggleVat} shellClass={NAV_SHELL} />
 
         {!mobileOpen && (
-          <div className={CONTAINER}>
+          <div className={NAV_SHELL}>
             {/* Mobile */}
             <div className="flex lg:hidden items-center justify-between min-h-[68px] py-3 gap-4">
               <BrandLogo compact />
@@ -274,12 +271,12 @@ export default function Navbar() {
             </div>
 
             {/* Desktop: logo | centered menu | Book Now */}
-            <div className="hidden lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-3 xl:gap-5 min-h-[72px] py-3 w-full">
-              <div className="flex items-center justify-start min-w-0">
+            <div className="hidden lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-2 xl:gap-4 min-h-[72px] py-3 w-full">
+              <div className="flex items-center justify-start min-w-0 shrink-0">
                 <BrandLogo />
               </div>
 
-              <nav className="flex items-center justify-center min-w-0 flex-wrap gap-x-0 px-1 xl:px-2">
+              <nav className="flex flex-nowrap items-center justify-center min-w-0 gap-x-0 px-0 overflow-x-clip">
                 {navGroups.map((group) => {
                   const isOpen = activeMenu === group.label;
                   return (
@@ -291,7 +288,7 @@ export default function Navbar() {
                     >
                       <button
                         type="button"
-                        className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} ${isOpen ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
+                        className={`${NAV_MENU_ITEM} ${isOpen ? "bg-[#f5f4f0]" : "hover:text-[#3d3b39]"}`}
                       >
                         {group.label}
                         <NavIconChevron open={isOpen} />
@@ -305,19 +302,16 @@ export default function Navbar() {
                 {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Services
                 </a> */}
-                <Link href="/blog" className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} hover:text-[#3d3b39]`}>
+                <Link href="/blog" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Blogs
                 </Link>
-                <Link href="/contact-us" className={`${NAV_MENU_ITEM} ${NAV_MENU_ITEM_MID} hover:text-[#3d3b39]`}>
-                  Contact
-                </Link>
-                <NavAuthControl variant="desktop" className={NAV_MENU_ITEM_MID} />
+                <NavAuthControl variant="desktop" />
               </nav>
 
               <div className="flex items-center justify-end min-w-0 shrink-0">
                 <Link
                   href="/services"
-                  className="nav-book-now-cta group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] max-[1199px]:text-[13px] font-semibold px-5 max-[1199px]:px-3.5 py-2.5 max-[1199px]:py-2 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
+                  className="nav-book-now-cta group inline-flex items-center gap-1.5 bg-[#111111] text-white text-[14px] font-semibold px-5 py-2.5 rounded-lg whitespace-nowrap shadow-sm transition-all duration-300 ease-out hover:bg-[#d32f2f] hover:shadow-[0_6px_20px_rgba(211,47,47,0.35)] hover:-translate-y-px active:translate-y-0"
                 >
                   Book Now
                   <span className="transition-transform duration-300 ease-out group-hover:translate-x-1">

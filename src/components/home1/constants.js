@@ -19,6 +19,10 @@ export const PAGE_GUTTERS = "px-3.5 sm:px-6 md:px-8 lg:px-12 xl:px-16";
 
 export const CONTAINER = `w-full max-w-[1440px] mx-auto ${PAGE_GUTTERS}`;
 
+/** Navbar shell — 1320px+ identical to CONTAINER; below 1320px tighter side gutters only */
+export const NAV_SHELL =
+  `${CONTAINER} max-[1334px]:!px-3.5 max-[1334px]:sm:!px-6 max-[1334px]:md:!px-8 max-[1334px]:lg:!px-6 max-[1334px]:xl:!px-8`;
+
 /** Service / blog / detail pages — same track as main site container */
 export const SERVICE_DETAIL_CONTAINER = CONTAINER;
 

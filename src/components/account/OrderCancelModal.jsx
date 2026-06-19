@@ -109,8 +109,8 @@ export default function OrderCancelModal({
         <form onSubmit={handleSubmit} className="home1-sites-modal-form">
           <div className="home1-sites-modal-body">
             <p className="home1-order-cancel-modal-lead">
-              You can cancel this booking within 48 hours of placing the order.
-              {deadlineLabel ? ` Cancellation is available until ${deadlineLabel}.` : null}
+            You can cancel this booking free of charge up to 48 hours before your appointment.
+              {deadlineLabel ? ` Free cancellation and changes are available until ${deadlineLabel}.` : null}
             </p>
 
             <div className="home1-sites-field">

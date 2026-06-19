@@ -1,6 +1,4 @@
 import ProfilePageClient from "@/components/account/ProfilePageClient";
-import "../../home1/home1.css";
-import "../account.css";
 
 export const metadata = {
   title: "My Profile | Urgent Electrical",

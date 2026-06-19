@@ -1,6 +1,4 @@
 import OrdersPageClient from "@/components/account/OrdersPageClient";
-import "../../home1/home1.css";
-import "../account.css";
 
 export const metadata = {
   title: "My Orders | Urgent Electrical",

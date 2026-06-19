@@ -17,11 +17,13 @@ import {
 } from "@/lib/orders/orderFilters";
 import { getOrderServiceDetailHref } from "@/lib/orders/orderServiceHref";
 import { canCancelOrder } from "@/lib/orders/orderCancel";
+import { downloadOrderInvoicePdf } from "@/lib/orders/downloadOrderInvoice";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { requestOrderCancellation } from "@/services/ordersApiService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearOrderDetail, loadOrderDetail, loadOrders } from "@/store/slices/ordersSlice";
-import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
+import { IconArrow, IconCalendar, IconCheck, IconDownload, IconMail } from "@/components/home1/icons";
+import "@/app/account/account.css";
 import "@/components/skeletons/skeleton.css";
 
 function formatShortDate(isoDate) {
@@ -70,11 +72,27 @@ function OrderStatusBadge({ order }) {
  * }} props
  */
 function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
   const visitDate = order.visitDate
     ? new Date(`${order.visitDate}T12:00:00`)
   : null;
   const displayRef = order.reference || order.id;
   const showCancel = canCancelOrder(order);
+
+  function handleSendInvoiceEmail() {
+    toastSuccess("Invoice sent to your email address.");
+  }
+
+  async function handleDownloadInvoice() {
+    setInvoiceLoading(true);
+    try {
+      await downloadOrderInvoicePdf(order);
+    } catch (err) {
+      toastError(err, "Could not download invoice.");
+    } finally {
+      setInvoiceLoading(false);
+    }
+  }
 
   return (
     <article className="home1-orders-card home1-card">
@@ -84,10 +102,11 @@ function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
           <h2 className="home1-orders-card-title">{order.serviceName}</h2>
           {order.paymentMethod || order.paymentStatus ? (
             <p className="home1-orders-card-category">
-              {[order.paymentMethod, order.paymentStatus]
+              {/* {[order.paymentMethod, order.paymentStatus]
                 .filter(Boolean)
                 .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-                .join(" · ")}
+                .join(" · ")} */}
+                Paid by Card
             </p>
           ) : null}
         </div>
@@ -136,36 +155,66 @@ function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
       </dl>
 
       <div className="home1-orders-card-actions">
-        <button
-          type="button"
-          className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--detail inline-flex items-center justify-center gap-2"
-          onClick={() => onViewDetails(order)}
-          disabled={detailLoading}
-          aria-busy={detailLoading}
-        >
-          {detailLoading ? <ButtonSpinner /> : null}
-          {detailLoading ? "Loading…" : "Order details"}
-        </button>
-        {showCancel ? (
+        <div className="home1-orders-card-actions-left">
+          {/* <button
+            type="button"
+            className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--detail inline-flex items-center justify-center gap-2"
+            onClick={() => onViewDetails(order)}
+            disabled={detailLoading}
+            aria-busy={detailLoading}
+          >
+            {detailLoading ? <ButtonSpinner /> : null}
+            {detailLoading ? "Loading…" : "Order Details"}
+          </button> */}
+
           <button
             type="button"
-            className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--cancel"
-            onClick={() => onCancel?.(order)}
+            className="home1-orders-card-btn home1-orders-card-btn--invoice home1-orders-card-btn--invoice-email inline-flex items-center justify-center gap-2"
+            onClick={handleSendInvoiceEmail}
           >
-            Cancel order
+            <span className="home1-orders-card-btn-icon home1-orders-card-btn-icon--mail" aria-hidden="true">
+              <IconMail className="w-3.5 h-3.5" />
+            </span>
+            Send Invoice By Email
           </button>
-        ) : order.status === "completed" || order.status === "cancelled" ? (
-          <Link
-            href={getOrderServiceDetailHref(order)}
-            className="home1-btn-primary home1-orders-card-btn"
+          <button
+            type="button"
+            className="home1-orders-card-btn home1-orders-card-btn--invoice home1-orders-card-btn--invoice-download inline-flex items-center justify-center gap-2"
+            onClick={handleDownloadInvoice}
+            disabled={invoiceLoading}
+            aria-busy={invoiceLoading}
           >
-            Book again
-          </Link>
-        ) : (
-          <a href="tel:01157780622" className="home1-btn-primary home1-orders-card-btn">
-            Call engineer
-          </a>
-        )}
+            {invoiceLoading ? <ButtonSpinner /> : (
+            <span className="home1-orders-card-btn-icon home1-orders-card-btn-icon--download" aria-hidden="true">
+              <IconDownload className="w-3.5 h-3.5" />
+            </span>
+            )}
+            {invoiceLoading ? "Downloading…" : "Download Invoice"}
+          </button>
+        </div>
+
+        <div className="home1-orders-card-actions-end">
+          {showCancel ? (
+            <button
+              type="button"
+              className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--cancel w-full"
+              onClick={() => onCancel?.(order)}
+            >
+              Cancel Order
+            </button>
+          ) : order.status === "completed" || order.status === "cancelled" ? (
+            <Link
+              href={getOrderServiceDetailHref(order)}
+              className="home1-btn-primary home1-orders-card-btn"
+            >
+              Reorder
+            </Link>
+          ) : (
+            <a href="tel:01157780622" className="home1-btn-primary home1-orders-card-btn">
+              Call Engineer
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );

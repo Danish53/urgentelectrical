@@ -31,6 +31,7 @@
  * @property {number} discount
  * @property {string} paymentMethod
  * @property {string} paymentStatus
+ * @property {Record<string, unknown>} [raw]
  */
 
 /**
