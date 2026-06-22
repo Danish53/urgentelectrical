@@ -12,6 +12,10 @@ import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { NAV_DROPDOWN_SUBTITLES } from "./navData";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { useNavMenu } from "@/hooks/useNavMenu";
+import {
+  AVAILABILITY_OPEN,
+  getEngineerAvailability,
+} from "@/lib/engineerAvailability";
 
 function NavIconPhone({ className = "w-3.5 h-3.5" }) {
   return (
@@ -93,6 +97,27 @@ function BrandLogo({ compact = false }) {
   );
 }
 
+function NavEngineerAvailability({ compact = false, className = "" }) {
+  const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
+
+  useEffect(() => {
+    setAvailability(getEngineerAvailability());
+  }, []);
+
+  const text = compact ? availability.navTextCompact : availability.navText;
+
+  return (
+    <span
+      className={`nav-availability${availability.limited ? " nav-availability--limited" : ""} ${className}`.trim()}
+    >
+      <span className="nav-availability-dot-wrap" aria-hidden="true">
+        <span className="nav-availability-dot" />
+      </span>
+      <span className="nav-availability-text">{text}</span>
+    </span>
+  );
+}
+
 function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shellClass = CONTAINER }) {
   const { site } = useWebsiteGeneralData();
 
@@ -102,22 +127,14 @@ function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shell
         <div className="flex items-center gap-4 min-w-0">
           <a
             href={`tel:${site.contactNumber}`}
-            className="flex items-center gap-2 text-[#6b7280] font-normal hover:text-[#111827] transition-colors shrink-0"
+            className="flex items-center gap-2 text-[#5A5856] font-medium hover:text-[#111827] transition-colors shrink-0"
           >
             <NavIconPhone className="w-4 h-4 text-[#c62828]" />
             <span className="tracking-wide">{site.contactNumberDisplay}</span>
           </a>
           {showDesktopExtras && <span className="hidden lg:block w-px h-[14px] bg-[#d4d4d4]" aria-hidden />}
-          <span className="hidden lg:flex items-center gap-2 text-[#2e7d32] font-normal shrink-0">
-            <span className="w-2 h-2 rounded-full bg-[#43a047] shrink-0" aria-hidden />
-            <span>Engineers available now</span>
-          </span>
+          <NavEngineerAvailability className="hidden lg:flex" />
         </div>
-
-        <span className="flex lg:hidden items-center gap-2 text-[#2e7d32] font-normal shrink-0">
-          <span className="w-2 h-2 rounded-full bg-[#43a047] shrink-0" aria-hidden />
-          <span>Available now</span>
-        </span>
 
         {showDesktopExtras && (
           <div className="hidden lg:flex items-center gap-2.5 shrink-0">

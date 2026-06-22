@@ -11,6 +11,10 @@ import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
 import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
+import {
+  AVAILABILITY_OPEN,
+  getEngineerAvailability,
+} from "@/lib/engineerAvailability";
 
 const MARQUEE_ITEMS = [
   "12-month warranty",
@@ -62,21 +66,6 @@ const HERO_STATS = [
   { value: "NICEIC", label: "Approved" },
   { value: "2014", label: "Est. since" },
 ];
-
-const AVAILABILITY_OPEN = {
-  limited: false,
-  text: "Engineers available now in your area",
-};
-
-const AVAILABILITY_LIMITED = {
-  limited: true,
-  text: "Limited availability — call us before booking",
-};
-
-function getEngineerAvailability() {
-  const hour = new Date().getHours();
-  return hour >= 6 && hour < 22 ? AVAILABILITY_OPEN : AVAILABILITY_LIMITED;
-}
 
 export default function HeroHome1() {
   const router = useRouter();
@@ -155,7 +144,7 @@ export default function HeroHome1() {
             >
               <span className="home1-hero-availability-dot" aria-hidden="true" />
               <span id="availabilityText" className="home1-hero-availability-text">
-                {availability.text}
+                {availability.heroText}
               </span>
             </motion.div>
 

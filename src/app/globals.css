@@ -753,6 +753,89 @@ section {
   isolation: isolate;
 }
 
+/* Navbar — engineer availability (same logic + pulse as hero) */
+.nav-availability {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+  min-height: 10px;
+}
+
+.nav-availability-text {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  color: #2e7d32;
+}
+
+.nav-availability--limited .nav-availability-text {
+  color: #b45309;
+}
+
+.nav-availability-dot-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.nav-availability-dot-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 50%;
+  background: #43a047;
+  animation: nav-availability-ring 2s ease-out infinite;
+}
+
+.nav-availability-dot {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #43a047;
+  flex-shrink: 0;
+  animation: nav-availability-pulse 2s ease-in-out infinite;
+}
+
+.nav-availability--limited .nav-availability-dot-wrap::before {
+  background: #f59e0b;
+  animation: none;
+}
+
+.nav-availability--limited .nav-availability-dot {
+  background: #f59e0b;
+  animation: none;
+}
+
+@keyframes nav-availability-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes nav-availability-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
 .nav-book-now-cta::after,
 .hero-cta-shine::after {
   content: "";

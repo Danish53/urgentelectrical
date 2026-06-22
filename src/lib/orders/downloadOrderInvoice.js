@@ -6,6 +6,7 @@ const MARGIN = 30;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 const SECTION_GAP = 14;
 const SITE_TO_TABLE_GAP = 6;
+const PAYMENT_TERMS_TOP_GAP = 28;
 const HEADER_HEIGHT_SCALE = 0.88;
 const VAT_RATE = 0.2;
 const INVOICE_HEADER_SRC = "/Invoice-Header.svg";
@@ -169,6 +170,7 @@ function yFromTop(fromTop) {
 
 function sanitizePdfText(text) {
   return String(text)
+    .replace(/[\r\n\t]/g, " ")
     .replace(/[\u2013\u2014\u2212]/g, "-")
     .replace(/\u00B7/g, " | ")
     .replace(/[\u2018\u2019]/g, "'")
@@ -198,6 +200,13 @@ function formatPdfMoney(amount) {
 function parseMoney(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : 0;
+}
+
+/** @param {number} amount */
+function roundMoney(amount) {
+  const n = Number(amount);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
 }
 
 /** @param {string | Date | undefined} value */
@@ -323,7 +332,12 @@ async function loadRasterImageAsset(src, logicalW, scale) {
 }
 
 async function loadHeaderAsset() {
-  return loadRasterImageAsset(INVOICE_HEADER_SRC, CONTENT_W, HEADER_RENDER_SCALE);
+  try {
+    const header = await loadRasterImageAsset(INVOICE_HEADER_SRC, CONTENT_W, HEADER_RENDER_SCALE);
+    return isJpegBytes(header.bytes) ? header : null;
+  } catch {
+    return null;
+  }
 }
 
 function encodeLatin1(text) {
@@ -332,6 +346,91 @@ function encodeLatin1(text) {
     arr[i] = text.charCodeAt(i) & 0xff;
   }
   return arr;
+}
+
+/** @param {number} value */
+function formatPdfNum(value) {
+  if (!Number.isFinite(value)) return "0";
+  const rounded = Math.round(value * 10000) / 10000;
+  const text = String(rounded);
+  return text.includes(".") ? text.replace(/0+$/, "").replace(/\.$/, "") : text;
+}
+
+/** @param {Uint8Array} bytes */
+function encodeAsciiHexStream(bytes) {
+  const hexChars = "0123456789ABCDEF";
+  const out = new Uint8Array(bytes.length * 2 + 1);
+  let offset = 0;
+  for (let i = 0; i < bytes.length; i += 1) {
+    out[offset++] = hexChars.charCodeAt(bytes[i] >> 4);
+    out[offset++] = hexChars.charCodeAt(bytes[i] & 0x0f);
+  }
+  out[offset] = 0x3e;
+  return out;
+}
+
+/** @param {Uint8Array} bytes */
+function isJpegBytes(bytes) {
+  return bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+}
+
+/** @param {Uint8Array} bytes */
+function assertValidPdf(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length < 64) {
+    throw new Error("Generated PDF is empty.");
+  }
+  if (bytes[0] !== 0x25 || bytes[1] !== 0x50 || bytes[2] !== 0x44 || bytes[3] !== 0x46) {
+    throw new Error("Generated PDF is invalid.");
+  }
+  const tail = bytes.subarray(Math.max(0, bytes.length - 64));
+  let hasEof = false;
+  for (let i = 0; i < tail.length - 4; i += 1) {
+    if (
+      tail[i] === 0x25 &&
+      tail[i + 1] === 0x25 &&
+      tail[i + 2] === 0x45 &&
+      tail[i + 3] === 0x4f &&
+      tail[i + 4] === 0x46
+    ) {
+      hasEof = true;
+      break;
+    }
+  }
+  if (!hasEof) {
+    throw new Error("Generated PDF is incomplete.");
+  }
+}
+
+/**
+ * @param {Uint8Array} pdfBytes
+ * @param {string} filename
+ */
+function triggerPdfDownload(pdfBytes, filename) {
+  const bytes = new Uint8Array(pdfBytes);
+  assertValidPdf(bytes);
+  const blob = new Blob([bytes], { type: "application/pdf" });
+
+  const legacySave = /** @type {Navigator & { msSaveOrOpenBlob?: (b: Blob, name: string) => boolean }} */ (
+    window.navigator
+  ).msSaveOrOpenBlob;
+  if (typeof legacySave === "function") {
+    legacySave.call(window.navigator, blob, filename);
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  anchor.type = "application/pdf";
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.setTimeout(() => {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, 120_000);
 }
 
 function concatBytes(chunks) {
@@ -352,36 +451,42 @@ class InvoicePdfWriter {
   }
 
   fillColor(color) {
-    this.ops.push(`${color.r} ${color.g} ${color.b} rg`);
+    this.ops.push(`${formatPdfNum(color.r)} ${formatPdfNum(color.g)} ${formatPdfNum(color.b)} rg`);
   }
 
   strokeColor(color) {
-    this.ops.push(`${color.r} ${color.g} ${color.b} RG`);
+    this.ops.push(`${formatPdfNum(color.r)} ${formatPdfNum(color.g)} ${formatPdfNum(color.b)} RG`);
   }
 
   lineWidth(w) {
-    this.ops.push(`${w} w`);
+    this.ops.push(`${formatPdfNum(w)} w`);
   }
 
   fillRectTop(x, yTop, w, h) {
-    this.ops.push(`${x} ${yFromTop(yTop + h)} ${w} ${h} re f`);
+    this.ops.push(
+      `${formatPdfNum(x)} ${formatPdfNum(yFromTop(yTop + h))} ${formatPdfNum(w)} ${formatPdfNum(h)} re f`
+    );
   }
 
   strokeRectTop(x, yTop, w, h) {
-    this.ops.push(`${x} ${yFromTop(yTop + h)} ${w} ${h} re S`);
+    this.ops.push(
+      `${formatPdfNum(x)} ${formatPdfNum(yFromTop(yTop + h))} ${formatPdfNum(w)} ${formatPdfNum(h)} re S`
+    );
   }
 
   lineTop(x1, yTop1, x2, yTop2) {
-    this.ops.push(`${x1} ${yFromTop(yTop1)} m ${x2} ${yFromTop(yTop2)} l S`);
+    this.ops.push(
+      `${formatPdfNum(x1)} ${formatPdfNum(yFromTop(yTop1))} m ${formatPdfNum(x2)} ${formatPdfNum(yFromTop(yTop2))} l S`
+    );
   }
 
   /** @param {Array<[number, number]>} pointsTop */
   fillPolygonTop(pointsTop) {
     if (pointsTop.length < 3) return;
     const [first, ...rest] = pointsTop;
-    this.ops.push(`${first[0]} ${yFromTop(first[1])} m`);
+    this.ops.push(`${formatPdfNum(first[0])} ${formatPdfNum(yFromTop(first[1]))} m`);
     for (const [x, yTop] of rest) {
-      this.ops.push(`${x} ${yFromTop(yTop)} l`);
+      this.ops.push(`${formatPdfNum(x)} ${formatPdfNum(yFromTop(yTop))} l`);
     }
     this.ops.push("h f");
   }
@@ -389,7 +494,7 @@ class InvoicePdfWriter {
   drawImage(name, drawW, drawH, x, yTop) {
     const y = yFromTop(yTop + drawH);
     this.ops.push("q");
-    this.ops.push(`${drawW} 0 0 ${drawH} ${x} ${y} cm`);
+    this.ops.push(`${formatPdfNum(drawW)} 0 0 ${formatPdfNum(drawH)} ${formatPdfNum(x)} ${formatPdfNum(y)} cm`);
     this.ops.push(`/${name} Do`);
     this.ops.push("Q");
   }
@@ -400,8 +505,10 @@ class InvoicePdfWriter {
     const color = opts.color ?? C.ink;
     this.ops.push("BT");
     this.fillColor(color);
-    this.ops.push(`/${font} ${size} Tf`);
-    this.ops.push(`1 0 0 1 ${x} ${yFromTop(yTop)} Tm (${escapePdfText(text)}) Tj`);
+    this.ops.push(`/${font} ${formatPdfNum(size)} Tf`);
+    this.ops.push(
+      `1 0 0 1 ${formatPdfNum(x)} ${formatPdfNum(yFromTop(yTop))} Tm (${escapePdfText(text)}) Tj`
+    );
     this.ops.push("ET");
   }
 
@@ -420,11 +527,19 @@ class InvoicePdfWriter {
   /** Circle in PDF bottom-left coordinates */
   circle(cx, cyBottom, r, fill = true) {
     const k = r * 0.5523;
-    this.ops.push(`${cx + r} ${cyBottom} m`);
-    this.ops.push(`${cx + r} ${cyBottom + k} ${cx + k} ${cyBottom + r} ${cx} ${cyBottom + r} c`);
-    this.ops.push(`${cx - k} ${cyBottom + r} ${cx - r} ${cyBottom + k} ${cx - r} ${cyBottom} c`);
-    this.ops.push(`${cx - k} ${cyBottom - r} ${cx - r} ${cyBottom - k} ${cx} ${cyBottom - r} c`);
-    this.ops.push(`${cx + k} ${cyBottom - r} ${cx + r} ${cyBottom - k} ${cx + r} ${cyBottom} c`);
+    this.ops.push(`${formatPdfNum(cx + r)} ${formatPdfNum(cyBottom)} m`);
+    this.ops.push(
+      `${formatPdfNum(cx + r)} ${formatPdfNum(cyBottom + k)} ${formatPdfNum(cx + k)} ${formatPdfNum(cyBottom + r)} ${formatPdfNum(cx)} ${formatPdfNum(cyBottom + r)} c`
+    );
+    this.ops.push(
+      `${formatPdfNum(cx - k)} ${formatPdfNum(cyBottom + r)} ${formatPdfNum(cx - r)} ${formatPdfNum(cyBottom + k)} ${formatPdfNum(cx - r)} ${formatPdfNum(cyBottom)} c`
+    );
+    this.ops.push(
+      `${formatPdfNum(cx - k)} ${formatPdfNum(cyBottom - r)} ${formatPdfNum(cx - r)} ${formatPdfNum(cyBottom - k)} ${formatPdfNum(cx)} ${formatPdfNum(cyBottom - r)} c`
+    );
+    this.ops.push(
+      `${formatPdfNum(cx + k)} ${formatPdfNum(cyBottom - r)} ${formatPdfNum(cx + r)} ${formatPdfNum(cyBottom - k)} ${formatPdfNum(cx + r)} ${formatPdfNum(cyBottom)} c`
+    );
     this.ops.push(fill ? "f" : "S");
   }
 }
@@ -467,11 +582,13 @@ function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
   const color = opts.textColor ?? C.black;
   const valueRightX = x + w - padX;
   const leftLines = opts.leftLines;
+  let valueY = textY;
 
   if (leftLines?.length) {
     const lineGap = size + 1.5;
     const stackH = leftLines.length * lineGap - 1.5;
     const startY = yTop + (h - stackH) / 2 + size * 0.72;
+    valueY = startY + (stackH - size * 0.28) / 2;
     leftLines.forEach((line, index) => {
       pdf.text(line, x + padX, startY + index * lineGap, { font: leftFont, size, color });
     });
@@ -479,7 +596,7 @@ function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
     pdf.text(left, x + padX, textY, { font: leftFont, size, color });
   }
 
-  pdf.textRight(String(right ?? ""), valueRightX, textY, { font: rightFont, size, color });
+  pdf.textRight(String(right ?? ""), valueRightX, valueY, { font: rightFont, size, color });
 }
 
 /**
@@ -748,9 +865,9 @@ function drawTotalsStack(pdf, yTop, totals) {
     boxW,
     finalRowH,
     C.orange,
-    "",
+    "Amount Including VAT",
     formatPdfMoney(totals.totalIncVat),
-    { ...boldOpts, leftLines: ["Amount Including", "VAT"] }
+    { ...boldOpts, size: 8 }
   );
 
   return yTop + getTotalsStackHeight();
@@ -853,28 +970,27 @@ function buildInvoiceContextFromDetail(order) {
         : null;
 
   const unitCost = parseMoney(variant?.variant_price ?? detailBlock?.total) / (qty || 1);
-  const lineNet = parseMoney(detailBlock?.total) || unitCost * qty;
-  const lineVat = lineNet * VAT_RATE;
+  const lineNet = roundMoney(parseMoney(detailBlock?.total) || unitCost * qty);
+  const lineVat = roundMoney(lineNet * VAT_RATE);
 
   /** @type {Array<{ description: string, qty: number, unitCost: number, amount: number, vatRateLabel: string, vatAmount: number, total: number }>} */
   const tableRows = [
     {
       description: serviceName,
       qty,
-      unitCost,
+      unitCost: roundMoney(unitCost),
       amount: lineNet,
       vatRateLabel: "20%",
       vatAmount: lineVat,
-      total: lineNet + lineVat,
+      total: roundMoney(lineNet + lineVat),
     },
   ];
 
-  const amountExVat = tableRows.reduce((sum, row) => sum + row.amount, 0);
-  const discount = parseMoney(order.discount);
-  const netAfterDiscount = Math.max(0, amountExVat - discount);
-  const vat = netAfterDiscount * VAT_RATE;
-  const totalIncVat =
-    parseMoney(order.totalInc) > 0 ? parseMoney(order.totalInc) : netAfterDiscount + vat;
+  const amountExVat = roundMoney(tableRows.reduce((sum, row) => sum + row.amount, 0));
+  const discount = roundMoney(parseMoney(order.discount));
+  const netAfterDiscount = roundMoney(Math.max(0, amountExVat - discount));
+  const vat = roundMoney(netAfterDiscount * VAT_RATE);
+  const totalIncVat = roundMoney(netAfterDiscount + vat);
 
   return {
     reference,
@@ -908,7 +1024,7 @@ function renderInvoicePage(pdf, header, ctx) {
 
   const totalsY = afterTableY + 20;
   const totalsEndY = drawTotalsStack(pdf, totalsY, ctx.totals);
-  drawPaymentTermsBox(pdf, totalsEndY + SECTION_GAP);
+  drawPaymentTermsBox(pdf, totalsEndY + PAYMENT_TERMS_TOP_GAP);
 }
 
 function assemblePdfDocument(stream, assets) {
@@ -920,14 +1036,19 @@ function assemblePdfDocument(stream, assets) {
     return objects.length;
   }
 
-  const fontRegularId = addObject(["<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>"]);
-  const fontBoldId = addObject(["<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>"]);
+  const fontRegularId = addObject([
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+  ]);
+  const fontBoldId = addObject([
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+  ]);
 
   let headerId = 0;
-  if (header) {
+  if (header && isJpegBytes(header.bytes)) {
+    const hexStream = encodeAsciiHexStream(header.bytes);
     headerId = addObject([
-      `<< /Type /XObject /Subtype /Image /Width ${header.width} /Height ${header.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${header.bytes.length} >>\nstream\n`,
-      header.bytes,
+      `<< /Type /XObject /Subtype /Image /Width ${header.width} /Height ${header.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${hexStream.length} >>\nstream\n`,
+      hexStream,
       "\nendstream",
     ]);
   }
@@ -938,14 +1059,15 @@ function assemblePdfDocument(stream, assets) {
   const xObjectEntries = [];
   if (headerId) xObjectEntries.push(`/Header ${headerId} 0 R`);
   const xObjectPart = xObjectEntries.length ? `/XObject << ${xObjectEntries.join(" ")} >>` : "";
+  const procSetPart = headerId ? "/ProcSet [/PDF /Text /ImageC]" : "/ProcSet [/PDF /Text]";
   const pageId = addObject([
-    `<< /Type /Page /Parent PAGES_ID /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${xObjectPart} >> >>`,
+    `<< /Type /Page /Parent PAGES_ID /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${xObjectPart} ${procSetPart} >> >>`,
   ]);
 
   const pagesId = addObject([`<< /Type /Pages /Kids [${pageId} 0 R] /Count 1 >>`]);
   const catalogId = addObject([`<< /Type /Catalog /Pages ${pagesId} 0 R >>`]);
 
-  const chunks = [encodeLatin1("%PDF-1.4\n")];
+  const chunks = [encodeLatin1("%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")];
   const offsets = [0];
 
   for (const obj of objects) {
@@ -995,15 +1117,6 @@ export async function downloadOrderInvoicePdf(order) {
 
   const detail = await fetchOrderById(order.id);
   const pdfBytes = await buildProfessionalInvoicePdf(detail);
-  const blob = new Blob([pdfBytes], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
   const ref = String(detail.reference || order.reference || order.id).replace(/[^\w-]+/g, "-");
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `invoice-${ref}.pdf`;
-  anchor.rel = "noopener";
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  triggerPdfDownload(pdfBytes, `invoice-${ref}.pdf`);
 }
