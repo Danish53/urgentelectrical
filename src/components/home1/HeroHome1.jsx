@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { useBookingOptions } from "@/hooks/useServices";
+import { useSimpleServicesList } from "@/hooks/useServices";
+import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
+import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER } from "./constants";
 import { IconArrow, IconPhone } from "./icons";
@@ -68,15 +70,16 @@ const HERO_STATS = [
 ];
 
 export default function HeroHome1() {
-  const router = useRouter();
-  const { options, loading: servicesLoading } = useBookingOptions();
-  const [service, setService] = useState("");
+  const { options, loading: servicesLoading } = useSimpleServicesList();
+  const { lookup, submitting, modalOpen, modalVariant, modalMessage, closeModal, bookService } =
+    useServicePostcodeLookup("home");
+  const [serviceSlug, setServiceSlug] = useState("");
 
   useEffect(() => {
-    if (options.length && !service) {
-      setService(options[0].name);
+    if (options.length && !serviceSlug) {
+      setServiceSlug(options[0].slug);
     }
-  }, [options, service]);
+  }, [options, serviceSlug]);
   const [postcode, setPostcode] = useState("");
   const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
   const reduceMotion = useReducedMotion();
@@ -87,11 +90,8 @@ export default function HeroHome1() {
 
   function handleBookSubmit(e) {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (service) params.set("service", service);
-    if (postcode.trim()) params.set("postcode", postcode.trim().toUpperCase());
-    const qs = params.toString();
-    router.push(qs ? `/checkout?${qs}` : "/checkout");
+    if (!serviceSlug || !postcode.trim() || submitting) return;
+    lookup({ serviceSlug, postCode: postcode });
   }
 
   return (
@@ -245,14 +245,14 @@ export default function HeroHome1() {
                   <select
                     id="home1-service"
                     name="service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
+                    value={serviceSlug}
+                    onChange={(e) => setServiceSlug(e.target.value)}
                     required
-                    disabled={!options.length}
+                    disabled={!options.length || submitting}
                     className="home1-hero-input cursor-pointer appearance-none"
                   >
                     {options.map((s) => (
-                      <option key={s.name} value={s.name}>
+                      <option key={s.slug} value={s.slug}>
                         {s.name}
                       </option>
                     ))}
@@ -279,6 +279,8 @@ export default function HeroHome1() {
                   onChange={(e) => setPostcode(e.target.value.toUpperCase())}
                   placeholder="e.g. NG1 1AA"
                   autoComplete="postal-code"
+                  required
+                  disabled={submitting}
                   className="home1-hero-input"
                 />
               </div>
@@ -286,12 +288,17 @@ export default function HeroHome1() {
               <div className="px-3 sm:px-0">
                 <button
                   type="submit"
-                  className="hero-cta-shine w-full flex items-center justify-center gap-2 sm:gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[14px] sm:text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+                  disabled={servicesLoading || !options.length || submitting || !postcode.trim()}
+                  className="hero-cta-shine w-full flex items-center justify-center gap-2 sm:gap-3 bg-[#D3231F] hover:bg-[#b71c1c] text-white font-bold text-[14px] sm:text-[15px] py-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(211,35,31,0.45)] hover:shadow-[0_12px_40px_rgba(211,35,31,0.55)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 >
-                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M20 20l-4-4" strokeLinecap="round" />
-                  </svg>
+                  {submitting ? (
+                    <ButtonSpinner className="h-5 w-5" />
+                  ) : (
+                    <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                      <circle cx="11" cy="11" r="7" />
+                      <path d="M20 20l-4-4" strokeLinecap="round" />
+                    </svg>
+                  )}
                   Check Availability &amp; Book Now
                   <IconArrow className="w-5 h-5 shrink-0" />
                 </button>
@@ -318,6 +325,14 @@ export default function HeroHome1() {
           </p>
         </footer>
       </aside>
+
+      <ServicePostcodeResultModal
+        open={modalOpen}
+        variant={modalVariant}
+        message={modalMessage}
+        onClose={closeModal}
+        onBook={bookService}
+      />
     </section>
   );
 }

@@ -1,0 +1,66 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { checkServiceByPostalCode } from "@/services/serviceByPostalCodeApiService";
+
+/**
+ * Hero / locations postcode lookup — shows success or error modal after API check.
+ * @param {"home" | "locations"} source
+ */
+export function useServicePostcodeLookup(source) {
+  const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalVariant, setModalVariant] = useState(/** @type {"success" | "error"} */ ("error"));
+  const [modalMessage, setModalMessage] = useState("");
+  const [matchedServiceSlug, setMatchedServiceSlug] = useState("");
+
+  const closeModal = useCallback(() => {
+    setModalOpen(false);
+    setMatchedServiceSlug("");
+  }, []);
+
+  const bookService = useCallback(() => {
+    if (!matchedServiceSlug) return;
+    const slug = matchedServiceSlug;
+    closeModal();
+    router.push(`/services/${slug}`);
+  }, [closeModal, matchedServiceSlug, router]);
+
+  const lookup = useCallback(
+    async ({ serviceSlug, postCode }) => {
+      if (!serviceSlug || !String(postCode ?? "").trim()) return;
+
+      setSubmitting(true);
+      try {
+        const result = await checkServiceByPostalCode({ source, serviceSlug, postCode });
+        if (result.matched) {
+          setMatchedServiceSlug(serviceSlug);
+          setModalVariant("success");
+          setModalMessage("");
+          setModalOpen(true);
+          return;
+        }
+        setMatchedServiceSlug("");
+        setModalVariant("error");
+        setModalMessage(result.message);
+        setModalOpen(true);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [source],
+  );
+
+  return {
+    lookup,
+    submitting,
+    modalOpen,
+    modalVariant,
+    modalMessage,
+    matchedServiceSlug,
+    closeModal,
+    bookService,
+  };
+}

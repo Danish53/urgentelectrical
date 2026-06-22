@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAppSelector } from "@/store/hooks";
+import { fetchSimpleServicesList } from "@/services/simpleServicesApiService";
 import { buildServiceCategoryFilters } from "@/lib/services/buildServiceCategory";
 import {
   selectBookableServices,
@@ -28,6 +29,40 @@ export function useBookingOptions() {
   const failed = status === "failed";
 
   return { options, loading, failed, status };
+}
+
+/** Lightweight service list (title + slug) for hero and location search dropdowns */
+export function useSimpleServicesList() {
+  const [options, setOptions] = useState(/** @type {{ name: string, slug: string }[]} */ ([]));
+  const [status, setStatus] = useState(/** @type {"idle" | "loading" | "succeeded" | "failed"} */ ("idle"));
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus("loading");
+
+    fetchSimpleServicesList()
+      .then((list) => {
+        if (cancelled) return;
+        setOptions(list.map(({ title, slug }) => ({ name: title, slug })));
+        setStatus("succeeded");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setOptions([]);
+        setStatus("failed");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return {
+    options,
+    loading: status === "loading" || status === "idle",
+    failed: status === "failed",
+    status,
+  };
 }
 
 export function useFeaturedServices({ limit } = {}) {

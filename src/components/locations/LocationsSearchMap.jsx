@@ -2,11 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useBookingOptions } from "@/hooks/useServices";
+import { useSimpleServicesList } from "@/hooks/useServices";
+import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
+import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
-import { buildCheckoutHref } from "@/lib/checkoutHref";
 
 const LocationsLeafletMap = dynamic(() => import("@/components/locations/LocationsLeafletMap"), {
   ssr: false,
@@ -14,20 +15,16 @@ const LocationsLeafletMap = dynamic(() => import("@/components/locations/Locatio
 });
 
 export default function LocationsSearchMap() {
-  const router = useRouter();
-  const { options, loading: servicesLoading } = useBookingOptions();
-  const [service, setService] = useState("");
+  const { options, loading: servicesLoading } = useSimpleServicesList();
+  const { lookup, submitting, modalOpen, modalVariant, modalMessage, closeModal, bookService } =
+    useServicePostcodeLookup("locations");
+  const [serviceSlug, setServiceSlug] = useState("");
   const [postcode, setPostcode] = useState("");
 
   function handleSearch(e) {
     e.preventDefault();
-    if (!service.trim()) return;
-    router.push(
-      buildCheckoutHref({
-        service,
-        postcode: postcode.trim() || undefined,
-      }),
-    );
+    if (!serviceSlug.trim() || !postcode.trim() || submitting) return;
+    lookup({ serviceSlug, postCode: postcode });
   }
 
   return (
@@ -54,17 +51,17 @@ export default function LocationsSearchMap() {
                 <select
                   id="locations-service"
                   name="service"
-                  value={service}
-                  onChange={(e) => setService(e.target.value)}
-                  disabled={!options.length}
-                  className={`home1-locations-search-slim__field home1-locations-search-slim__field--select${!service ? " is-placeholder" : ""}`}
+                  value={serviceSlug}
+                  onChange={(e) => setServiceSlug(e.target.value)}
+                  disabled={!options.length || submitting}
+                  className={`home1-locations-search-slim__field home1-locations-search-slim__field--select${!serviceSlug ? " is-placeholder" : ""}`}
                   required
                 >
                   <option value="" disabled>
                     Select a Service
                   </option>
                   {options.map((s) => (
-                    <option key={s.name} value={s.name}>
+                    <option key={s.slug} value={s.slug}>
                       {s.name}
                     </option>
                   ))}
@@ -87,6 +84,8 @@ export default function LocationsSearchMap() {
                     placeholder="Enter postcode"
                     autoComplete="postal-code"
                     maxLength={8}
+                    required
+                    disabled={submitting}
                     className="home1-locations-search-slim__field home1-locations-search-slim__field--postcode"
                   />
                 </>
@@ -95,9 +94,9 @@ export default function LocationsSearchMap() {
               <button
                 type="submit"
                 className="home1-locations-search-slim__btn"
-                disabled={servicesLoading || !options.length}
+                disabled={servicesLoading || !options.length || submitting || !serviceSlug || !postcode.trim()}
               >
-                Search
+                {submitting ? <ButtonSpinner className="h-4 w-4" /> : "Search"}
               </button>
             </form>
           </div>
@@ -111,6 +110,14 @@ export default function LocationsSearchMap() {
           </div>
         </div>
       </section>
+
+      <ServicePostcodeResultModal
+        open={modalOpen}
+        variant={modalVariant}
+        message={modalMessage}
+        onClose={closeModal}
+        onBook={bookService}
+      />
     </>
   );
 }

@@ -997,6 +997,32 @@
   border-color: #b81e1a !important;
 }
 
+/* Send invoice email modal */
+.home1-send-invoice-modal {
+  max-width: 24rem;
+}
+
+.home1-send-invoice-modal-ref {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--home1-muted);
+}
+
+.home1-send-invoice-modal-lead {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--home1-muted);
+}
+
+.home1-send-invoice-modal-error {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #d3231f;
+}
+
 /* Profile */
 .home1-profile-hero {
   display: flex;

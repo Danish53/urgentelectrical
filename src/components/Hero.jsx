@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { useBookingOptions } from "@/hooks/useServices";
+import { useSimpleServicesList } from "@/hooks/useServices";
+import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
+import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
 
@@ -95,25 +97,23 @@ function HeroMarquee() {
 }
 
 export default function Hero() {
-  const router = useRouter();
-  const { options, loading: servicesLoading } = useBookingOptions();
-  const [service, setService] = useState("");
+  const { options, loading: servicesLoading } = useSimpleServicesList();
+  const { lookup, submitting, modalOpen, modalVariant, modalMessage, closeModal, bookService } =
+    useServicePostcodeLookup("home");
+  const [serviceSlug, setServiceSlug] = useState("");
   const [postcode, setPostcode] = useState("");
 
   useEffect(() => {
-    if (options.length && !service) {
-      setService(options[0].name);
+    if (options.length && !serviceSlug) {
+      setServiceSlug(options[0].slug);
     }
-  }, [options, service]);
+  }, [options, serviceSlug]);
   const reduceMotion = useReducedMotion();
 
   function handleBookSubmit(e) {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (service) params.set("service", service);
-    if (postcode.trim()) params.set("postcode", postcode.trim().toUpperCase());
-    const qs = params.toString();
-    router.push(qs ? `/checkout?${qs}` : "/checkout");
+    if (!serviceSlug || !postcode.trim() || submitting) return;
+    lookup({ serviceSlug, postCode: postcode });
   }
 
   return (
@@ -214,14 +214,14 @@ export default function Hero() {
                   <select
                     id="hero-service"
                     name="service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
+                    value={serviceSlug}
+                    onChange={(e) => setServiceSlug(e.target.value)}
                     required
-                    disabled={!options.length}
+                    disabled={!options.length || submitting}
                     className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all appearance-none cursor-pointer"
                   >
                     {options.map((s) => (
-                      <option key={s.name} value={s.name} className="bg-[#141414]">
+                      <option key={s.slug} value={s.slug} className="bg-[#141414]">
                         {s.name}
                       </option>
                     ))}
@@ -247,6 +247,8 @@ export default function Hero() {
                   onChange={(e) => setPostcode(e.target.value.toUpperCase())}
                   placeholder="e.g. NG1 1AA"
                   autoComplete="postal-code"
+                  required
+                  disabled={submitting}
                   className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white placeholder:text-[#6b7280] font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all"
                 />
               </div>
@@ -255,12 +257,17 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                className="hero-cta-shine flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+                disabled={servicesLoading || !options.length || submitting || !postcode.trim()}
+                className="hero-cta-shine flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
-                <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-4-4" strokeLinecap="round" />
-                </svg>
+                {submitting ? (
+                  <ButtonSpinner className="h-5 w-5" />
+                ) : (
+                  <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="M20 20l-4-4" strokeLinecap="round" />
+                  </svg>
+                )}
                 <span className="truncate">Check Availability &amp; Book Now</span>
                 <svg className="w-5 h-5 shrink-0 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
                   <path d="M5 12h12M13 8l4 4-4 4" strokeLinecap="round" strokeLinejoin="round" />
@@ -299,6 +306,14 @@ export default function Hero() {
           </p>
         </footer>
       </motion.aside>
+
+      <ServicePostcodeResultModal
+        open={modalOpen}
+        variant={modalVariant}
+        message={modalMessage}
+        onClose={closeModal}
+        onBook={bookService}
+      />
     </section>
   );
 }

@@ -42,6 +42,33 @@ export async function submitOrderActionRequest({ action, orderId, note = "" }) {
   });
 }
 
+/**
+ * @param {unknown} data
+ */
+export function parseSendOrderInvoiceMessage(data) {
+  if (!data || typeof data !== "object") return null;
+  const record = /** @type {Record<string, unknown>} */ (data);
+  if (typeof record.message === "string" && record.message.trim()) return record.message.trim();
+  if (record.data && typeof record.data === "object") {
+    const nested = /** @type {Record<string, unknown>} */ (record.data);
+    if (typeof nested.message === "string" && nested.message.trim()) return nested.message.trim();
+  }
+  return null;
+}
+
+/** POST /orders/send-order-pdf */
+export async function sendOrderInvoiceEmail(orderId, email) {
+  const normalizedEmail = String(email ?? "").trim();
+  if (!orderId || !normalizedEmail) {
+    throw new Error("Order ID and email are required.");
+  }
+
+  return sameOriginAuthPost(ORDERS_PROXY.sendOrderPdf, {
+    order_id: resolveOrderActionId(orderId),
+    email: normalizedEmail,
+  });
+}
+
 /** @param {string | number} orderId @param {string} note */
 export async function requestOrderCancellation(orderId, note) {
   return submitOrderActionRequest({

@@ -5,6 +5,7 @@ import Link from "next/link";
 import AccountLayout from "@/components/account/AccountLayout";
 import OrderDetailModal from "@/components/account/OrderDetailModal";
 import OrderCancelModal from "@/components/account/OrderCancelModal";
+import SendInvoiceEmailModal from "@/components/account/SendInvoiceEmailModal";
 import OrdersListSkeleton from "@/components/skeletons/OrdersListSkeleton";
 import BlogPagination from "@/components/blog/BlogPagination";
 import { formatMoney, formatLongDate } from "@/components/checkout/checkoutUtils";
@@ -19,7 +20,7 @@ import { getOrderServiceDetailHref } from "@/lib/orders/orderServiceHref";
 import { canCancelOrder } from "@/lib/orders/orderCancel";
 import { downloadOrderInvoicePdf } from "@/lib/orders/downloadOrderInvoice";
 import { toastError, toastSuccess } from "@/lib/toast";
-import { requestOrderCancellation } from "@/services/ordersApiService";
+import { requestOrderCancellation, fetchOrderById, sendOrderInvoiceEmail, parseSendOrderInvoiceMessage } from "@/services/ordersApiService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearOrderDetail, loadOrderDetail, loadOrders } from "@/store/slices/ordersSlice";
 import { IconArrow, IconCalendar, IconCheck, IconDownload, IconMail } from "@/components/home1/icons";
@@ -68,20 +69,25 @@ function OrderStatusBadge({ order }) {
  *   order: import("@/lib/orders/orderTypes").OrderSummary,
  *   onViewDetails: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
  *   onCancel?: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
+ *   onSendInvoiceEmail?: (order: import("@/lib/orders/orderTypes").OrderSummary) => void,
  *   detailLoading?: boolean,
+ *   invoiceEmailLoading?: boolean,
  * }} props
  */
-function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
+function OrderCard({
+  order,
+  onViewDetails,
+  onCancel,
+  onSendInvoiceEmail,
+  detailLoading = false,
+  invoiceEmailLoading = false,
+}) {
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const visitDate = order.visitDate
     ? new Date(`${order.visitDate}T12:00:00`)
   : null;
   const displayRef = order.reference || order.id;
   const showCancel = canCancelOrder(order);
-
-  function handleSendInvoiceEmail() {
-    toastSuccess("Invoice sent to your email address.");
-  }
 
   async function handleDownloadInvoice() {
     setInvoiceLoading(true);
@@ -170,18 +176,24 @@ function OrderCard({ order, onViewDetails, onCancel, detailLoading = false }) {
           <button
             type="button"
             className="home1-orders-card-btn home1-orders-card-btn--invoice home1-orders-card-btn--invoice-email inline-flex items-center justify-center gap-2"
-            onClick={handleSendInvoiceEmail}
+            onClick={() => onSendInvoiceEmail?.(order)}
+            disabled={invoiceEmailLoading || invoiceLoading}
+            aria-busy={invoiceEmailLoading}
           >
-            <span className="home1-orders-card-btn-icon home1-orders-card-btn-icon--mail" aria-hidden="true">
-              <IconMail className="w-3.5 h-3.5" />
-            </span>
-            Send Invoice By Email
+            {invoiceEmailLoading ? (
+              <ButtonSpinner />
+            ) : (
+              <span className="home1-orders-card-btn-icon home1-orders-card-btn-icon--mail" aria-hidden="true">
+                <IconMail className="w-3.5 h-3.5" />
+              </span>
+            )}
+            {invoiceEmailLoading ? "Sending…" : "Send Invoice By Email"}
           </button>
           <button
             type="button"
             className="home1-orders-card-btn home1-orders-card-btn--invoice home1-orders-card-btn--invoice-download inline-flex items-center justify-center gap-2"
             onClick={handleDownloadInvoice}
-            disabled={invoiceLoading}
+            disabled={invoiceLoading || invoiceEmailLoading}
             aria-busy={invoiceLoading}
           >
             {invoiceLoading ? <ButtonSpinner /> : (
@@ -257,6 +269,11 @@ export default function OrdersPageClient() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelSaving, setCancelSaving] = useState(false);
+  const [invoiceEmailTarget, setInvoiceEmailTarget] = useState(
+    /** @type {{ orderId: string, reference?: string, serviceName?: string } | null} */ (null),
+  );
+  const [invoiceEmailSaving, setInvoiceEmailSaving] = useState(false);
+  const [invoiceSendingOrderId, setInvoiceSendingOrderId] = useState("");
   const listAnchorRef = useRef(null);
 
   const initialLoading = (status === "loading" || status === "idle") && orders.length === 0;
@@ -329,6 +346,55 @@ export default function OrdersPageClient() {
       toastError(err, "Could not cancel this order.");
     } finally {
       setCancelSaving(false);
+    }
+  }
+
+  async function deliverInvoiceEmail(orderId, email) {
+    const response = await sendOrderInvoiceEmail(orderId, email);
+    toastSuccess(parseSendOrderInvoiceMessage(response) || "Invoice sent to your email address.");
+  }
+
+  async function handleSendInvoiceEmail(order) {
+    if (!order?.id || invoiceSendingOrderId || invoiceEmailSaving) return;
+
+    setInvoiceSendingOrderId(order.id);
+    try {
+      const detail = await fetchOrderById(order.id);
+      const savedEmail = detail.customerEmail?.trim();
+
+      if (savedEmail) {
+        await deliverInvoiceEmail(detail.id, savedEmail);
+        return;
+      }
+
+      setInvoiceEmailTarget({
+        orderId: detail.id,
+        reference: detail.reference || detail.id,
+        serviceName: detail.serviceName,
+      });
+    } catch (err) {
+      toastError(err, "Could not send invoice by email.");
+    } finally {
+      setInvoiceSendingOrderId("");
+    }
+  }
+
+  function closeInvoiceEmailModal() {
+    if (invoiceEmailSaving) return;
+    setInvoiceEmailTarget(null);
+  }
+
+  async function handleManualInvoiceEmail(email) {
+    if (!invoiceEmailTarget?.orderId) return;
+
+    setInvoiceEmailSaving(true);
+    try {
+      await deliverInvoiceEmail(invoiceEmailTarget.orderId, email);
+      setInvoiceEmailTarget(null);
+    } catch (err) {
+      toastError(err, "Could not send invoice by email.");
+    } finally {
+      setInvoiceEmailSaving(false);
     }
   }
 
@@ -422,7 +488,9 @@ export default function OrdersPageClient() {
                   order={order}
                   onViewDetails={openOrderDetail}
                   onCancel={openCancelModal}
+                  onSendInvoiceEmail={handleSendInvoiceEmail}
                   detailLoading={detailLoading && detailOrderId === order.id}
+                  invoiceEmailLoading={invoiceSendingOrderId === order.id}
                 />
             </li>
           ))}
@@ -483,6 +551,14 @@ export default function OrdersPageClient() {
         onClose={closeCancelModal}
         onSubmit={handleConfirmCancel}
         saving={cancelSaving}
+      />
+
+      <SendInvoiceEmailModal
+        open={Boolean(invoiceEmailTarget)}
+        order={invoiceEmailTarget}
+        onClose={closeInvoiceEmailModal}
+        onSubmit={handleManualInvoiceEmail}
+        saving={invoiceEmailSaving}
       />
     </AccountLayout>
   );
