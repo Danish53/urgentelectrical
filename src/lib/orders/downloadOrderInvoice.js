@@ -1,19 +1,21 @@
 import { fetchOrderById } from "@/services/ordersApiService";
 
-const PAGE_W = 612;
-const PAGE_H = 792;
-const MARGIN = 32;
+const PAGE_W = 595;
+const PAGE_H = 842;
+const MARGIN = 30;
 const CONTENT_W = PAGE_W - MARGIN * 2;
+const SECTION_GAP = 14;
+const SITE_TO_TABLE_GAP = 6;
 const HEADER_HEIGHT_SCALE = 0.88;
 const VAT_RATE = 0.2;
 const INVOICE_HEADER_SRC = "/Invoice-Header.svg";
 const HEADER_RENDER_SCALE = 3;
 
 const INVOICE_META = {
-  boxW: 198,
+  boxW: 190,
   rowH: 24,
   rowCount: 3,
-  gutter: 22,
+  gutter: 20,
   padX: 10,
 };
 
@@ -43,7 +45,17 @@ const PAYMENT_TERMS_LAYOUT = {
   sectionGap: 18,
 };
 
-const CUSTOMER_TEXT_INDENT = 8;
+const CUSTOMER_SECTION = {
+  padY: 12,
+  headingSize: 11,
+  bodySize: 9.5,
+  bodyBoldSize: 10,
+  lineGap: 13,
+  dividerGap: 5,
+  gapAfterDivider: 12,
+  addressIndent: 18,
+  sectionGap: 10,
+};
 
 /** Type1 Helvetica widths (1/1000 em) for accurate right-alignment */
 const AFM_HELV = {
@@ -518,28 +530,52 @@ function drawInvoiceMetaStack(pdf, yTop, ctx, layout) {
  * @param {ReturnType<typeof getInvoiceMetaLayout>} layout
  */
 function drawCustomerDetails(pdf, yTop, lines, layout) {
-  const headingY = yTop + 10;
-  const dividerY = headingY + 5;
-  const contentX = MARGIN + CUSTOMER_TEXT_INDENT;
+  const {
+    padY,
+    headingSize,
+    bodySize,
+    bodyBoldSize,
+    lineGap,
+    dividerGap,
+    gapAfterDivider,
+    addressIndent,
+  } = CUSTOMER_SECTION;
+  const headingAscent = headingSize * 0.72;
+  const headingX = MARGIN;
+  const contentX = MARGIN + addressIndent;
   const lineEndX = layout.customerLineEndX;
 
-  pdf.text("CUSTOMER DETAILS", MARGIN, headingY, { font: "F2", size: 11, color: C.black });
+  const headingBaseline = yTop + padY + headingAscent;
+  const dividerY = headingBaseline + headingSize * 0.22 + dividerGap;
+  const firstLineBaseline = dividerY + gapAfterDivider;
+  const lastLineBaseline = firstLineBaseline + Math.max(0, lines.length - 1) * lineGap;
+  const lastIndex = Math.max(0, lines.length - 1);
+  const lastLineBold = lastIndex === 0 || isPostcodeLine(lines[lastIndex] ?? "");
+  const lastLineDescent = (lastLineBold ? bodyBoldSize : bodySize) * 0.28;
+  const blockEndY = lastLineBaseline + lastLineDescent + padY;
+
+  pdf.text("CUSTOMER DETAILS", headingX, headingBaseline, {
+    font: "F2",
+    size: headingSize,
+    color: C.black,
+  });
   pdf.lineWidth(0.75);
   pdf.strokeColor(C.black);
-  pdf.lineTop(MARGIN, dividerY, lineEndX, dividerY);
+  pdf.lineTop(headingX, dividerY, lineEndX, dividerY);
 
-  let y = dividerY + 14;
+  let lineBaseline = firstLineBaseline;
   lines.forEach((line, index) => {
     const bold = index === 0 || isPostcodeLine(line);
-    pdf.text(line, contentX, y, {
+    const size = bold ? bodyBoldSize : bodySize;
+    pdf.text(line, contentX, lineBaseline, {
       font: bold ? "F2" : "F1",
-      size: bold ? 10 : 9.5,
+      size,
       color: C.ink,
     });
-    y += 14;
+    lineBaseline += lineGap;
   });
 
-  return { endY: y + 6, dividerY };
+  return { endY: blockEndY, dividerY };
 }
 
 /**
@@ -549,31 +585,38 @@ function drawCustomerDetails(pdf, yTop, lines, layout) {
  */
 function drawSiteAddress(pdf, yTop, address) {
   const padX = 10;
-  const padY = 7;
+  const padY = 8;
   const headingSize = 9.5;
   const addressSize = 9.5;
   const headingGap = 14;
   const lineGap = 12;
+  const headingAscent = headingSize * 0.72;
+  const addressDescent = addressSize * 0.28;
 
-  const addressLines = wrapText(address || "", 88);
-  const lineCount = Math.max(1, addressLines.length);
-  const boxH = padY + headingSize + headingGap + lineCount * lineGap + padY;
+  const addressLines = wrapText(address || "", 88).filter(Boolean);
+  const lines = addressLines.length ? addressLines : [""];
+  const headingBaseline = yTop + padY + headingAscent;
+  const lastLineBaseline = headingBaseline + headingGap + (lines.length - 1) * lineGap;
+  const boxH = lastLineBaseline - yTop + addressDescent + padY;
 
   pdf.fillColor(C.siteBar);
   pdf.fillRectTop(MARGIN, yTop, CONTENT_W, boxH);
 
-  const headingY = yTop + padY + headingSize;
-  pdf.text("Site Address", MARGIN + padX, headingY, { font: "F2", size: headingSize, color: C.black });
+  pdf.text("Site Address", MARGIN + padX, headingBaseline, {
+    font: "F2",
+    size: headingSize,
+    color: C.black,
+  });
 
-  let y = headingY + headingGap;
-  for (const line of addressLines.length ? addressLines : [""]) {
+  let lineBaseline = headingBaseline + headingGap;
+  for (const line of lines) {
     if (line) {
-      pdf.text(line, MARGIN + padX, y, { font: "F1", size: addressSize, color: C.black });
+      pdf.text(line, MARGIN + padX, lineBaseline, { font: "F1", size: addressSize, color: C.black });
     }
-    y += lineGap;
+    lineBaseline += lineGap;
   }
 
-  return yTop + boxH + 6;
+  return yTop + boxH + SITE_TO_TABLE_GAP;
 }
 
 /**
@@ -678,7 +721,7 @@ function drawServiceTable(pdf, yTop, rows) {
     y += rowH;
   });
 
-  return y + 16;
+  return y + SECTION_GAP;
 }
 
 /**
@@ -852,19 +895,20 @@ function buildInvoiceContextFromDetail(order) {
 
 function renderInvoicePage(pdf, header, ctx) {
   const headerBottom = drawBrandHeader(pdf, header);
-  const sectionY = headerBottom + 16;
+  const customerGap = CUSTOMER_SECTION.sectionGap;
+  const sectionY = headerBottom + customerGap;
   const layout = getInvoiceMetaLayout();
 
   const customerBlock = drawCustomerDetails(pdf, sectionY, ctx.customerLines, layout);
   const metaEnd = drawInvoiceMetaStack(pdf, customerBlock.dividerY, ctx, layout);
 
-  const siteY = Math.max(customerBlock.endY, metaEnd) + 16;
+  const siteY = Math.max(customerBlock.endY, metaEnd) + customerGap;
   const tableY = drawSiteAddress(pdf, siteY, ctx.siteAddress);
   const afterTableY = drawServiceTable(pdf, tableY, ctx.tableRows);
 
-  const totalsY = afterTableY + 24;
+  const totalsY = afterTableY + 20;
   const totalsEndY = drawTotalsStack(pdf, totalsY, ctx.totals);
-  drawPaymentTermsBox(pdf, totalsEndY + 16);
+  drawPaymentTermsBox(pdf, totalsEndY + SECTION_GAP);
 }
 
 function assemblePdfDocument(stream, assets) {
