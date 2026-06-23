@@ -1771,6 +1771,86 @@
   font-size: 0.875rem;
 }
 
+.home1-sites-field--postcode {
+  min-width: 0;
+}
+
+.home1-sites-postcode-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.home1-sites-postcode-row .home1-sites-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.home1-sites-postcode-find {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  min-height: 2.15rem;
+  padding: 0 0.85rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: var(--home1-red, #d3231f);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.home1-sites-postcode-find svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.home1-sites-postcode-find:hover:not(:disabled) {
+  background: #b81d1a;
+}
+
+.home1-sites-postcode-find:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.home1-sites-input--error {
+  border-color: #d3231f !important;
+  box-shadow: 0 0 0 1px rgba(211, 35, 31, 0.12);
+}
+
+.home1-sites-field-error {
+  margin: 0.35rem 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #b91c1c;
+}
+
+.home1-sites-lookup-suggestion {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.home1-sites-address-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  padding-right: 2rem;
+}
+
 .home1-sites-save {
   margin-top: 0.25rem;
   font-size: 0.8125rem;

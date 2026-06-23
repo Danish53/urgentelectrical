@@ -85,6 +85,23 @@ export function formatSiteAddress(form) {
 }
 
 /**
+ * @param {Record<string, unknown>} address
+ * @returns {Pick<SiteFormValues, "addressLine1" | "addressLine2" | "townCity" | "county" | "postcode" | "country">}
+ */
+export function mapIdealAddressToSiteForm(address) {
+  return {
+    addressLine1: String(address.line_1 ?? "").trim(),
+    addressLine2: String(address.line_2 ?? "").trim(),
+    townCity: String(address.post_town ?? "").trim(),
+    county: String(address.county ?? "").trim(),
+    postcode: String(address.postcode ?? "")
+      .trim()
+      .toUpperCase(),
+    country: "United Kingdom",
+  };
+}
+
+/**
  * @param {SiteFormValues} form
  * @param {string} [id]
  * @returns {SavedSite}

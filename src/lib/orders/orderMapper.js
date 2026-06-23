@@ -14,6 +14,58 @@ export function normalizeOrderApiId(api) {
 }
 
 /**
+ * Best id for order detail / invoice fetch (prefers raw API id).
+ * @param {{ id?: string, raw?: Record<string, unknown> } | null | undefined} order
+ */
+export function pickOrderApiId(order) {
+  const raw =
+    order?.raw && typeof order.raw === "object"
+      ? /** @type {Record<string, unknown>} */ (order.raw)
+      : {};
+  const candidates = [raw.id, order?.id];
+  for (const value of candidates) {
+    if (value == null || value === "") continue;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return String(numeric);
+  }
+  return String(order?.id ?? "").trim();
+}
+
+/**
+ * @param {Record<string, unknown>} api
+ */
+export function orderApiHasDetailBlock(api) {
+  return pickOrderDetailBlock(api) !== null;
+}
+
+/**
+ * Merge list/summary fields into the raw API row for invoice fallback.
+ * @param {import("@/lib/orders/orderTypes").OrderSummary} order
+ */
+export function mergeOrderSummaryIntoApi(order) {
+  const raw =
+    order?.raw && typeof order.raw === "object"
+      ? /** @type {Record<string, unknown>} */ ({ ...order.raw })
+      : {};
+
+  return {
+    ...raw,
+    id: pickOrderApiId(order) || raw.id,
+    order_id: order.reference || raw.order_id,
+    selected_date: order.visitDate || raw.selected_date,
+    paid_amount: raw.paid_amount ?? order.totalInc,
+    totalSubtotal: order.serviceSubTotal ?? raw.totalSubtotal,
+    total_subtotal: order.serviceSubTotal ?? raw.total_subtotal,
+    delivery_fee: order.deliveryFee ?? raw.delivery_fee,
+    discount: order.discount ?? raw.discount,
+    payment_method: order.paymentMethod || raw.payment_method,
+    payment_status: order.paymentStatus || raw.payment_status,
+    order_status: order.status || raw.order_status,
+    created_at: order.bookedAt || raw.created_at,
+  };
+}
+
+/**
  * Display reference e.g. ORD-WLHFGH
  * @param {Record<string, unknown>} api
  */
@@ -70,15 +122,15 @@ function pickOrderPaidTotal(api) {
   const deliveryFee = pickOrderDeliveryFee(api);
   const grossFromParts = subTotal + deliveryFee;
 
-  if (grossFromParts > 0) {
-    const netFromParts = Math.max(0, grossFromParts - discount);
-    if (discount > 0) return netFromParts;
-  }
-
   const explicitPaid = parseMoney(
     api.paid_amount ?? api.amount_paid ?? api.total_paid ?? api.net_amount ?? api.net_total
   );
   if (explicitPaid > 0) return explicitPaid;
+
+  if (grossFromParts > 0) {
+    const netFromParts = Math.max(0, grossFromParts - discount);
+    return Math.round(netFromParts * 1.2 * 100) / 100;
+  }
 
   const amount = parseMoney(api.amount);
   if (amount > 0) {

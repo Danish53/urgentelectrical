@@ -1,61 +1,66 @@
 import { fetchOrderById } from "@/services/ordersApiService";
+import { CONTACT_BUSINESS_NAME } from "@/data/contactPage";
+import { ApiError } from "@/lib/api/errors";
+import {
+  apiToOrderDetail,
+  mergeOrderSummaryIntoApi,
+  orderApiHasDetailBlock,
+  pickOrderApiId,
+} from "@/lib/orders/orderMapper";
 
 const PAGE_W = 595;
 const PAGE_H = 842;
 const MARGIN = 30;
 const CONTENT_W = PAGE_W - MARGIN * 2;
 const SECTION_GAP = 14;
-const SITE_TO_TABLE_GAP = 6;
-const PAYMENT_TERMS_TOP_GAP = 28;
+const SITE_TO_TABLE_GAP = 8;
 const HEADER_HEIGHT_SCALE = 0.88;
 const VAT_RATE = 0.2;
 const INVOICE_HEADER_SRC = "/Invoice-Header.svg";
+const INVOICE_STAMP_SRC = "/stamp.png";
 const HEADER_RENDER_SCALE = 3;
+const STAMP_RENDER_SCALE = 2;
+const STAMP_DRAW_W = 155;
 
 const INVOICE_META = {
-  boxW: 190,
-  rowH: 24,
-  rowCount: 3,
-  gutter: 20,
-  padX: 10,
+  boxW: 250,
+  rowH: 28,
+  rowCount: 4,
+  gutter: 22,
+  padX: 14,
+  labelFontSize: 9,
+  valueFontSize: 10,
+  valuePadX: 20,
+  titleFontSize: 12,
 };
 
 const TOTALS_META = {
-  rowH: 26,
-  finalRowH: 38,
-  size: 9,
-  padX: 10,
-};
-
-const PAYMENT_TERMS = {
-  deposit:
-    "A 60% deposit is required upfront before work commences. Work will only start once payment has been received. The remaining 40% is due upon completion of the works, unless otherwise agreed in advance.",
-  latePaymentLabel: "Late Payment:",
-  latePaymentText: "Fees may apply to balances outstanding after 30 days, unless otherwise agreed in writing.",
-  accountDetails:
-    "Account Details: Urgent Electrical Services Limited | Sort Code: 40-35-18 | Account Number: 24686934",
-};
-
-const PAYMENT_TERMS_LAYOUT = {
-  pad: 28,
-  headingSize: 11,
-  bodySize: 9,
-  lineH: 14,
-  gapAfterHeading: 10,
-  gapAfterDivider: 20,
-  sectionGap: 18,
+  boxW: 268,
+  rowH: 30,
+  size: 10,
+  padX: 14,
+  valuePadX: 14,
 };
 
 const CUSTOMER_SECTION = {
-  padY: 12,
   headingSize: 11,
   bodySize: 9.5,
-  bodyBoldSize: 10,
-  lineGap: 13,
-  dividerGap: 5,
-  gapAfterDivider: 12,
-  addressIndent: 18,
-  sectionGap: 10,
+  lineGap: 14,
+  dividerGap: 4,
+  gapAfterDivider: 18,
+  addressIndent: 0,
+  sectionGap: 24,
+};
+
+const TABLE_LAYOUT = {
+  headerH: 32,
+  rowMinH: 32,
+  headerSize: 9,
+  cellSize: 9.5,
+  lineH: 13,
+  descWidthRatio: 0.44,
+  pad: 10,
+  afterGap: 18,
 };
 
 /** Type1 Helvetica widths (1/1000 em) for accurate right-alignment */
@@ -87,19 +92,16 @@ const C = {
   orange: { r: 244 / 255, g: 196 / 255, b: 97 / 255 },
   grey: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
   siteBar: { r: 242 / 255, g: 242 / 255, b: 242 / 255 },
-  tableHeaderBar: { r: 232 / 255, g: 232 / 255, b: 232 / 255 },
-  termsBg: { r: 247 / 255, g: 247 / 255, b: 247 / 255 },
-  termsBorder: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
-  termsDivider: { r: 238 / 255, g: 238 / 255, b: 238 / 255 },
-  termsText: { r: 68 / 255, g: 68 / 255, b: 68 / 255 },
+  tableHeaderBar: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
   black: { r: 0, g: 0, b: 0 },
   white: { r: 1, g: 1, b: 1 },
   ink: { r: 0.12, g: 0.12, b: 0.12 },
+  valueInk: { r: 0.28, g: 0.28, b: 0.28 },
   tableHeader: { r: 224 / 255, g: 224 / 255, b: 224 / 255 },
 };
 
 function getTotalsStackHeight() {
-  return TOTALS_META.rowH * 3 + TOTALS_META.finalRowH;
+  return TOTALS_META.rowH * 4;
 }
 
 function getInvoiceMetaLayout() {
@@ -107,9 +109,57 @@ function getInvoiceMetaLayout() {
   return {
     boxW: INVOICE_META.boxW,
     boxX,
-    rowH: INVOICE_META.rowH,
     customerLineEndX: boxX - INVOICE_META.gutter,
-    stackHeight: INVOICE_META.rowH * INVOICE_META.rowCount,
+  };
+}
+
+function getTotalsLayout() {
+  const boxW = TOTALS_META.boxW;
+  return {
+    boxW,
+    boxX: PAGE_W - MARGIN - boxW,
+  };
+}
+
+/**
+ * Shared layout so customer block and invoice meta box share the same top, height, and bottom.
+ * @param {string[]} lines
+ * @param {number} yTop
+ * @param {ReturnType<typeof getInvoiceMetaLayout>} layout
+ */
+function getCustomerInvoiceSectionLayout(lines, yTop, layout) {
+  const {
+    headingSize,
+    bodySize,
+    lineGap,
+    dividerGap,
+    gapAfterDivider,
+    addressIndent,
+  } = CUSTOMER_SECTION;
+  const headingAscent = headingSize * 0.72;
+  const headingBaseline = yTop + headingAscent;
+  const dividerY = headingBaseline + headingSize * 0.22 + dividerGap;
+  const firstLineBaseline = dividerY + gapAfterDivider;
+  const lastLineBaseline = firstLineBaseline + Math.max(0, lines.length - 1) * lineGap;
+  const lastLineDescent = bodySize * 0.28;
+  const contentBottom = lastLineBaseline + lastLineDescent;
+  const metaBoxY = dividerY;
+  const metaBoxHeight = INVOICE_META.rowH * INVOICE_META.rowCount;
+  const metaBoxBottom = metaBoxY + metaBoxHeight;
+  const sectionEndY = Math.max(contentBottom, metaBoxBottom);
+  const sectionHeight = sectionEndY - yTop;
+
+  return {
+    headingBaseline,
+    dividerY,
+    firstLineBaseline,
+    headingX: MARGIN,
+    contentX: MARGIN + addressIndent,
+    lineEndX: layout.customerLineEndX,
+    metaBoxY,
+    metaBoxHeight,
+    sectionHeight,
+    sectionEndY: yTop + sectionHeight,
   };
 }
 
@@ -340,6 +390,15 @@ async function loadHeaderAsset() {
   }
 }
 
+async function loadStampAsset() {
+  try {
+    const stamp = await loadRasterImageAsset(INVOICE_STAMP_SRC, STAMP_DRAW_W, STAMP_RENDER_SCALE);
+    return isJpegBytes(stamp.bytes) ? stamp : null;
+  } catch {
+    return null;
+  }
+}
+
 function encodeLatin1(text) {
   const arr = new Uint8Array(text.length);
   for (let i = 0; i < text.length; i += 1) {
@@ -512,11 +571,13 @@ class InvoicePdfWriter {
     this.ops.push("ET");
   }
 
-  /** @param {string} text @param {number} rightX @param {number} yTop */
+  /** Right edge of text lands on rightX (top-origin coordinates). */
   textRight(text, rightX, yTop, opts = {}) {
     const size = opts.size ?? 8;
     const font = opts.font ?? "F1";
-    this.text(text, rightX - measureTextWidth(text, size, font), yTop, { ...opts, size, font });
+    const safe = sanitizePdfText(String(text));
+    const width = measureTextWidth(safe, size, font);
+    this.text(safe, rightX - width, yTop, { ...opts, size, font });
   }
 
   /** @param {number} cx @param {number} cyTop @param {number} r */
@@ -569,34 +630,50 @@ function drawBrandHeader(pdf, header) {
  * @param {{ r: number, g: number, b: number }} bg
  * @param {string} left
  * @param {string} right
- * @param {{ leftBold?: boolean, rightBold?: boolean, textColor?: { r: number, g: number, b: number }, rightX?: number, padX?: number, size?: number, leftLines?: string[] }} [opts]
+ * @param {{ leftBold?: boolean, rightBold?: boolean, textColor?: { r: number, g: number, b: number }, valueColor?: { r: number, g: number, b: number }, rightX?: number, padX?: number, valuePadX?: number, size?: number, rightSize?: number, leftLines?: string[] }} [opts]
  */
 function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
   pdf.fillColor(bg);
   pdf.fillRectTop(x, yTop, w, h);
   const padX = opts.padX ?? INVOICE_META.padX;
-  const size = opts.size ?? 8;
-  const textY = yTop + (h + size * 0.32) / 2;
+  const valuePadX = opts.valuePadX ?? INVOICE_META.valuePadX;
+  const leftSize = opts.size ?? INVOICE_META.labelFontSize;
+  const rightSize = opts.rightSize ?? INVOICE_META.valueFontSize;
+  const rowSize = Math.max(leftSize, rightSize);
+  const textY = yTop + (h + rowSize * 0.32) / 2;
   const leftFont = opts.leftBold ? "F2" : "F1";
   const rightFont = opts.rightBold ? "F2" : "F1";
-  const color = opts.textColor ?? C.black;
-  const valueRightX = x + w - padX;
+  const labelColor = opts.textColor ?? C.black;
+  const valueColor = opts.valueColor ?? C.valueInk;
+  const valueRightX = opts.valueRightX ?? x + w - valuePadX;
   const leftLines = opts.leftLines;
   let valueY = textY;
 
   if (leftLines?.length) {
-    const lineGap = size + 1.5;
+    const lineGap = leftSize + 1.5;
     const stackH = leftLines.length * lineGap - 1.5;
-    const startY = yTop + (h - stackH) / 2 + size * 0.72;
-    valueY = startY + (stackH - size * 0.28) / 2;
+    const startY = yTop + (h - stackH) / 2 + leftSize * 0.72;
+    valueY = startY + (stackH - leftSize * 0.28) / 2;
     leftLines.forEach((line, index) => {
-      pdf.text(line, x + padX, startY + index * lineGap, { font: leftFont, size, color });
+      pdf.text(line, x + padX, startY + index * lineGap, { font: leftFont, size: leftSize, color: labelColor });
     });
   } else {
-    pdf.text(left, x + padX, textY, { font: leftFont, size, color });
+    pdf.text(left, x + padX, textY, { font: leftFont, size: leftSize, color: labelColor });
   }
 
-  pdf.textRight(String(right ?? ""), valueRightX, valueY, { font: rightFont, size, color });
+  const rightText = sanitizePdfText(String(right ?? ""));
+  const labelEndX = x + padX + measureTextWidth(left, leftSize, leftFont);
+  const maxValueW = Math.max(24, valueRightX - labelEndX - 4);
+  let fitRightSize = rightSize;
+  while (fitRightSize > 7.5 && measureTextWidth(rightText, fitRightSize, rightFont) > maxValueW) {
+    fitRightSize -= 0.25;
+  }
+
+  pdf.textRight(rightText, valueRightX, valueY, {
+    font: rightFont,
+    size: fitRightSize,
+    color: valueColor,
+  });
 }
 
 /**
@@ -604,72 +681,88 @@ function drawMetaRow(pdf, x, yTop, w, h, bg, left, right, opts = {}) {
  * @param {number} yTop
  * @param {ReturnType<typeof buildInvoiceContextFromDetail>} ctx
  * @param {ReturnType<typeof getInvoiceMetaLayout>} layout
+ * @param {number} sectionHeight
  */
-function drawInvoiceMetaStack(pdf, yTop, ctx, layout) {
-  const { boxW, boxX, rowH } = layout;
-  const metaSize = 9;
-  const titleSize = 12;
-  const titleY = yTop + (rowH + titleSize * 0.32) / 2;
+function drawInvoiceMetaStack(pdf, metaBoxY, ctx, layout) {
+  const { boxW, boxX } = layout;
+  const rowH = INVOICE_META.rowH;
+  const padX = INVOICE_META.padX;
+  const labelSize = INVOICE_META.labelFontSize;
+  const valueSize = INVOICE_META.valueFontSize;
+  const valueRightX = boxX + boxW - INVOICE_META.valuePadX;
+  const rowTextY = (yTop, size) => yTop + (rowH + size * 0.32) / 2;
+  const metaOpts = {
+    leftBold: false,
+    rightBold: false,
+    size: valueSize,
+    rightSize: valueSize,
+    padX,
+    valueRightX,
+    valueColor: C.black,
+  };
 
   pdf.fillColor(C.red);
-  pdf.fillRectTop(boxX, yTop, boxW, rowH);
-  const invoiceTitleW = measureTextWidth("INVOICE", titleSize, "F2");
-  pdf.text("INVOICE", boxX + (boxW - invoiceTitleW) / 2, titleY, {
+  pdf.fillRectTop(boxX, metaBoxY, boxW, rowH);
+  pdf.text("INVOICE", boxX + padX, rowTextY(metaBoxY, INVOICE_META.titleFontSize), {
     font: "F2",
-    size: titleSize,
+    size: INVOICE_META.titleFontSize,
     color: C.white,
   });
 
-  drawMetaRow(pdf, boxX, yTop + rowH, boxW, rowH, C.yellow, "Invoice Number", ctx.reference, {
-    leftBold: true,
-    rightBold: true,
-    size: metaSize,
-  });
   drawMetaRow(
     pdf,
     boxX,
-    yTop + rowH * 2,
+    metaBoxY + rowH,
+    boxW,
+    rowH,
+    C.yellow,
+    "INVOICE NUMBER:",
+    String(ctx.reference ?? "").toUpperCase(),
+    metaOpts
+  );
+  drawMetaRow(
+    pdf,
+    boxX,
+    metaBoxY + rowH * 2,
     boxW,
     rowH,
     C.grey,
-    "Invoice Date",
-    ctx.invoiceDateDisplay,
-    { leftBold: true, rightBold: true, size: metaSize }
+    "INVOICE DATE:",
+    ctx.invoiceDate,
+    metaOpts
+  );
+  drawMetaRow(
+    pdf,
+    boxX,
+    metaBoxY + rowH * 3,
+    boxW,
+    rowH,
+    C.green,
+    "SCHEDULED:",
+    ctx.scheduledLabel,
+    metaOpts
   );
 
-  return yTop + rowH * INVOICE_META.rowCount;
+  return metaBoxY + INVOICE_META.rowH * INVOICE_META.rowCount;
 }
 
 /**
  * @param {InvoicePdfWriter} pdf
  * @param {number} yTop
  * @param {string[]} lines
- * @param {ReturnType<typeof getInvoiceMetaLayout>} layout
+ * @param {ReturnType<typeof getCustomerInvoiceSectionLayout>} sectionLayout
  */
-function drawCustomerDetails(pdf, yTop, lines, layout) {
+function drawCustomerDetails(pdf, yTop, lines, sectionLayout) {
+  const { headingSize, bodySize, lineGap } = CUSTOMER_SECTION;
   const {
-    padY,
-    headingSize,
-    bodySize,
-    bodyBoldSize,
-    lineGap,
-    dividerGap,
-    gapAfterDivider,
-    addressIndent,
-  } = CUSTOMER_SECTION;
-  const headingAscent = headingSize * 0.72;
-  const headingX = MARGIN;
-  const contentX = MARGIN + addressIndent;
-  const lineEndX = layout.customerLineEndX;
-
-  const headingBaseline = yTop + padY + headingAscent;
-  const dividerY = headingBaseline + headingSize * 0.22 + dividerGap;
-  const firstLineBaseline = dividerY + gapAfterDivider;
-  const lastLineBaseline = firstLineBaseline + Math.max(0, lines.length - 1) * lineGap;
-  const lastIndex = Math.max(0, lines.length - 1);
-  const lastLineBold = lastIndex === 0 || isPostcodeLine(lines[lastIndex] ?? "");
-  const lastLineDescent = (lastLineBold ? bodyBoldSize : bodySize) * 0.28;
-  const blockEndY = lastLineBaseline + lastLineDescent + padY;
+    headingBaseline,
+    dividerY,
+    firstLineBaseline,
+    headingX,
+    contentX,
+    lineEndX,
+    sectionEndY,
+  } = sectionLayout;
 
   pdf.text("CUSTOMER DETAILS", headingX, headingBaseline, {
     font: "F2",
@@ -682,17 +775,15 @@ function drawCustomerDetails(pdf, yTop, lines, layout) {
 
   let lineBaseline = firstLineBaseline;
   lines.forEach((line, index) => {
-    const bold = index === 0 || isPostcodeLine(line);
-    const size = bold ? bodyBoldSize : bodySize;
     pdf.text(line, contentX, lineBaseline, {
-      font: bold ? "F2" : "F1",
-      size,
+      font: index === 0 ? "F2" : "F1",
+      size: bodySize,
       color: C.ink,
     });
     lineBaseline += lineGap;
   });
 
-  return { endY: blockEndY, dividerY };
+  return { endY: sectionEndY, dividerY };
 }
 
 /**
@@ -702,11 +793,11 @@ function drawCustomerDetails(pdf, yTop, lines, layout) {
  */
 function drawSiteAddress(pdf, yTop, address) {
   const padX = 10;
-  const padY = 8;
-  const headingSize = 9.5;
-  const addressSize = 9.5;
+  const padY = 10;
+  const headingSize = CUSTOMER_SECTION.headingSize;
+  const addressSize = CUSTOMER_SECTION.bodySize;
   const headingGap = 14;
-  const lineGap = 12;
+  const lineGap = CUSTOMER_SECTION.lineGap;
   const headingAscent = headingSize * 0.72;
   const addressDescent = addressSize * 0.28;
 
@@ -741,8 +832,8 @@ function drawSiteAddress(pdf, yTop, address) {
  * @param {number} tableW
  */
 function getTableColumns(tableX, tableW) {
-  const pad = 12;
-  const descW = Math.round(tableW * 0.52);
+  const pad = TABLE_LAYOUT.pad;
+  const descW = Math.round(tableW * TABLE_LAYOUT.descWidthRatio);
   const numericW = tableW - pad * 2 - descW;
   const colW = {
     qty: Math.round(numericW * 0.105),
@@ -776,11 +867,18 @@ function getTableColumns(tableX, tableW) {
  */
 function drawColumnHeaderStack(pdf, col, lines, blockTop, blockH, opts = {}) {
   const size = opts.size ?? 9;
+  const font = opts.font ?? "F2";
+  const color = opts.color ?? C.black;
   const lineGap = size + 1.5;
   const stackH = lines.length * lineGap - 1.5;
   const startY = blockTop + (blockH - stackH) / 2 + size * 0.72;
+  const innerPad = 4;
+  const rightX = col.right - innerPad;
+
   lines.forEach((line, index) => {
-    drawInColumn(pdf, col, line, startY + index * lineGap, { ...opts, size });
+    const safe = sanitizePdfText(line);
+    const width = measureTextWidth(safe, size, font);
+    pdf.text(safe, rightX - width, startY + index * lineGap, { font, size, color });
   });
 }
 
@@ -792,11 +890,7 @@ function drawColumnHeaderStack(pdf, col, lines, blockTop, blockH, opts = {}) {
 function drawServiceTable(pdf, yTop, rows) {
   const tableX = MARGIN;
   const tableW = CONTENT_W;
-  const headerH = 36;
-  const rowMinH = 34;
-  const headerSize = 9;
-  const cellSize = 9;
-  const lineH = 14;
+  const { headerH, rowMinH, headerSize, cellSize, lineH, afterGap } = TABLE_LAYOUT;
   const { cols, descX, descMaxW } = getTableColumns(tableX, tableW);
   const descMaxChars = Math.max(28, Math.floor(descMaxW / (cellSize * 0.48)));
   const cellOpts = { font: "F1", size: cellSize, color: C.black };
@@ -806,18 +900,18 @@ function drawServiceTable(pdf, yTop, rows) {
   pdf.fillRectTop(tableX, yTop, tableW, headerH);
   const headerTextY = yTop + (headerH + headerSize * 0.32) / 2;
 
-  pdf.text("Description", descX, headerTextY, headerOpts);
-  drawInColumn(pdf, cols.qty, "Qty", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.unit, "Unit", headerTextY, headerOpts);
-  drawInColumn(pdf, cols.amount, "Amount", headerTextY, headerOpts);
-  drawColumnHeaderStack(pdf, cols.vatRate, ["VAT", "Rate"], yTop, headerH, headerOpts);
-  drawColumnHeaderStack(pdf, cols.vatAmt, ["VAT", "Amount"], yTop, headerH, headerOpts);
-  drawInColumn(pdf, cols.total, "Total", headerTextY, headerOpts);
+  pdf.text("DESCRIPTION", descX, headerTextY, headerOpts);
+  drawInColumn(pdf, cols.qty, "QTY", headerTextY, headerOpts);
+  drawColumnHeaderStack(pdf, cols.unit, ["UNIT", "COST"], yTop, headerH, headerOpts);
+  drawInColumn(pdf, cols.amount, "AMOUNT", headerTextY, headerOpts);
+  drawColumnHeaderStack(pdf, cols.vatRate, ["VAT", "RATE"], yTop, headerH, headerOpts);
+  drawColumnHeaderStack(pdf, cols.vatAmt, ["VAT", "AMOUNT"], yTop, headerH, headerOpts);
+  drawInColumn(pdf, cols.total, "TOTAL", headerTextY, headerOpts);
 
   let y = yTop + headerH;
   rows.forEach((row) => {
     const descLines = wrapText(row.description, descMaxChars);
-    const rowH = Math.max(rowMinH, 18 + descLines.length * lineH);
+    const rowH = Math.max(rowMinH, 16 + descLines.length * lineH);
 
     pdf.fillColor(C.white);
     pdf.fillRectTop(tableX, y, tableW, rowH);
@@ -838,7 +932,11 @@ function drawServiceTable(pdf, yTop, rows) {
     y += rowH;
   });
 
-  return y + SECTION_GAP;
+  pdf.lineWidth(0.75);
+  pdf.strokeColor(C.black);
+  pdf.lineTop(tableX, y, tableX + tableW, y);
+
+  return y + afterGap;
 }
 
 /**
@@ -847,27 +945,43 @@ function drawServiceTable(pdf, yTop, rows) {
  * @param {ReturnType<typeof buildInvoiceContextFromDetail>["totals"]} totals
  */
 function drawTotalsStack(pdf, yTop, totals) {
-  const layout = getInvoiceMetaLayout();
-  const { boxW, boxX } = layout;
-  const { rowH, finalRowH, size, padX } = TOTALS_META;
-  const boldOpts = { leftBold: true, rightBold: true, size, padX };
+  const { boxW, boxX } = getTotalsLayout();
+  const { rowH, size, padX, valuePadX } = TOTALS_META;
+  const valueRightX = boxX + boxW - valuePadX;
+  const rowOpts = {
+    leftBold: true,
+    rightBold: true,
+    size,
+    rightSize: size,
+    padX,
+    valueRightX,
+    textColor: C.black,
+    valueColor: C.black,
+  };
 
-  drawMetaRow(pdf, boxX, yTop, boxW, rowH, C.siteBar, "Amount", formatPdfMoney(totals.amount), boldOpts);
-  drawMetaRow(pdf, boxX, yTop + rowH, boxW, rowH, C.green, "Discount", formatPdfMoney(totals.discount), {
-    ...boldOpts,
-    textColor: C.white,
-  });
-  drawMetaRow(pdf, boxX, yTop + rowH * 2, boxW, rowH, C.yellow, "VAT", formatPdfMoney(totals.vat), boldOpts);
+  drawMetaRow(pdf, boxX, yTop, boxW, rowH, C.siteBar, "Amount", formatPdfMoney(totals.amount), rowOpts);
+  drawMetaRow(
+    pdf,
+    boxX,
+    yTop + rowH,
+    boxW,
+    rowH,
+    C.green,
+    "Discount",
+    formatPdfMoney(totals.discount),
+    rowOpts
+  );
+  drawMetaRow(pdf, boxX, yTop + rowH * 2, boxW, rowH, C.yellow, "VAT", formatPdfMoney(totals.vat), rowOpts);
   drawMetaRow(
     pdf,
     boxX,
     yTop + rowH * 3,
     boxW,
-    finalRowH,
+    rowH,
     C.orange,
     "Amount Including VAT",
     formatPdfMoney(totals.totalIncVat),
-    { ...boldOpts, size: 8 }
+    rowOpts
   );
 
   return yTop + getTotalsStackHeight();
@@ -875,65 +989,66 @@ function drawTotalsStack(pdf, yTop, totals) {
 
 /**
  * @param {InvoicePdfWriter} pdf
+ * @param {{ bytes: Uint8Array, width: number, height: number } | null} stamp
  * @param {number} yTop
  */
-function drawPaymentTermsBox(pdf, yTop) {
-  const { pad, headingSize, bodySize, lineH, gapAfterHeading, gapAfterDivider, sectionGap } =
-    PAYMENT_TERMS_LAYOUT;
-  const boxW = CONTENT_W;
-  const innerW = boxW - pad * 2;
-  const maxChars = Math.max(40, Math.floor(innerW / (bodySize * 0.47)));
-  const bodyOpts = { font: "F1", size: bodySize, color: C.termsText };
+function drawPaidStamp(pdf, stamp, yTop) {
+  if (!stamp) return;
 
-  const depositLines = wrapText(PAYMENT_TERMS.deposit, maxChars);
-  const accountLines = wrapText(PAYMENT_TERMS.accountDetails, maxChars);
-  const boxH =
-    pad * 2 +
-    headingSize +
-    gapAfterHeading +
-    gapAfterDivider +
-    depositLines.length * lineH +
-    sectionGap +
-    lineH * 2 +
-    sectionGap +
-    accountLines.length * lineH;
+  const stampDrawW = STAMP_DRAW_W;
+  const stampDrawH = (stamp.height / stamp.width) * stampDrawW;
+  const totalsH = getTotalsStackHeight();
+  const stampX = MARGIN + 4;
+  const stampY = yTop + (totalsH - stampDrawH) / 2;
 
-  pdf.fillColor(C.termsBg);
-  pdf.fillRectTop(MARGIN, yTop, boxW, boxH);
-  pdf.lineWidth(0.75);
-  pdf.strokeColor(C.termsBorder);
-  pdf.strokeRectTop(MARGIN, yTop, boxW, boxH);
+  pdf.drawImage("Stamp", stampDrawW, stampDrawH, stampX, stampY);
+}
 
-  let cursor = yTop + pad;
-  const textX = MARGIN + pad;
-  const textBase = (blockTop) => blockTop + bodySize * 0.85;
+function buildInvoiceLineRow(description, qty, unitCostExVat) {
+  const safeQty = qty > 0 ? qty : 1;
+  const unitCost = roundMoney(unitCostExVat);
+  const amount = roundMoney(unitCost * safeQty);
+  const vatAmount = roundMoney(amount * VAT_RATE);
+  const total = roundMoney(amount + vatAmount);
 
-  pdf.text("Payment And Terms", textX, cursor + headingSize, {
-    font: "F2",
-    size: headingSize,
-    color: C.black,
-  });
-  cursor += headingSize + gapAfterHeading;
+  return {
+    description,
+    qty: safeQty,
+    unitCost,
+    amount,
+    vatRateLabel: "20%",
+    vatAmount,
+    total,
+  };
+}
 
-  pdf.lineWidth(0.5);
-  pdf.strokeColor(C.termsDivider);
-  pdf.lineTop(textX, cursor, MARGIN + boxW - pad, cursor);
-  cursor += gapAfterDivider;
+function buildInvoiceTotals(order, raw, tableAmountExVat) {
+  const discount = roundMoney(
+    parseMoney(order.discount) || parseMoney(raw.discount_amount) || parseMoney(raw.discount)
+  );
 
-  depositLines.forEach((line, index) => {
-    pdf.text(line, textX, textBase(cursor) + index * lineH, bodyOpts);
-  });
-  cursor += depositLines.length * lineH + sectionGap;
+  let amountExVat = roundMoney(tableAmountExVat);
+  if (amountExVat <= 0) {
+    const serviceSubTotal = roundMoney(
+      parseMoney(order.serviceSubTotal) ||
+        parseMoney(raw.totalSubtotal) ||
+        parseMoney(raw.total_subtotal) ||
+        parseMoney(raw.sub_total)
+    );
+    const deliveryFee = roundMoney(parseMoney(order.deliveryFee) || parseMoney(raw.delivery_fee));
+    amountExVat = roundMoney(serviceSubTotal + deliveryFee);
+  }
 
-  pdf.text(PAYMENT_TERMS.latePaymentLabel, textX, textBase(cursor), bodyOpts);
-  pdf.text(PAYMENT_TERMS.latePaymentText, textX, textBase(cursor) + lineH, bodyOpts);
-  cursor += lineH * 2 + sectionGap;
+  const netExVat = roundMoney(Math.max(0, amountExVat - discount));
+  const vat = roundMoney(netExVat * VAT_RATE);
+  const totalIncVat = roundMoney(netExVat + vat);
 
-  accountLines.forEach((line, index) => {
-    pdf.text(line, textX, textBase(cursor) + index * lineH, bodyOpts);
-  });
-
-  return yTop + boxH;
+  return {
+    amount: amountExVat,
+    discount,
+    vat,
+    totalIncVat,
+  };
 }
 
 function buildInvoiceContextFromDetail(order) {
@@ -955,10 +1070,13 @@ function buildInvoiceContextFromDetail(order) {
   const reference = order.reference || String(raw.order_id ?? "");
   const serviceName = order.serviceName || "Electrical service";
   const invoiceDate = formatShortDate(order.visitDate || raw.selected_date);
-  const invoiceDateDisplay = formatInvoiceMetaDate(order.visitDate || raw.selected_date);
   const scheduledLabel = formatScheduledLabel(order.visitDate, order.visitTime);
   const addressLines = formatAddressLines(addressRow);
-  const customerLines = addressLines.length ? addressLines : ["Customer"];
+  const customerLines = addressLines.length
+    ? [CONTACT_BUSINESS_NAME, ...addressLines]
+    : order.customerName
+      ? [CONTACT_BUSINESS_NAME, order.customerName]
+      : [CONTACT_BUSINESS_NAME, "Customer"];
   const siteAddress = order.address?.trim() || addressLines.slice(1).join(", ");
 
   const qty = parseMoney(detailBlock?.quantity) || 1;
@@ -969,66 +1087,61 @@ function buildInvoiceContextFromDetail(order) {
         ? /** @type {Record<string, unknown>} */ (detailBlock.service_variant)
         : null;
 
-  const unitCost = parseMoney(variant?.variant_price ?? detailBlock?.total) / (qty || 1);
-  const lineNet = roundMoney(parseMoney(detailBlock?.total) || unitCost * qty);
-  const lineVat = roundMoney(lineNet * VAT_RATE);
+  const unitCostExVat =
+    parseMoney(variant?.variant_price) ||
+    (parseMoney(order.serviceSubTotal) > 0
+      ? parseMoney(order.serviceSubTotal) / qty
+      : parseMoney(detailBlock?.total) > 0
+        ? parseMoney(detailBlock?.total) / qty
+        : 0);
+
+  const travelUnitExVat = roundMoney(parseMoney(order.deliveryFee) || parseMoney(raw.delivery_fee));
 
   /** @type {Array<{ description: string, qty: number, unitCost: number, amount: number, vatRateLabel: string, vatAmount: number, total: number }>} */
   const tableRows = [
-    {
-      description: serviceName,
-      qty,
-      unitCost: roundMoney(unitCost),
-      amount: lineNet,
-      vatRateLabel: "20%",
-      vatAmount: lineVat,
-      total: roundMoney(lineNet + lineVat),
-    },
+    buildInvoiceLineRow(serviceName, qty, unitCostExVat),
+    buildInvoiceLineRow("Travel Charge (No Charge Within 20 Miles)", 1, travelUnitExVat),
   ];
 
-  const amountExVat = roundMoney(tableRows.reduce((sum, row) => sum + row.amount, 0));
-  const discount = roundMoney(parseMoney(order.discount));
-  const netAfterDiscount = roundMoney(Math.max(0, amountExVat - discount));
-  const vat = roundMoney(netAfterDiscount * VAT_RATE);
-  const totalIncVat = roundMoney(netAfterDiscount + vat);
+  const tableAmountExVat = roundMoney(tableRows.reduce((sum, row) => sum + row.amount, 0));
+  const totals = buildInvoiceTotals(order, raw, tableAmountExVat);
 
   return {
     reference,
     invoiceDate,
-    invoiceDateDisplay,
     scheduledLabel,
     customerLines,
     siteAddress,
     tableRows,
-    totals: {
-      amount: amountExVat,
-      discount,
-      vat,
-      totalIncVat,
-    },
+    totals,
+    showPaidStamp: true,
   };
 }
 
-function renderInvoicePage(pdf, header, ctx) {
+function renderInvoicePage(pdf, header, stamp, ctx) {
   const headerBottom = drawBrandHeader(pdf, header);
   const customerGap = CUSTOMER_SECTION.sectionGap;
   const sectionY = headerBottom + customerGap;
   const layout = getInvoiceMetaLayout();
+  const sectionLayout = getCustomerInvoiceSectionLayout(ctx.customerLines, sectionY, layout);
 
-  const customerBlock = drawCustomerDetails(pdf, sectionY, ctx.customerLines, layout);
-  const metaEnd = drawInvoiceMetaStack(pdf, customerBlock.dividerY, ctx, layout);
+  drawCustomerDetails(pdf, sectionY, ctx.customerLines, sectionLayout);
+  drawInvoiceMetaStack(pdf, sectionLayout.metaBoxY, ctx, layout);
 
-  const siteY = Math.max(customerBlock.endY, metaEnd) + customerGap;
+  const siteY = sectionLayout.sectionEndY + customerGap;
   const tableY = drawSiteAddress(pdf, siteY, ctx.siteAddress);
   const afterTableY = drawServiceTable(pdf, tableY, ctx.tableRows);
 
-  const totalsY = afterTableY + 20;
-  const totalsEndY = drawTotalsStack(pdf, totalsY, ctx.totals);
-  drawPaymentTermsBox(pdf, totalsEndY + PAYMENT_TERMS_TOP_GAP);
+  const totalsY = afterTableY + 24;
+  drawTotalsStack(pdf, totalsY, ctx.totals);
+
+  if (ctx.showPaidStamp) {
+    drawPaidStamp(pdf, stamp, totalsY);
+  }
 }
 
 function assemblePdfDocument(stream, assets) {
-  const { header } = assets;
+  const { header, stamp } = assets;
   const objects = [];
 
   function addObject(parts) {
@@ -1053,13 +1166,25 @@ function assemblePdfDocument(stream, assets) {
     ]);
   }
 
+  let stampId = 0;
+  if (stamp && isJpegBytes(stamp.bytes)) {
+    const hexStream = encodeAsciiHexStream(stamp.bytes);
+    stampId = addObject([
+      `<< /Type /XObject /Subtype /Image /Width ${stamp.width} /Height ${stamp.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter [/ASCIIHexDecode /DCTDecode] /Length ${hexStream.length} >>\nstream\n`,
+      hexStream,
+      "\nendstream",
+    ]);
+  }
+
   const streamBytes = encodeLatin1(stream);
   const contentId = addObject([`<< /Length ${streamBytes.length} >>\nstream\n`, streamBytes, "\nendstream"]);
 
   const xObjectEntries = [];
   if (headerId) xObjectEntries.push(`/Header ${headerId} 0 R`);
+  if (stampId) xObjectEntries.push(`/Stamp ${stampId} 0 R`);
   const xObjectPart = xObjectEntries.length ? `/XObject << ${xObjectEntries.join(" ")} >>` : "";
-  const procSetPart = headerId ? "/ProcSet [/PDF /Text /ImageC]" : "/ProcSet [/PDF /Text]";
+  const procSetPart =
+    headerId || stampId ? "/ProcSet [/PDF /Text /ImageC]" : "/ProcSet [/PDF /Text]";
   const pageId = addObject([
     `<< /Type /Page /Parent PAGES_ID /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] /Contents ${contentId} 0 R /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> ${xObjectPart} ${procSetPart} >> >>`,
   ]);
@@ -1100,22 +1225,46 @@ function assemblePdfDocument(stream, assets) {
 }
 
 async function buildProfessionalInvoicePdf(order) {
-  const header = await loadHeaderAsset();
+  const [header, stamp] = await Promise.all([loadHeaderAsset(), loadStampAsset()]);
   const ctx = buildInvoiceContextFromDetail(order);
   const writer = new InvoicePdfWriter();
-  renderInvoicePage(writer, header, ctx);
-  return assemblePdfDocument(`${writer.ops.join("\n")}\n`, { header });
+  renderInvoicePage(writer, header, stamp, ctx);
+  return assemblePdfDocument(`${writer.ops.join("\n")}\n`, { header, stamp });
+}
+
+async function loadOrderForInvoice(order) {
+  const merged = mergeOrderSummaryIntoApi(order);
+
+  if (orderApiHasDetailBlock(merged)) {
+    return apiToOrderDetail(merged);
+  }
+
+  const fetchId = pickOrderApiId(order);
+  if (!fetchId) {
+    throw new Error("This order cannot be invoiced (missing ID).");
+  }
+
+  try {
+    return await fetchOrderById(fetchId);
+  } catch (err) {
+    const status = err instanceof ApiError ? err.status : 0;
+    const message = String(err?.message ?? "");
+    const missingOrder =
+      status === 404 ||
+      message.includes("No query results") ||
+      message.toLowerCase().includes("order not found");
+
+    if (!missingOrder) throw err;
+    return apiToOrderDetail(merged);
+  }
 }
 
 export async function downloadOrderInvoicePdf(order) {
   if (!order?.id && !order?.reference) {
     throw new Error("This order cannot be invoiced.");
   }
-  if (!order.id) {
-    throw new Error("This order cannot be invoiced (missing ID).");
-  }
 
-  const detail = await fetchOrderById(order.id);
+  const detail = await loadOrderForInvoice(order);
   const pdfBytes = await buildProfessionalInvoicePdf(detail);
   const ref = String(detail.reference || order.reference || order.id).replace(/[^\w-]+/g, "-");
   triggerPdfDownload(pdfBytes, `invoice-${ref}.pdf`);

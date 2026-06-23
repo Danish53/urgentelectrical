@@ -33,6 +33,7 @@ export function useServicePostcodeLookup(source) {
       if (!serviceSlug || !String(postCode ?? "").trim()) return;
 
       setSubmitting(true);
+      setModalOpen(false);
       try {
         const result = await checkServiceByPostalCode({ source, serviceSlug, postCode });
         if (result.matched) {
@@ -45,6 +46,11 @@ export function useServicePostcodeLookup(source) {
         setMatchedServiceSlug("");
         setModalVariant("error");
         setModalMessage(result.message);
+        setModalOpen(true);
+      } catch {
+        setMatchedServiceSlug("");
+        setModalVariant("error");
+        setModalMessage("Unable to check postcode coverage. Please try again.");
         setModalOpen(true);
       } finally {
         setSubmitting(false);

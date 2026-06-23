@@ -4,9 +4,20 @@ import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { AUTH_INPUT_CLASS, AUTH_LABEL_CLASS } from "@/components/login/authFormStyles";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
-import { EMPTY_SITE_FORM } from "@/lib/sites/siteForm";
+import { formatIdealAddressLabel } from "@/lib/idealPostcodes/mapIdealAddress";
+import { EMPTY_SITE_FORM, mapIdealAddressToSiteForm } from "@/lib/sites/siteForm";
+import { fetchAddressesByPostcode } from "@/services/idealPostcodesApiService";
 
 const INPUT = `${AUTH_INPUT_CLASS} home1-sites-input`;
+
+function IconSearch({ className = "w-4 h-4" }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function Field({ id, label, optional, children }) {
   return (
@@ -43,11 +54,27 @@ export default function CreateSiteModal({
   hideContactDetails = false,
 }) {
   const titleId = useId();
+  const postcodeErrorId = useId();
   const [form, setForm] = useState(EMPTY_SITE_FORM);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState("");
+  const [lookupSuggestions, setLookupSuggestions] = useState([]);
+  const [addressOptions, setAddressOptions] = useState([]);
+  const [addressPicked, setAddressPicked] = useState(false);
   const isEdit = mode === "edit";
 
+  function resetLookup() {
+    setLookupError("");
+    setLookupSuggestions([]);
+    setAddressOptions([]);
+    setAddressPicked(false);
+  }
+
   useEffect(() => {
-    if (open) setForm(initialForm ?? EMPTY_SITE_FORM);
+    if (open) {
+      setForm(initialForm ?? EMPTY_SITE_FORM);
+      resetLookup();
+    }
   }, [open, initialForm]);
 
   useEffect(() => {
@@ -69,6 +96,63 @@ export default function CreateSiteModal({
   function update(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
+
+  function handlePostcodeChange(value) {
+    resetLookup();
+    setForm((prev) => ({
+      ...prev,
+      postcode: value.toUpperCase(),
+      addressLine1: "",
+      addressLine2: "",
+      townCity: "",
+      county: "",
+    }));
+  }
+
+  async function handleFind() {
+    const postcode = form.postcode.trim();
+    if (!postcode) {
+      setLookupError("Please enter a postcode.");
+      return;
+    }
+
+    setLookupLoading(true);
+    setLookupError("");
+    setLookupSuggestions([]);
+    setAddressOptions([]);
+    setAddressPicked(false);
+
+    try {
+      const { addresses } = await fetchAddressesByPostcode(postcode);
+      if (!addresses.length) {
+        setLookupError("No addresses found for this postcode.");
+        return;
+      }
+      setAddressOptions(addresses);
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : "Could not find addresses.");
+      if (err instanceof Error && "suggestions" in err && Array.isArray(err.suggestions)) {
+        setLookupSuggestions(err.suggestions);
+      }
+    } finally {
+      setLookupLoading(false);
+    }
+  }
+
+  function handleSelectAddress(udprn) {
+    if (!udprn) return;
+
+    const match = addressOptions.find((item) => String(item.udprn ?? "") === udprn);
+    if (!match) return;
+
+    const mapped = mapIdealAddressToSiteForm(match);
+    setForm((prev) => ({ ...prev, ...mapped }));
+    setAddressPicked(true);
+    setAddressOptions([]);
+  }
+
+  const showAddressSelect = addressOptions.length > 0 && !addressPicked;
+  const displayPostcodeError = lookupError;
 
   async function handleSubmit(e) {
     e?.preventDefault?.();
@@ -125,18 +209,76 @@ export default function CreateSiteModal({
             </Field>
 
             <div className="home1-sites-form-grid home1-sites-form-grid--2">
-              <Field id="site-postcode" label="Postcode">
-                <input
-                  id="site-postcode"
-                  value={form.postcode}
-                  onChange={(e) => update("postcode", e.target.value.toUpperCase())}
-                  placeholder="e.g. NG1 1AA"
-                  className={INPUT}
-                  required
-                  disabled={saving}
-                  autoComplete="postal-code"
-                />
-              </Field>
+              <div className="home1-sites-field home1-sites-field--postcode">
+                <label htmlFor="site-postcode" className={AUTH_LABEL_CLASS}>
+                  Postcode
+                </label>
+                <div className="home1-sites-postcode-row">
+                  <input
+                    id="site-postcode"
+                    value={form.postcode}
+                    onChange={(e) => handlePostcodeChange(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleFind();
+                      }
+                    }}
+                    placeholder="e.g. NG1 1AA"
+                    className={`${INPUT}${displayPostcodeError ? " home1-sites-input--error" : ""}`}
+                    required
+                    disabled={saving || lookupLoading}
+                    autoComplete="postal-code"
+                    aria-invalid={displayPostcodeError ? "true" : undefined}
+                    aria-describedby={displayPostcodeError ? postcodeErrorId : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="home1-sites-postcode-find"
+                    onClick={handleFind}
+                    disabled={saving || lookupLoading}
+                    aria-busy={lookupLoading}
+                  >
+                    {lookupLoading ? (
+                      <>
+                        <ButtonSpinner className="h-4 w-4 text-white" />
+                        <span>Finding…</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconSearch />
+                        <span>Find</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                {displayPostcodeError ? (
+                  <p id={postcodeErrorId} className="home1-sites-field-error" role="alert">
+                    {displayPostcodeError}
+                    {lookupSuggestions.length ? (
+                      <span className="home1-sites-lookup-suggestions">
+                        {" "}
+                        Did you mean:{" "}
+                        {lookupSuggestions.map((suggestion, index) => (
+                          <button
+                            key={suggestion}
+                            type="button"
+                            className="home1-sites-lookup-suggestion"
+                            onClick={() => {
+                              handlePostcodeChange(suggestion);
+                              setLookupError("");
+                              setLookupSuggestions([]);
+                            }}
+                          >
+                            {suggestion}
+                            {index < lookupSuggestions.length - 1 ? ", " : ""}
+                          </button>
+                        ))}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
               <Field id="site-county" label="County" optional>
                 <input
                   id="site-county"
@@ -148,6 +290,31 @@ export default function CreateSiteModal({
                 />
               </Field>
             </div>
+
+            {showAddressSelect ? (
+              <Field id="site-address-select" label="Select address">
+                <select
+                  id="site-address-select"
+                  className={`${INPUT} home1-sites-address-select`}
+                  defaultValue=""
+                  onChange={(e) => handleSelectAddress(e.target.value)}
+                  required
+                  disabled={saving}
+                >
+                  <option value="" disabled>
+                    Select an address…
+                  </option>
+                  {addressOptions.map((address) => {
+                    const key = String(address.udprn ?? formatIdealAddressLabel(address));
+                    return (
+                      <option key={key} value={String(address.udprn ?? "")}>
+                        {formatIdealAddressLabel(address)}
+                      </option>
+                    );
+                  })}
+                </select>
+              </Field>
+            ) : null}
 
             <Field id="site-line1" label="Address line 1">
               <input

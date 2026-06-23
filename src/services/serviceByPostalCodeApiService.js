@@ -1,13 +1,26 @@
 import { SERVICE_BY_POSTAL_CODE_PROXY } from "@/constants/servicesApi";
+import { DEFAULT_NO_MATCH_MESSAGE } from "@/lib/postcode/parseServicePostcodeResponse";
 import { normalizePostcodeForApi } from "@/lib/postcode/normalizePostcode";
-
-const DEFAULT_NO_MATCH_MESSAGE = "Invalid Postcode";
 
 /**
  * @typedef {{ matched: true, distance?: number }} ServicePostcodeMatch
  * @typedef {{ matched: false, message: string, distance?: number }} ServicePostcodeNoMatch
  * @typedef {ServicePostcodeMatch | ServicePostcodeNoMatch} ServicePostcodeResult
  */
+
+/**
+ * @param {unknown} data
+ */
+function readDistanceFromPayload(data) {
+  if (!data || typeof data !== "object") return undefined;
+  const record = /** @type {Record<string, unknown>} */ (data);
+  if (typeof record.distance === "number") return record.distance;
+  if (record.data && typeof record.data === "object" && !Array.isArray(record.data)) {
+    const inner = /** @type {Record<string, unknown>} */ (record.data);
+    if (typeof inner.distance === "number") return inner.distance;
+  }
+  return undefined;
+}
 
 /**
  * @param {Response} response
@@ -41,6 +54,7 @@ export async function checkServiceByPostalCode({ source, serviceSlug, postCode }
   try {
     response = await fetch(SERVICE_BY_POSTAL_CODE_PROXY, {
       method: "POST",
+      cache: "no-store",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -60,23 +74,16 @@ export async function checkServiceByPostalCode({ source, serviceSlug, postCode }
 
   const { data, ok } = await parseProxyResponse(response);
 
-  if (!ok) {
-    const message =
-      String(data?.error ?? data?.message ?? "").trim() ||
-      (data?.errors && typeof data.errors === "object"
-        ? Object.values(data.errors).flat().filter(Boolean).join(" ")
-        : "") ||
-      DEFAULT_NO_MATCH_MESSAGE;
-    return { matched: false, message };
+  if (ok) {
+    return { matched: true, distance: readDistanceFromPayload(data) };
   }
 
-  if (data?.success === true) {
-    return { matched: true, distance: typeof data.distance === "number" ? data.distance : undefined };
-  }
-
-  return {
-    matched: false,
-    message: String(data?.message ?? data?.error ?? "").trim() || DEFAULT_NO_MATCH_MESSAGE,
-    distance: typeof data?.distance === "number" ? data.distance : undefined,
-  };
+  const record = data && typeof data === "object" ? /** @type {Record<string, unknown>} */ (data) : null;
+  const message =
+    String(record?.error ?? record?.message ?? "").trim() ||
+    (record?.errors && typeof record.errors === "object"
+      ? Object.values(record.errors).flat().filter(Boolean).join(" ")
+      : "") ||
+    DEFAULT_NO_MATCH_MESSAGE;
+  return { matched: false, message };
 }

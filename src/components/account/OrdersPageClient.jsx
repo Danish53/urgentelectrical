@@ -21,6 +21,7 @@ import { canCancelOrder } from "@/lib/orders/orderCancel";
 import { downloadOrderInvoicePdf } from "@/lib/orders/downloadOrderInvoice";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { requestOrderCancellation, fetchOrderById, sendOrderInvoiceEmail, parseSendOrderInvoiceMessage } from "@/services/ordersApiService";
+import { pickOrderApiId } from "@/lib/orders/orderMapper";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { clearOrderDetail, loadOrderDetail, loadOrders } from "@/store/slices/ordersSlice";
 import { IconArrow, IconCalendar, IconCheck, IconDownload, IconMail } from "@/components/home1/icons";
@@ -355,21 +356,22 @@ export default function OrdersPageClient() {
   }
 
   async function handleSendInvoiceEmail(order) {
-    if (!order?.id || invoiceSendingOrderId || invoiceEmailSaving) return;
+    const orderId = pickOrderApiId(order);
+    if (!orderId || invoiceSendingOrderId || invoiceEmailSaving) return;
 
-    setInvoiceSendingOrderId(order.id);
+    setInvoiceSendingOrderId(orderId);
     try {
-      const detail = await fetchOrderById(order.id);
+      const detail = await fetchOrderById(orderId);
       const savedEmail = detail.customerEmail?.trim();
 
       if (savedEmail) {
-        await deliverInvoiceEmail(detail.id, savedEmail);
+        await deliverInvoiceEmail(pickOrderApiId(detail) || orderId, savedEmail);
         return;
       }
 
       setInvoiceEmailTarget({
-        orderId: detail.id,
-        reference: detail.reference || detail.id,
+        orderId: pickOrderApiId(detail) || orderId,
+        reference: detail.reference || orderId,
         serviceName: detail.serviceName,
       });
     } catch (err) {
