@@ -2,7 +2,9 @@ import { LOCATION_AREAS_BY_REGION, LOCATION_FILTERS } from "@/data/locationsPage
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { slugify } from "@/lib/slugs";
 
-const SITE = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE = getSiteUrl();
 
 const REGION_LABELS = Object.fromEntries(
   LOCATION_FILTERS.filter((f) => f.id !== "all").map((f) => [f.id, f.label])

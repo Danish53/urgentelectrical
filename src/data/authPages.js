@@ -1,4 +1,6 @@
-const SITE = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE = getSiteUrl();
 
 const AUTH_ROBOTS = {
   index: false,

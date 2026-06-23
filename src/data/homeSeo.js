@@ -1,6 +1,7 @@
 import { FAQ_ITEMS } from "./faqs";
+import { getSiteUrl } from "@/lib/siteUrl";
 
-const SITE = "https://www.urgentelectrical.services";
+const SITE = getSiteUrl();
 
 /** Shorter FAQ set on homepage for faster load & focused schema */
 export const HOME_FAQ_ITEMS = FAQ_ITEMS.slice(0, 4);

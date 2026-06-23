@@ -1,11 +1,12 @@
 import LocationsPageClient from "@/components/locations/LocationsPageClient";
 import { buildLocationsMetadata, LOCATIONS_JSON_LD } from "@/data/locationsPage";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "../home1/home1.css";
 
 const meta = buildLocationsMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   keywords: meta.keywords,

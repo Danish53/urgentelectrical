@@ -7,7 +7,7 @@ import {
   resolveDetailExtra,
 } from "@/lib/services/resolveServiceDetailSlug";
 
-const SITE = "https://www.urgentelectrical.services";
+import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 
 const FALLBACK_META = {
   "Emergency Response - 24/7": { image: "/featured/emergency-24.jpg", color: "#DC2626" },
@@ -61,7 +61,7 @@ function resolveImage(api, name) {
     if (fromApi.startsWith("http") || fromApi.startsWith("/")) {
       return fromApi;
     }
-    return `https://www.urgentelectrical.services/${fromApi.replace(/^\/+/, "")}`;
+    return absoluteCmsUrl(fromApi);
   }
   return FALLBACK_META[name]?.image ?? "/featured/pat.jpg";
 }
@@ -133,7 +133,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     image: resolveImage(api, name),
     color: meta.color,
     href: `/services/${slug}`,
-    canonicalUrl: `${SITE}/services/${slug}`,
+    canonicalUrl: absoluteSiteUrl(`/services/${slug}`),
     bookHref: buildCheckoutHref({ service: name }),
     priceIncVat,
     variants,

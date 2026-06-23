@@ -1,12 +1,11 @@
 /** Laravel Sanctum SPA — CSRF cookie before stateful POST requests */
 
 import { fetchCookieSession, clearCookieSessionCache } from "@/services/cookieApiService";
+import { getApiSiteOrigin } from "@/lib/siteUrl";
 
 /** @returns {string} */
 export function getAppOrigin() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim().replace(/\/$/, "");
-  if (!base) return "";
-  return base.replace(/\/api\/?$/i, "");
+  return getApiSiteOrigin();
 }
 
 /** @returns {string | null} */

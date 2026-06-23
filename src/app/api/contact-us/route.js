@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
-
-function getApiBaseUrl() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-  if (!base) return null;
-  return base.replace(/\/$/, "");
-}
+import { getApiBaseUrl } from "@/lib/siteUrl";
 
 /** Proxy contact form to Laravel API (avoids browser CSRF 419 on cross-origin POST). */
 export async function POST(request) {

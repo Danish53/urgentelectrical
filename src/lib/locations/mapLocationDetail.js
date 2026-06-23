@@ -1,6 +1,6 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
-const SITE = "https://www.urgentelectrical.services";
+import { absoluteCmsUrl } from "@/lib/siteUrl";
 const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
 
@@ -22,7 +22,7 @@ export function getLocationImageUrl(raw) {
   if (!trimmed) return DEFAULT_IMAGE;
   if (trimmed.startsWith("http")) return trimmed;
   if (trimmed.startsWith("/")) return trimmed;
-  return `https://www.urgentelectrical.services/${trimmed.replace(/^\/+/, "")}`;
+  return absoluteCmsUrl(trimmed);
 }
 
 /**

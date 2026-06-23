@@ -1,15 +1,10 @@
-/** @returns {string | null} */
-export function getApiBaseUrl() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-  if (!base) return null;
-  return base.replace(/\/$/, "");
-}
+import { getApiBaseUrl, getApiSiteOrigin } from "@/lib/siteUrl";
+
+export { getApiBaseUrl };
 
 /** Site origin for `/public/api/*` routes (strips trailing `/api` from env base). */
 export function getPublicApiOrigin() {
-  const apiBase = getApiBaseUrl();
-  if (!apiBase) return null;
-  return apiBase.replace(/\/api\/?$/i, "");
+  return getApiSiteOrigin();
 }
 
 /**

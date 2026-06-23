@@ -1,7 +1,7 @@
 import { formatBlogPublishedDisplay, parseBlogCreatedAtToISO } from "@/lib/blogs/parseBlogDate";
 import { sanitizeBlogHtml } from "@/lib/blogs/sanitizeBlogHtml";
 
-const SITE = "https://www.urgentelectrical.services";
+import { absoluteCmsUrl, absoluteSiteUrl, getSiteUrl } from "@/lib/siteUrl";
 const DEFAULT_AUTHOR = "Urgent Electrical Team";
 const DEFAULT_COLOR = "#D3231F";
 const FALLBACK_IMAGE = "/og-image.jpg";
@@ -14,10 +14,11 @@ function estimateReadMinutes(text) {
 function resolveImageUrl(image) {
   if (!image || typeof image !== "string") return FALLBACK_IMAGE;
   const trimmed = image.trim();
-  if (!trimmed || trimmed === SITE || trimmed === `${SITE}/`) return FALLBACK_IMAGE;
+  const site = getSiteUrl();
+  if (!trimmed || trimmed === site || trimmed === `${site}/`) return FALLBACK_IMAGE;
   if (trimmed.startsWith("http")) return trimmed;
   if (trimmed.startsWith("/")) return trimmed;
-  return `${SITE}/${trimmed.replace(/^\//, "")}`;
+  return absoluteCmsUrl(trimmed);
 }
 
 function excerptFromHtml(html, maxLen = 320) {
@@ -50,7 +51,7 @@ export function buildBlogPostFromListItem(api, options = {}) {
     category: categorySlug,
     categoryLabel,
     href: `/blog/${slug}`,
-    canonicalUrl: `${SITE}/blog/${slug}`,
+    canonicalUrl: absoluteSiteUrl(`/blog/${slug}`),
     publishedISO,
     publishedDisplay: formatBlogPublishedDisplay(api.created_at, publishedISO),
     readMinutes: estimateReadMinutes(excerpt),
@@ -99,7 +100,7 @@ export function buildBlogPostFromDetail(api, options = {}) {
     category: "all",
     categoryLabel: options.categoryLabel ?? "Article",
     href: `/blog/${slug}`,
-    canonicalUrl: `${SITE}/blog/${slug}`,
+    canonicalUrl: absoluteSiteUrl(`/blog/${slug}`),
     publishedISO,
     publishedDisplay: formatBlogPublishedDisplay(
       typeof api.created_at === "string" ? api.created_at : "",

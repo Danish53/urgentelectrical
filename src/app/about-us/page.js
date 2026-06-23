@@ -1,11 +1,12 @@
 import AboutPageClient from "@/components/about/AboutPageClient";
 import { buildAboutMetadata, ABOUT_JSON_LD } from "@/data/aboutPage";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "../home1/home1.css";
 
 const meta = buildAboutMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   keywords: meta.keywords,

@@ -1,16 +1,17 @@
 import { ApiError } from "@/lib/api/errors";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
 import { ensureCsrfCookie, getXsrfTokenFromCookie } from "@/lib/api/csrf";
+import { getApiBaseUrl } from "@/lib/siteUrl";
 
 function getBaseUrl() {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  const base = getApiBaseUrl();
   if (!base) {
     throw new ApiError(
       "API base URL is not configured. Set NEXT_PUBLIC_API_BASE_URL in .env.local.",
       { status: 0 }
     );
   }
-  return base.replace(/\/$/, "");
+  return base;
 }
 
 /**

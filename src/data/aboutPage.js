@@ -1,4 +1,6 @@
-const SITE = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE = getSiteUrl();
 
 export const ABOUT_CANONICAL = `${SITE}/about-us`;
 

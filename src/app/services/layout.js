@@ -1,4 +1,6 @@
-const SITE_URL = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE_URL = getSiteUrl();
 const PAGE_URL = `${SITE_URL}/services`;
 
 export const metadata = {

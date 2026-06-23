@@ -9,7 +9,7 @@ import {
 
 export { DETAIL_SLUG_ALIASES };
 
-const SITE = "https://www.urgentelectrical.services";
+import { absoluteSiteUrl } from "@/lib/siteUrl";
 
 /** @deprecated Prefer API category labels via categoryMap */
 export const CATEGORY_LABELS = {
@@ -147,7 +147,7 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     image,
     color: meta.color,
     href: `/services/${slug}`,
-    canonicalUrl: `${SITE}/services/${slug}`,
+    canonicalUrl: absoluteSiteUrl(`/services/${slug}`),
     bookHref: buildCheckoutHref({ service: name }),
     priceIncVat,
     variants,

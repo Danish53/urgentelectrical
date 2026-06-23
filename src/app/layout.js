@@ -75,7 +75,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_GB",
-    url: "https://www.urgentelectrical.services",
+    url: getSiteUrl(),
     siteName: "Urgent Electrical Services",
     title: "Local Emergency Electrician in Nottingham | 24 Hours",
     description:

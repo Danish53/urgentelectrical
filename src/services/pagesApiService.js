@@ -11,15 +11,7 @@ import { resolveServiceApiSlugCandidates } from "@/lib/services/resolveServiceDe
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 
-const SITE = "https://www.urgentelectrical.services";
-
-function getPublicSiteOrigin() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
-  if (apiBase) {
-    return apiBase.replace(/\/api\/?$/i, "").replace(/\/$/, "");
-  }
-  return SITE;
-}
+import { getApiSiteOrigin, absoluteCmsUrl } from "@/lib/siteUrl";
 
 function titleFromSlug(slug) {
   return slug
@@ -54,7 +46,7 @@ function pageFromServiceApi(api, urlSlug) {
 /** @param {string} slug */
 async function fetchPublicCmsPageBySlug(slug) {
   const encoded = encodeURIComponent(slug);
-  const url = `${getPublicSiteOrigin()}/public/api/pages/${encoded}`;
+  const url = `${getApiSiteOrigin()}/public/api/pages/${encoded}`;
   let response;
 
   try {
@@ -277,8 +269,8 @@ export function parseOtherServiceDetailResponse(payload) {
 async function fetchOtherServiceDetailPayload(slug, fetchOptions = {}) {
   const encoded = encodeURIComponent(slug);
   const urls = [
-    `${getPublicSiteOrigin()}${OTHER_SERVICES_DETAIL_PATH}/${encoded}`,
-    `${getPublicSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}/${encoded}`,
+    `${getApiSiteOrigin()}${OTHER_SERVICES_DETAIL_PATH}/${encoded}`,
+    `${getApiSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}/${encoded}`,
   ];
 
   for (const url of urls) {
@@ -377,7 +369,7 @@ export function parseOtherServicesListResponse(payload) {
 
 async function fetchOtherServicesPayload(page = 1, fetchOptions = {}) {
   const safePage = Math.max(1, Number(page) || 1);
-  const url = `${getPublicSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}?page=${safePage}`;
+  const url = `${getApiSiteOrigin()}${OTHER_SERVICES_PUBLIC_PATH}?page=${safePage}`;
   let response;
 
   try {
@@ -596,7 +588,7 @@ export function getPageImageUrl(page) {
   const trimmed = raw.trim();
   if (!trimmed) return "";
   if (trimmed.startsWith("http")) return trimmed;
-  return `${SITE}/${trimmed.replace(/^\/+/, "")}`;
+  return absoluteCmsUrl(trimmed);
 }
 
 /**

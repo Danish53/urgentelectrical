@@ -1,7 +1,9 @@
 import { CHECKOUT_PATH, buildCheckoutHref } from "@/lib/checkoutHref";
 import { formatApiPrice, priceIncVatFromString, VAT_MULTIPLIER } from "@/lib/pricing";
 
-const SITE = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE = getSiteUrl();
 
 export { CHECKOUT_PATH, buildCheckoutHref };
 export const CHECKOUT_CANONICAL = `${SITE}${CHECKOUT_PATH}`;

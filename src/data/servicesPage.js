@@ -2,7 +2,9 @@ import { NAV_GROUPS } from "@/components/navData";
 import { serviceSlug } from "@/lib/slugs";
 import { formatApiPrice, priceIncVatFromString } from "@/lib/pricing";
 
-const SITE = "https://www.urgentelectrical.services";
+import { getSiteUrl } from "@/lib/siteUrl";
+
+const SITE = getSiteUrl();
 
 export { formatApiPrice, priceIncVatFromString };
 

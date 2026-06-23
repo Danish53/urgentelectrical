@@ -1,6 +1,4 @@
-import { POLICY_API } from "@/constants/policyApi";
-import { ApiError } from "@/lib/api/errors";
-import { apiRequest } from "@/lib/api/client";
+import { absoluteCmsUrl } from "@/lib/siteUrl";
 
 /**
  * @typedef {object} ApiPolicyItem
@@ -107,7 +105,7 @@ export function getPolicyImageUrl(policy) {
   const trimmed = raw.trim();
   if (!trimmed) return "";
   if (trimmed.startsWith("http")) return trimmed;
-  return `https://www.urgentelectrical.services/${trimmed.replace(/^\/+/, "")}`;
+  return absoluteCmsUrl(trimmed);
 }
 
 /**

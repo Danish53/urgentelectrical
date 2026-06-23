@@ -1,12 +1,13 @@
 import AuthLayout from "@/components/login/AuthLayout";
 import ResetPasswordForm from "@/components/login/ResetPasswordForm";
 import { buildResetPasswordMetadata } from "@/data/authPages";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "../../home1/home1.css";
 
 const meta = buildResetPasswordMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   alternates: meta.alternates,

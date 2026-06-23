@@ -1,12 +1,9 @@
 import { NAV_GROUPS } from "@/components/navData";
+import { getApiSiteOrigin } from "@/lib/siteUrl";
 
 /** @returns {string} */
 export function getSiteOrigin() {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
-  if (apiBase) {
-    return apiBase.replace(/\/api\/?$/i, "").replace(/\/$/, "");
-  }
-  return "https://www.urgentelectrical.services";
+  return getApiSiteOrigin();
 }
 
 /**

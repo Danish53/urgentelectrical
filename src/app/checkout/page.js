@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import CheckoutPageClient from "@/components/checkout/CheckoutPageClient";
 import { buildCheckoutMetadata } from "@/data/checkoutPage";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "../home1/home1.css";
 import "../account/account.css";
 import "./checkout.css";
@@ -8,7 +9,7 @@ import "./checkout.css";
 const meta = buildCheckoutMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   alternates: meta.alternates,

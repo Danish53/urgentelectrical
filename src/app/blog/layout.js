@@ -1,9 +1,10 @@
 import { buildBlogListingMetadata } from "@/data/blogs";
+import { getSiteUrl } from "@/lib/siteUrl";
 
 const meta = buildBlogListingMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   keywords: meta.keywords,

@@ -1,11 +1,12 @@
 import ContactPageClient from "@/components/contact/ContactPageClient";
 import { buildContactMetadata, CONTACT_JSON_LD } from "@/data/contactPage";
+import { getSiteUrl } from "@/lib/siteUrl";
 import "../home1/home1.css";
 
 const meta = buildContactMetadata();
 
 export const metadata = {
-  metadataBase: new URL("https://www.urgentelectrical.services"),
+  metadataBase: new URL(getSiteUrl()),
   title: meta.title,
   description: meta.description,
   keywords: meta.keywords,

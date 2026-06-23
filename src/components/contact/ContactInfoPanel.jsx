@@ -3,6 +3,7 @@
 import { IconPhone } from "@/components/home1/icons";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
 import { CONTACT_BUSINESS_HOURS } from "@/data/contactPage";
+import { absoluteSiteUrl } from "@/lib/siteUrl";
 
 const CARD =
   "rounded-xl bg-white border border-[#e8eaed] shadow-[0_4px_24px_rgba(17,24,39,0.06)] px-5 py-6 sm:px-6 sm:py-7";
@@ -63,7 +64,7 @@ export default function ContactInfoPanel() {
       className="home1-contact-info-panel flex flex-col gap-5 sm:gap-6 h-full"
       itemScope
       itemType="https://schema.org/LocalBusiness"
-      itemID="https://www.urgentelectrical.services/#organization"
+      itemID={absoluteSiteUrl("/#organization")}
     >
       <meta itemProp="name" content={site.title} />
 
