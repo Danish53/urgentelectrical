@@ -3,15 +3,18 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "ue_checkout_session_expires";
+const ON_PAGE_KEY = "ue_checkout_on_page";
 
 export function clearCheckoutSession() {
   if (typeof window !== "undefined") {
     sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(ON_PAGE_KEY);
   }
 }
 
 /**
- * 10-minute countdown persisted for the browser tab session.
+ * Countdown persisted for the browser tab. Resets when the user returns to
+ * checkout from another page; continues across refresh and in-checkout steps.
  * @param {number} totalSeconds
  */
 export function useCheckoutSessionTimer(totalSeconds) {
@@ -19,18 +22,25 @@ export function useCheckoutSessionTimer(totalSeconds) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const key = STORAGE_KEY;
-    let expiresAt = Number(sessionStorage.getItem(key));
+    const wasOnCheckout = sessionStorage.getItem(ON_PAGE_KEY) === "1";
+    let expiresAt = Number(sessionStorage.getItem(STORAGE_KEY));
 
-    if (!expiresAt || Number.isNaN(expiresAt)) {
+    const needsNewSession =
+      !wasOnCheckout || !expiresAt || Number.isNaN(expiresAt) || expiresAt <= Date.now();
+
+    if (needsNewSession) {
       expiresAt = Date.now() + totalSeconds * 1000;
-      sessionStorage.setItem(key, String(expiresAt));
+      sessionStorage.setItem(STORAGE_KEY, String(expiresAt));
     }
+
+    sessionStorage.setItem(ON_PAGE_KEY, "1");
 
     if (expiresAt <= Date.now()) {
       setSecondsLeft(0);
       setReady(true);
-      return undefined;
+      return () => {
+        sessionStorage.setItem(ON_PAGE_KEY, "0");
+      };
     }
 
     const tick = () => {
@@ -41,7 +51,10 @@ export function useCheckoutSessionTimer(totalSeconds) {
 
     tick();
     const id = window.setInterval(tick, 1000);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      sessionStorage.setItem(ON_PAGE_KEY, "0");
+    };
   }, [totalSeconds]);
 
   return {

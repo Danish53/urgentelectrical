@@ -4,11 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatMoney } from "@/components/checkout/checkoutUtils";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
-import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { parseApplyCouponResponse } from "@/lib/checkout/parseCouponResponse";
-import { formatGbpDisplay, getDisplayPrice, getVatSuffix } from "@/lib/pricing";
 import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
+
+const VAT_RATE = 0.2;
 
 const TRAVEL_CHARGE_INFO =
   "No travel fee within 20 miles. For locations outside this radius, a travel charge will be added automatically based on distance.";
@@ -155,29 +155,29 @@ export default function CheckoutSummary({
   deliveryFeeOutOfRange = false,
   deliveryFeeError = "",
 }) {
-  const { incVat } = useVatPreference();
   const [couponCode, setCouponCode] = useState(appliedCoupon?.code ?? "");
   const [couponError, setCouponError] = useState("");
   const [couponSuccess, setCouponSuccess] = useState(appliedCoupon?.message ?? "");
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const subtotal = parseFloat(lineItems.totalInc) || 0;
+  const serviceExc = parseFloat(lineItems.service?.amountExc) || 0;
+  const travelExc = parseFloat(lineItems.travel?.amountExc) || 0;
+  const totalInc = parseFloat(lineItems.totalInc) || 0;
   const discount = appliedCoupon?.discountAmount ?? 0;
-  const totalAfterDiscount = Math.max(0, subtotal - discount);
-  const vatLabel = getVatSuffix(incVat);
-  const priceExc = service?.priceExcVat ?? service?.price;
-  const displayPrice = priceExc != null ? getDisplayPrice(priceExc, incVat) : null;
+  const payableTotalInc = Math.max(0, totalInc - discount);
+  const netExc = Math.round((payableTotalInc / (1 + VAT_RATE)) * 100) / 100;
+  const vatAmount = Math.round((payableTotalInc - netExc) * 100) / 100;
 
   const travelPrice =
     deliveryFeeLoading
       ? "...."
       : deliveryFeeError
-        ? "0"
+        ? formatMoney(0)
         : deliveryFeeOutOfRange
           ? "Unavailable"
           : !deliveryFeeResolved && postcode
-            ? "0"
-            : formatMoney(incVat ? lineItems.travel.amountInc : lineItems.travel.amountExc);
+            ? formatMoney(0)
+            : formatMoney(travelExc);
 
   async function handleApplyCoupon() {
     const code = couponCode.trim().toUpperCase();
@@ -207,7 +207,7 @@ export default function CheckoutSummary({
       }
 
       const data = await applyCouponApi(payload);
-      const parsed = parseApplyCouponResponse(data, subtotal);
+      const parsed = parseApplyCouponResponse(data, totalInc);
 
       if (!parsed.success) {
         setCouponError("This coupon could not be applied.");
@@ -252,27 +252,58 @@ export default function CheckoutSummary({
 
         <div className="home1-checkout-summary-body">
           {service ? (
-            <div className="home1-checkout-summary-service">
-              <p className="home1-checkout-summary-service-label">Service</p>
-              <p className="home1-checkout-summary-service-name">{service.name}</p>
-              {service.categoryLabel ? (
-                <p className="home1-checkout-summary-service-meta">{service.categoryLabel}</p>
-              ) : null}
-              {variantLabel ? (
-                <p className="home1-checkout-summary-service-variant">
-                  Option: <strong>{variantLabel}</strong>
-                </p>
-              ) : null}
-              {displayPrice != null ? (
-                <p className="home1-checkout-summary-service-price">
-                  {formatGbpDisplay(displayPrice)} <span>{vatLabel}</span>
-                </p>
-              ) : null}
+            <div className="home1-checkout-summary-headline">
+              <p className="home1-checkout-summary-headline-title">{lineItems.service.label}</p>
+              <p className="home1-checkout-summary-headline-price">{formatMoney(serviceExc)}</p>
             </div>
           ) : null}
 
+          <ul className="home1-checkout-summary-lines list-none p-0 m-0">
+            <li>
+              <span className="home1-checkout-summary-line-label home1-checkout-summary-line-label--with-info">
+                <span>{lineItems.travel.label}</span>
+                <TravelChargeInfoTooltip />
+              </span>
+              <span
+                className={`home1-checkout-summary-line-price${
+                  deliveryFeeOutOfRange || deliveryFeeError ? " is-muted" : ""
+                }`}
+              >
+                {travelPrice}
+              </span>
+            </li>
+            {deliveryFeeError ? (
+              <li className="home1-checkout-summary-line-note">
+                <span className="home1-checkout-summary-delivery-error" role="alert">
+                  {deliveryFeeError}
+                </span>
+              </li>
+            ) : null}
+            <li className="home1-checkout-summary-line-discount">
+              <span className="home1-checkout-summary-line-label">
+                Discount{appliedCoupon?.code ? ` (${appliedCoupon.code})` : ""}
+              </span>
+              <span className="home1-checkout-summary-line-price">
+                {discount > 0 ? `−${formatMoney(discount)}` : `−${formatMoney(0)}`}
+              </span>
+            </li>
+            <li>
+              <span className="home1-checkout-summary-line-label">Subtotal</span>
+              <span className="home1-checkout-summary-line-price">{formatMoney(netExc)}</span>
+            </li>
+            <li>
+              <span className="home1-checkout-summary-line-label">VAT (20%)</span>
+              <span className="home1-checkout-summary-line-price">{formatMoney(vatAmount)}</span>
+            </li>
+          </ul>
+
+          <div className="home1-checkout-summary-total">
+            <span>Total</span>
+            <strong>{formatMoney(payableTotalInc.toFixed(2))}</strong>
+          </div>
+
           <div className="home1-checkout-summary-coupon">
-            <label htmlFor="checkout-coupon" className="home1-checkout-summary-coupon-label">
+            <label htmlFor="checkout-coupon" className="sr-only">
               Coupon code
             </label>
             <div className="home1-checkout-summary-coupon-row">
@@ -284,7 +315,7 @@ export default function CheckoutSummary({
                   setCouponCode(e.target.value);
                   setCouponError("");
                 }}
-                placeholder="e.g. QWE"
+                placeholder="Enter coupon code"
                 className="home1-checkout-summary-coupon-input"
                 disabled={Boolean(appliedCoupon) || applyingCoupon}
                 autoComplete="off"
@@ -326,48 +357,6 @@ export default function CheckoutSummary({
                 {couponSuccess}
               </p>
             ) : null}
-          </div>
-
-          <ul className="home1-checkout-summary-lines list-none p-0 m-0">
-            <li>
-              <span className="home1-checkout-summary-line-label">{lineItems.service.label}</span>
-              <span className="home1-checkout-summary-line-price">
-                {formatMoney(incVat ? lineItems.service.amountInc : lineItems.service.amountExc)}
-              </span>
-            </li>
-            <li>
-              <span className="home1-checkout-summary-line-label home1-checkout-summary-line-label--with-info">
-                <span>{lineItems.travel.label}</span>
-                <TravelChargeInfoTooltip />
-              </span>
-              <span
-                className={`home1-checkout-summary-line-price${
-                  deliveryFeeOutOfRange || deliveryFeeError ? " is-muted" : ""
-                }`}
-              >
-                {travelPrice}
-              </span>
-            </li>
-            {deliveryFeeError ? (
-              <li className="home1-checkout-summary-line-note">
-                <span className="home1-checkout-summary-delivery-error" role="alert">
-                  {deliveryFeeError}
-                </span>
-              </li>
-            ) : null}
-            {discount > 0 ? (
-              <li className="home1-checkout-summary-line-discount">
-                <span className="home1-checkout-summary-line-label">
-                  Discount ({appliedCoupon?.code})
-                </span>
-                <span className="home1-checkout-summary-line-price">−{formatMoney(discount)}</span>
-              </li>
-            ) : null}
-          </ul>
-
-          <div className="home1-checkout-summary-total">
-            <span>Total{incVat ? " Inc. VAT" : " Exc. VAT"}</span>
-            <strong>{formatMoney(totalAfterDiscount.toFixed(2))}</strong>
           </div>
 
           {(selectedDate || selectedTime || postcode) ? (
