@@ -32,6 +32,7 @@ function SuccessIcon() {
  * @param {{
  *   open: boolean,
  *   variant: "success" | "error",
+ *   title?: string,
  *   message?: string,
  *   onClose: () => void,
  *   onBook?: () => void,
@@ -40,13 +41,14 @@ function SuccessIcon() {
 export default function ServicePostcodeResultModal({
   open,
   variant,
+  title: titleOverride,
   message,
   onClose,
   onBook,
 }) {
   const titleId = useId();
   const isSuccess = variant === "success";
-  const title = isSuccess ? "We Proudly Serve Your Area" : "Invalid Postcode";
+  const title = titleOverride ?? (isSuccess ? "We Proudly Serve Your Area" : "Invalid Postcode");
   const bodyText = isSuccess ? "" : message || "Invalid Postcode";
 
   useEffect(() => {

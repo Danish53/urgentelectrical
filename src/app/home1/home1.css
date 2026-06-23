@@ -4544,29 +4544,30 @@
 .home1-blog-hero-media {
   position: relative;
   margin: 0;
-  aspect-ratio: 16 / 10;
   overflow: hidden;
-  background: var(--home1-surface);
+  background: #0f172a;
   border-top: 1px solid var(--home1-border);
 }
 
 .home1-blog-hero-media-img {
-  position: absolute;
-  inset: 0;
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  max-height: 420px;
   object-fit: cover;
+  object-position: center;
 }
 
-@media (min-width: 640px) {
-  .home1-blog-hero-media {
-    aspect-ratio: 16 / 9;
+@media (min-width: 1024px) {
+  .home1-blog-hero-media-img {
+    max-height: 480px;
   }
 }
 
 .home1-blog-hero-media-fallback {
-  position: absolute;
-  inset: 0;
+  width: 100%;
+  min-height: 220px;
+  max-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4575,6 +4576,12 @@
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+@media (min-width: 1024px) {
+  .home1-blog-hero-media-fallback {
+    max-height: 480px;
+  }
 }
 
 .home1-blog-body {
@@ -7944,6 +7951,7 @@ label[class*="__btn"] {
 
 .home1-postcode-result-btn--ok {
   min-width: 9rem;
+  border: 1px solid #000;
 }
 
 .home1-postcode-result-btn--ok:hover,

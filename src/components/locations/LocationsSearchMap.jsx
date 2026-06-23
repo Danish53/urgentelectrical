@@ -20,10 +20,20 @@ export default function LocationsSearchMap() {
     useServicePostcodeLookup("locations");
   const [serviceSlug, setServiceSlug] = useState("");
   const [postcode, setPostcode] = useState("");
+  const [serviceRequiredOpen, setServiceRequiredOpen] = useState(false);
+  const [postcodeRequiredOpen, setPostcodeRequiredOpen] = useState(false);
 
   function handleSearch(e) {
     e.preventDefault();
-    if (!serviceSlug.trim() || !postcode.trim() || submitting) return;
+    if (submitting) return;
+    if (!serviceSlug.trim()) {
+      setServiceRequiredOpen(true);
+      return;
+    }
+    if (!postcode.trim()) {
+      setPostcodeRequiredOpen(true);
+      return;
+    }
     lookup({ serviceSlug, postCode: postcode });
   }
 
@@ -55,7 +65,6 @@ export default function LocationsSearchMap() {
                   onChange={(e) => setServiceSlug(e.target.value)}
                   disabled={!options.length || submitting}
                   className={`home1-locations-search-slim__field home1-locations-search-slim__field--select${!serviceSlug ? " is-placeholder" : ""}`}
-                  required
                 >
                   <option value="" disabled>
                     Select a Service
@@ -84,7 +93,6 @@ export default function LocationsSearchMap() {
                     placeholder="Enter postcode"
                     autoComplete="postal-code"
                     maxLength={8}
-                    required
                     disabled={submitting}
                     className="home1-locations-search-slim__field home1-locations-search-slim__field--postcode"
                   />
@@ -94,7 +102,7 @@ export default function LocationsSearchMap() {
               <button
                 type="submit"
                 className="home1-locations-search-slim__btn"
-                disabled={servicesLoading || !options.length || submitting || !serviceSlug || !postcode.trim()}
+                disabled={servicesLoading || submitting}
               >
                 {submitting ? <ButtonSpinner className="h-4 w-4" /> : "Search"}
               </button>
@@ -110,6 +118,22 @@ export default function LocationsSearchMap() {
           </div>
         </div>
       </section>
+
+      <ServicePostcodeResultModal
+        open={serviceRequiredOpen}
+        variant="error"
+        title="Oops"
+        message="Please select a service!"
+        onClose={() => setServiceRequiredOpen(false)}
+      />
+
+      <ServicePostcodeResultModal
+        open={postcodeRequiredOpen}
+        variant="error"
+        title="Oops"
+        message="Please enter your postcode!"
+        onClose={() => setPostcodeRequiredOpen(false)}
+      />
 
       <ServicePostcodeResultModal
         open={modalOpen}

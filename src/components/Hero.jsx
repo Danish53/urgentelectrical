@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useSimpleServicesList } from "@/hooks/useServices";
 import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
@@ -102,17 +102,21 @@ export default function Hero() {
     useServicePostcodeLookup("home");
   const [serviceSlug, setServiceSlug] = useState("");
   const [postcode, setPostcode] = useState("");
-
-  useEffect(() => {
-    if (options.length && !serviceSlug) {
-      setServiceSlug(options[0].slug);
-    }
-  }, [options, serviceSlug]);
+  const [serviceRequiredOpen, setServiceRequiredOpen] = useState(false);
+  const [postcodeRequiredOpen, setPostcodeRequiredOpen] = useState(false);
   const reduceMotion = useReducedMotion();
 
   function handleBookSubmit(e) {
     e.preventDefault();
-    if (!serviceSlug || !postcode.trim() || submitting) return;
+    if (submitting) return;
+    if (!serviceSlug) {
+      setServiceRequiredOpen(true);
+      return;
+    }
+    if (!postcode.trim()) {
+      setPostcodeRequiredOpen(true);
+      return;
+    }
     lookup({ serviceSlug, postCode: postcode });
   }
 
@@ -216,10 +220,12 @@ export default function Hero() {
                     name="service"
                     value={serviceSlug}
                     onChange={(e) => setServiceSlug(e.target.value)}
-                    required
                     disabled={!options.length || submitting}
-                    className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all appearance-none cursor-pointer"
+                    className={`w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all appearance-none cursor-pointer${serviceSlug ? " text-white" : " text-[#6b7280]"}`}
                   >
+                    <option value="" disabled>
+                      Select a Service
+                    </option>
                     {options.map((s) => (
                       <option key={s.slug} value={s.slug} className="bg-[#141414]">
                         {s.name}
@@ -247,7 +253,6 @@ export default function Hero() {
                   onChange={(e) => setPostcode(e.target.value.toUpperCase())}
                   placeholder="e.g. NG1 1AA"
                   autoComplete="postal-code"
-                  required
                   disabled={submitting}
                   className="w-full bg-[#141414] border border-white/15 rounded-xl px-4 py-3.5 text-[14px] text-white placeholder:text-[#6b7280] font-medium focus:outline-none focus:border-[#E31E24]/60 focus:ring-1 focus:ring-[#E31E24]/30 transition-all"
                 />
@@ -257,7 +262,7 @@ export default function Hero() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
-                disabled={servicesLoading || !options.length || submitting || !postcode.trim()}
+                disabled={servicesLoading || submitting}
                 className="hero-cta-shine flex-1 min-w-0 flex items-center justify-center gap-2 sm:gap-3 bg-[#E31E24] hover:bg-[#c41a1f] text-white font-bold text-[14px] sm:text-[15px] py-3.5 sm:py-4 px-4 rounded-xl transition-all duration-200 shadow-[0_8px_30px_rgba(227,30,36,0.45)] hover:shadow-[0_12px_40px_rgba(227,30,36,0.55)] hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
                 {submitting ? (
@@ -306,6 +311,22 @@ export default function Hero() {
           </p>
         </footer>
       </motion.aside>
+
+      <ServicePostcodeResultModal
+        open={serviceRequiredOpen}
+        variant="error"
+        title="Oops"
+        message="Please select a service!"
+        onClose={() => setServiceRequiredOpen(false)}
+      />
+
+      <ServicePostcodeResultModal
+        open={postcodeRequiredOpen}
+        variant="error"
+        title="Oops"
+        message="Please enter your postcode!"
+        onClose={() => setPostcodeRequiredOpen(false)}
+      />
 
       <ServicePostcodeResultModal
         open={modalOpen}

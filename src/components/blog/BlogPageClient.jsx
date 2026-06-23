@@ -19,9 +19,9 @@ export default function BlogPageClient({ categories, initialPosts, initialMeta }
           initialPosts={initialPosts}
           initialMeta={initialMeta}
         />
-        <MotionSection variant="fade-in">
+        {/* <MotionSection variant="fade-in">
           <NewsletterHome1 />
-        </MotionSection>
+        </MotionSection> */}
       </main>
       <MotionSection variant="fade-up">
         <Footer />

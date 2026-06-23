@@ -53,13 +53,16 @@ const CUSTOMER_SECTION = {
 };
 
 const TABLE_LAYOUT = {
-  headerH: 32,
-  rowMinH: 32,
-  headerSize: 9,
-  cellSize: 9.5,
-  lineH: 13,
-  descWidthRatio: 0.44,
-  pad: 10,
+  headerH: 28,
+  rowMinH: 30,
+  headerSize: 8,
+  cellSize: 9,
+  lineH: 12,
+  descMinWidth: 150,
+  descMaxLines: 2,
+  pad: 7,
+  colInnerPad: 4,
+  colWidthBump: 2,
   afterGap: 18,
 };
 
@@ -185,7 +188,7 @@ function estimateTextWidth(text, size, bold = false) {
  * @param {boolean} bold
  */
 function fitTextSizeForColumn(text, col, size, bold) {
-  const innerPad = 4;
+  const innerPad = TABLE_LAYOUT.colInnerPad;
   const maxW = col.right - col.left - innerPad * 2;
   let fitSize = size;
   while (fitSize > 5.5 && estimateTextWidth(text, fitSize, bold) > maxW) {
@@ -205,7 +208,7 @@ function drawInColumn(pdf, col, text, yTop, opts = {}) {
   const bold = (opts.font ?? "F1") === "F2";
   const baseSize = opts.size ?? 8;
   const size = fitTextSizeForColumn(text, col, baseSize, bold);
-  const innerPad = 4;
+  const innerPad = TABLE_LAYOUT.colInnerPad;
   const textW = estimateTextWidth(text, size, bold);
   const minX = col.left + innerPad;
   const maxX = col.right - innerPad;
@@ -330,8 +333,8 @@ function formatAddressLines(addr) {
   return lines;
 }
 
-/** @param {string} text @param {number} maxLen */
-function wrapText(text, maxLen = 52) {
+/** @param {string} text @param {number} maxLen @param {number} [maxLines] */
+function wrapText(text, maxLen = 52, maxLines = Infinity) {
   const words = String(text || "").split(/\s+/).filter(Boolean);
   if (!words.length) return [];
   const lines = [];
@@ -346,6 +349,9 @@ function wrapText(text, maxLen = 52) {
     }
   }
   if (current) lines.push(current);
+  if (Number.isFinite(maxLines) && maxLines > 0 && lines.length > maxLines) {
+    return lines.slice(0, maxLines);
+  }
   return lines;
 }
 
@@ -828,21 +834,36 @@ function drawSiteAddress(pdf, yTop, address) {
 }
 
 /**
+ * @param {string} header
+ * @param {string} sample
+ * @param {number} headerSize
+ * @param {number} cellSize
+ */
+function getMinTableColumnWidth(header, sample, headerSize, cellSize) {
+  const innerPad = TABLE_LAYOUT.colInnerPad;
+  const headerW = measureTextWidth(header, headerSize, "F2");
+  const sampleW = measureTextWidth(sample, cellSize, "F1");
+  return Math.ceil(Math.max(headerW, sampleW) + innerPad * 2 + TABLE_LAYOUT.colWidthBump);
+}
+
+/**
  * @param {number} tableX
  * @param {number} tableW
  */
 function getTableColumns(tableX, tableW) {
   const pad = TABLE_LAYOUT.pad;
-  const descW = Math.round(tableW * TABLE_LAYOUT.descWidthRatio);
-  const numericW = tableW - pad * 2 - descW;
+  const { headerSize, cellSize, descMinWidth } = TABLE_LAYOUT;
+  const moneySample = formatPdfMoney(9999.99);
   const colW = {
-    qty: Math.round(numericW * 0.105),
-    unit: Math.round(numericW * 0.185),
-    amount: Math.round(numericW * 0.185),
-    vatRate: Math.round(numericW * 0.155),
-    vatAmt: Math.round(numericW * 0.185),
-    total: Math.round(numericW * 0.185),
+    qty: getMinTableColumnWidth("QTY", "99", headerSize, cellSize),
+    unit: getMinTableColumnWidth("UNIT COST", moneySample, headerSize, cellSize),
+    amount: getMinTableColumnWidth("AMOUNT", moneySample, headerSize, cellSize),
+    vatRate: getMinTableColumnWidth("VAT RATE", "20%", headerSize, cellSize),
+    vatAmt: getMinTableColumnWidth("VAT AMOUNT", moneySample, headerSize, cellSize),
+    total: getMinTableColumnWidth("TOTAL", moneySample, headerSize, cellSize),
   };
+  const numericTotal = Object.values(colW).reduce((sum, width) => sum + width, 0);
+  const descW = Math.max(descMinWidth, tableW - pad * 2 - numericTotal);
 
   /** @type {Record<string, { left: number, right: number, width: number }>} */
   const cols = {};
@@ -860,26 +881,15 @@ function getTableColumns(tableX, tableW) {
 /**
  * @param {InvoicePdfWriter} pdf
  * @param {{ left: number, right: number }} col
- * @param {string[]} lines
+ * @param {string} text
  * @param {number} blockTop
  * @param {number} blockH
  * @param {{ size?: number, font?: string, color?: { r: number, g: number, b: number } }} [opts]
  */
-function drawColumnHeaderStack(pdf, col, lines, blockTop, blockH, opts = {}) {
-  const size = opts.size ?? 9;
-  const font = opts.font ?? "F2";
-  const color = opts.color ?? C.black;
-  const lineGap = size + 1.5;
-  const stackH = lines.length * lineGap - 1.5;
-  const startY = blockTop + (blockH - stackH) / 2 + size * 0.72;
-  const innerPad = 4;
-  const rightX = col.right - innerPad;
-
-  lines.forEach((line, index) => {
-    const safe = sanitizePdfText(line);
-    const width = measureTextWidth(safe, size, font);
-    pdf.text(safe, rightX - width, startY + index * lineGap, { font, size, color });
-  });
+function drawColumnHeader(pdf, col, text, blockTop, blockH, opts = {}) {
+  const size = opts.size ?? TABLE_LAYOUT.headerSize;
+  const headerTextY = blockTop + (blockH + size * 0.32) / 2;
+  drawInColumn(pdf, col, text, headerTextY, { ...opts, size, font: opts.font ?? "F2" });
 }
 
 /**
@@ -890,9 +900,9 @@ function drawColumnHeaderStack(pdf, col, lines, blockTop, blockH, opts = {}) {
 function drawServiceTable(pdf, yTop, rows) {
   const tableX = MARGIN;
   const tableW = CONTENT_W;
-  const { headerH, rowMinH, headerSize, cellSize, lineH, afterGap } = TABLE_LAYOUT;
+  const { headerH, rowMinH, headerSize, cellSize, lineH, afterGap, descMaxLines } = TABLE_LAYOUT;
   const { cols, descX, descMaxW } = getTableColumns(tableX, tableW);
-  const descMaxChars = Math.max(28, Math.floor(descMaxW / (cellSize * 0.48)));
+  const descMaxChars = Math.max(24, Math.floor(descMaxW / (cellSize * 0.5)));
   const cellOpts = { font: "F1", size: cellSize, color: C.black };
   const headerOpts = { font: "F2", size: headerSize, color: C.black };
 
@@ -901,17 +911,17 @@ function drawServiceTable(pdf, yTop, rows) {
   const headerTextY = yTop + (headerH + headerSize * 0.32) / 2;
 
   pdf.text("DESCRIPTION", descX, headerTextY, headerOpts);
-  drawInColumn(pdf, cols.qty, "QTY", headerTextY, headerOpts);
-  drawColumnHeaderStack(pdf, cols.unit, ["UNIT", "COST"], yTop, headerH, headerOpts);
-  drawInColumn(pdf, cols.amount, "AMOUNT", headerTextY, headerOpts);
-  drawColumnHeaderStack(pdf, cols.vatRate, ["VAT", "RATE"], yTop, headerH, headerOpts);
-  drawColumnHeaderStack(pdf, cols.vatAmt, ["VAT", "AMOUNT"], yTop, headerH, headerOpts);
-  drawInColumn(pdf, cols.total, "TOTAL", headerTextY, headerOpts);
+  drawColumnHeader(pdf, cols.qty, "QTY", yTop, headerH, headerOpts);
+  drawColumnHeader(pdf, cols.unit, "UNIT COST", yTop, headerH, headerOpts);
+  drawColumnHeader(pdf, cols.amount, "AMOUNT", yTop, headerH, headerOpts);
+  drawColumnHeader(pdf, cols.vatRate, "VAT RATE", yTop, headerH, headerOpts);
+  drawColumnHeader(pdf, cols.vatAmt, "VAT AMOUNT", yTop, headerH, headerOpts);
+  drawColumnHeader(pdf, cols.total, "TOTAL", yTop, headerH, headerOpts);
 
   let y = yTop + headerH;
   rows.forEach((row) => {
-    const descLines = wrapText(row.description, descMaxChars);
-    const rowH = Math.max(rowMinH, 16 + descLines.length * lineH);
+    const descLines = wrapText(row.description, descMaxChars, descMaxLines);
+    const rowH = Math.max(rowMinH, 14 + descLines.length * lineH);
 
     pdf.fillColor(C.white);
     pdf.fillRectTop(tableX, y, tableW, rowH);

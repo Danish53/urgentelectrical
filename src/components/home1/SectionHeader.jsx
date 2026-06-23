@@ -10,7 +10,7 @@ export default function SectionHeader({
   id,
 }) {
   const alignClass =
-    align === "left" ? "text-left max-w-2xl" : align === "right" ? "text-right ml-auto max-w-2xl" : "text-center max-w-3xl mx-auto";
+    align === "left" ? "text-left max-w-2xl" : align === "right" ? "text-right ml-auto max-w-2xl mb-3" : "text-center max-w-3xl mx-auto";
 
   return (
     <header className={`${compact ? "mb-0" : "mb-12 sm:mb-14"} ${alignClass}`}>
