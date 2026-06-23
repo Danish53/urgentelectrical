@@ -2,6 +2,22 @@ import { getScheduleSlotsForDate, normalizeApiDate } from "@/lib/schedules";
 import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
 
 /**
+ * @param {unknown} value
+ */
+function nullIfEmpty(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
+/**
+ * @param {unknown} value
+ */
+function toMoneyNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Number(n.toFixed(2)) : 0;
+}
+
+/**
  * @param {Date | string | null | undefined} date
  */
 export function formatCheckoutApiDate(date) {
@@ -58,10 +74,12 @@ export function buildValidateOrderPayload({
   sameAddress = true,
   coupon = null,
 }) {
-  const serviceSubTotal = parseFloat(lineItems.service?.amountInc) || 0;
-  const deliveryFee = parseFloat(lineItems.travel?.amountInc) || 0;
+  const serviceSubTotal = toMoneyNumber(lineItems.service?.amountExc);
+  const deliveryFee = toMoneyNumber(lineItems.travel?.amountExc);
+  const serviceInc = toMoneyNumber(lineItems.service?.amountInc);
+  const deliveryInc = toMoneyNumber(lineItems.travel?.amountInc);
   const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
-  const amount = Math.max(0, serviceSubTotal + deliveryFee - discountAmount);
+  const amount = Math.max(0, serviceInc + deliveryInc - discountAmount);
 
   const sameAsBilling = details.siteSameAsBilling === true;
   const billing = readCheckoutAddress(details, "billing");
@@ -70,6 +88,9 @@ export function buildValidateOrderPayload({
   const crmScheduleKey =
     crmOverride ?? resolveCrmScheduleKey(selectedDate, selectedTime, schedules) ?? "CRM-1";
 
+  const isGuest = details.isGuest !== false;
+
+  /** @type {Record<string, unknown>} */
   const payload = {
     service_id: Number(service?.apiId),
     variant_id:
@@ -87,27 +108,28 @@ export function buildValidateOrderPayload({
     discount_amount: discountAmount,
     discount_value: coupon?.discountValue ?? null,
     discount_type: coupon?.discountType ?? null,
-    crm_schedule_key: crmScheduleKey,
+    crm_schedule_key: String(crmScheduleKey),
     payment_intent_id: paymentIntentId,
     site_country: site.country,
     site_post_code: site.postcode,
     site_address_line_1: site.address,
-    site_address_line_2: site.addressLine2 || null,
+    site_address_line_2: nullIfEmpty(site.addressLine2),
     site_town: site.city,
-    site_county: site.county || null,
-    is_guest: details.isGuest !== false,
+    site_county: nullIfEmpty(site.county),
+    is_guest: isGuest,
     country: billing.country,
     post_code: billing.postcode,
     address_line_1: billing.address,
-    address_line_2: billing.addressLine2 || null,
+    address_line_2: nullIfEmpty(billing.addressLine2),
     town: billing.city,
-    county: billing.county || null,
+    county: nullIfEmpty(billing.county),
     title: String(details.title ?? "Mr").trim() || "Mr",
     first_name: String(details.firstName ?? "").trim(),
     last_name: String(details.lastName ?? "").trim(),
     mobile_number: String(details.phone ?? "").trim(),
     email: String(details.email ?? "").trim(),
-    company: details.company ?? null,
+    company: nullIfEmpty(details.company),
+    same_as_billing_address: sameAsBilling ? 1 : 0,
   };
 
   const couponCode = String(coupon?.code ?? "").trim();
@@ -117,7 +139,7 @@ export function buildValidateOrderPayload({
 
   const password = String(details.password ?? "").trim();
   const passwordConfirmation = String(details.passwordConfirmation ?? password).trim();
-  if (password) {
+  if (isGuest && password) {
     payload.password = password;
     payload.password_confirmation = passwordConfirmation;
   }

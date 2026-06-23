@@ -170,7 +170,7 @@ export default function CheckoutPageClient() {
   const lineItems = useMemo(
     () =>
       buildCheckoutLineItems(service, deliveryFeeFromApi, selectedVariant, {
-        travelFeeIsInc: true,
+        travelFeeIsInc: false,
       }),
     [service, selectedVariant, deliveryFeeFromApi]
   );
@@ -688,7 +688,7 @@ export default function CheckoutPageClient() {
     }
 
     const updatedLineItems = buildCheckoutLineItems(service, fee, selectedVariant, {
-      travelFeeIsInc: true,
+      travelFeeIsInc: false,
     });
     const discount = appliedCoupon?.discountAmount ?? 0;
     const amount = Math.max(0, parseFloat(updatedLineItems.totalInc) - discount);

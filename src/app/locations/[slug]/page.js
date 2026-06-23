@@ -38,7 +38,7 @@ export default async function LocationDetailPage({ params }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <LocationDetailClient location={location} related={[]} />
+      <LocationDetailClient location={location} />
     </>
   );
 }

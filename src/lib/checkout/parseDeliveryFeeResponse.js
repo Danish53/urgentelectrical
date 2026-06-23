@@ -23,7 +23,8 @@ export function isDeliveryFeeOutOfRange(data) {
 }
 
 /**
- * Inc-VAT delivery fee from calculate-delivery-fee API (`data.delivery_fee`).
+ * Ex-VAT delivery fee from calculate-delivery-fee API (`data.delivery_fee`).
+ * Checkout adds 20% VAT for Inc. VAT display and payment totals.
  * @param {unknown} data
  * @returns {number}
  */

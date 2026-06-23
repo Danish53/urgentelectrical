@@ -1,8 +1,7 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
-import { buildCheckoutHref } from "@/lib/checkoutHref";
-
 const SITE = "https://www.urgentelectrical.services";
+const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
 
 const TOP_SERVICE_SLUGS = [
@@ -109,6 +108,25 @@ function parseWhyChoose(value, fallback) {
  * @param {{ id: string, q: string, a: string }[]} fallback
  */
 function parseFaqs(value, name, regionLabel, fallback) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = /** @type {Record<string, unknown>} */ (value);
+    const questions = record.question ?? record.questions ?? record.q;
+    const answers = record.answer ?? record.answers ?? record.a;
+
+    if (Array.isArray(questions) && Array.isArray(answers)) {
+      const items = questions
+        .map((question, index) => {
+          const q = String(question ?? "").trim();
+          const a = String(answers[index] ?? "").trim();
+          if (!q || !a) return null;
+          return { id: String(index), q, a };
+        })
+        .filter(Boolean);
+
+      if (items.length) return items;
+    }
+  }
+
   if (!Array.isArray(value) || !value.length) return fallback;
 
   const items = value
@@ -197,9 +215,7 @@ export function mapLocationDetailFromApi(payload) {
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),
     faqs,
-    mapEmbed: `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
-    nearby: [],
-    bookHref: buildCheckoutHref(),
+    bookHref: DEFAULT_BOOK_HREF,
     metaTitle,
     metaDescription,
     keywords: [

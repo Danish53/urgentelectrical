@@ -10,6 +10,7 @@ import FloatingCTA from "@/components/FloatingCTA.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
+import LocationRelatedAreas from "@/components/locations/LocationRelatedAreas";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 
 function LocationHeroImage({ location }) {
@@ -50,9 +51,7 @@ function LocationFaq({ faqs }) {
   );
 }
 
-export default function LocationDetailClient({ location, related }) {
-  const nearby = location.nearby?.length ? location.nearby : related;
-
+export default function LocationDetailClient({ location }) {
   return (
     <div className="home1-page home1-location-detail-page w-full min-w-0">
       <Navbar />
@@ -143,6 +142,7 @@ export default function LocationDetailClient({ location, related }) {
                   <p className="home1-location-detail-response">{location.responseNote}</p>
                 </article>
 
+                {location.whyChoose.length > 0 ? (
                 <article id="why" className="home1-location-detail-block">
                   <h2 className="home1-location-detail-h2">Why choose Urgent Electrical</h2>
                   <ul className="home1-location-detail-why-grid list-none p-0 m-0">
@@ -156,7 +156,9 @@ export default function LocationDetailClient({ location, related }) {
                     ))}
                   </ul>
                 </article>
+                ) : null}
 
+                {location.faqs.length > 0 ? (
                 <article id="faqs" className="home1-location-detail-block">
                   <h2 className="home1-location-detail-h2">Frequently asked questions</h2>
                   <p className="home1-location-detail-sub">
@@ -164,6 +166,7 @@ export default function LocationDetailClient({ location, related }) {
                   </p>
                   <LocationFaq faqs={location.faqs} />
                 </article>
+                ) : null}
               </div>
 
               <aside className="home1-location-detail-aside" aria-label="Book an electrician">
@@ -241,54 +244,7 @@ export default function LocationDetailClient({ location, related }) {
           </div>
         </section>
 
-        {/* Map */}
-        <section className="home1-location-detail-map" aria-label={`Map of ${location.name}`}>
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <h2 className="home1-location-detail-h2 text-center mb-6 sm:mb-8">
-              Service area map — {location.name}
-            </h2>
-            <div className="home1-location-detail-map-frame">
-              <iframe
-                title={`Map showing ${location.name} — Urgent Electrical coverage`}
-                src={location.mapEmbed}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full border-0"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Nearby areas */}
-        {nearby.length > 0 && (
-          <section
-            className="home1-location-detail-nearby"
-            aria-labelledby="location-nearby-heading"
-          >
-            <div className={SERVICES_PAGE_CONTAINER}>
-              <h2 id="location-nearby-heading" className="home1-location-detail-h2 text-center">
-                More areas in {location.regionLabel}
-              </h2>
-              <ul className="home1-location-detail-nearby-grid list-none p-0 m-0">
-                {nearby.map((area) => (
-                  <li key={area.slug}>
-                    <Link href={area.href} className="home1-location-detail-nearby-link">
-                      <span className="home1-location-detail-nearby-marker" aria-hidden="true" />
-                      {area.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              <p className="text-center mt-8 sm:mt-10">
-                <Link href="/locations" className="home1-location-detail-view-all">
-                  View all service areas
-                  <IconArrow className="w-4 h-4 shrink-0" aria-hidden="true" />
-                </Link>
-              </p>
-            </div>
-          </section>
-        )}
+        <LocationRelatedAreas currentSlug={location.slug} />
 
         <CTAHome1 bookHref={location.bookHref} />
       </main>

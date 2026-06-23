@@ -1,6 +1,5 @@
 import { LOCATION_AREAS_BY_REGION, LOCATION_FILTERS } from "@/data/locationsPage";
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
-import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { slugify } from "@/lib/slugs";
 
 const SITE = "https://www.urgentelectrical.services";
@@ -125,7 +124,7 @@ export function buildLocationRecord(name) {
     faqs: buildFaqs(name, regionLabel),
     mapEmbed: `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
     nearby: getNearby(name, regionId),
-    bookHref: buildCheckoutHref(),
+    bookHref: "/services",
     metaTitle: `Electrician ${name} | 24/7 Emergency | Urgent Electrical`,
     metaDescription: `NICEIC approved electricians in ${name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Fixed prices — book online or call Urgent Electrical.`,
     keywords: [
