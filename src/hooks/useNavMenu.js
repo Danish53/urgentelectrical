@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getFallbackNavGroups } from "@/lib/menu/mapNavMenu";
-import { fetchNavMenu } from "@/services/menuApiService";
+import { fetchNavMenu, getCachedNavMenu } from "@/services/menuApiService";
 
 export function useNavMenu() {
-  const fallback = getFallbackNavGroups();
-  const [navGroups, setNavGroups] = useState(fallback);
-  const [loading, setLoading] = useState(true);
+  const [navGroups, setNavGroups] = useState(() => getCachedNavMenu() ?? []);
+  const [loading, setLoading] = useState(() => !getCachedNavMenu());
 
   useEffect(() => {
+    if (getCachedNavMenu()) return;
+
     let cancelled = false;
 
     async function load() {
@@ -17,7 +17,7 @@ export function useNavMenu() {
         const groups = await fetchNavMenu();
         if (!cancelled) setNavGroups(groups);
       } catch {
-        if (!cancelled) setNavGroups(fallback);
+        if (!cancelled) setNavGroups([]);
       } finally {
         if (!cancelled) setLoading(false);
       }

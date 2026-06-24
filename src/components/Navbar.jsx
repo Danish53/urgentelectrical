@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { CONTAINER, NAV_SHELL } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
+import NavMenuSkeleton from "@/components/skeletons/NavMenuSkeleton";
 import { NAV_MENU_ITEM } from "@/components/nav/navMenuStyles";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { NAV_DROPDOWN_SUBTITLES } from "./navData";
@@ -118,26 +119,26 @@ function NavEngineerAvailability({ compact = false, className = "" }) {
   );
 }
 
-function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shellClass = CONTAINER }) {
+function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shellClass = CONTAINER, className = "" }) {
   const { site } = useWebsiteGeneralData();
 
   return (
-    <div className="bg-[#f9f8f6] border-b border-[#ececec]">
-      <div className={`${shellClass} h-10 flex items-center justify-between text-[13px] leading-none`}>
-        <div className="flex items-center gap-4 min-w-0">
-          <a
-            href={`tel:${site.contactNumber}`}
-            className="flex items-center gap-2 text-[#5A5856] font-medium hover:text-[#111827] transition-colors shrink-0"
-          >
-            <NavIconPhone className="w-4 h-4 text-[#c62828]" />
-            <span className="tracking-wide">{site.contactNumberDisplay}</span>
-          </a>
-          {showDesktopExtras && <span className="hidden lg:block w-px h-[14px] bg-[#d4d4d4]" aria-hidden />}
-          <NavEngineerAvailability className="hidden lg:flex" />
-        </div>
+    <div className={`bg-[#f9f8f6] border-b border-[#ececec] ${className}`.trim()}>
+      <div
+        className={`${shellClass} relative h-10 flex items-center text-[13px] leading-none gap-3 lg:gap-4`}
+      >
+        <a
+          href={`tel:${site.contactNumber}`}
+          className="flex items-center gap-2 text-[#5A5856] font-medium hover:text-[#111827] transition-colors shrink-0"
+        >
+          <NavIconPhone className="w-4 h-4 text-[#c62828]" />
+          <span className="tracking-wide">{site.contactNumberDisplay}</span>
+        </a>
+        <span className="hidden lg:block w-px h-[14px] bg-[#d4d4d4] shrink-0" aria-hidden />
+        <NavEngineerAvailability className="absolute right-2 top-1/2 -translate-y-1/2 lg:static lg:right-auto lg:translate-y-0 shrink-0" />
 
         {showDesktopExtras && (
-          <div className="hidden lg:flex items-center gap-2.5 shrink-0">
+          <div className="hidden lg:flex items-center gap-2.5 ml-auto shrink-0">
             <span className="px-3 py-[5px] rounded-full border border-[#d4d4d4] text-[#6b7280] text-[11px] font-medium bg-white leading-none">
               NICEIC Approved
             </span>
@@ -212,15 +213,15 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
   const [mobileAccordion, setMobileAccordion] = useState(null);
-  const { navGroups } = useNavMenu();
+  const { navGroups, loading: navMenuLoading } = useNavMenu();
   const { incVat, toggleVat } = useVatPreference();
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (navGroups.length && mobileAccordion === null) {
+    if (!navMenuLoading && navGroups.length && mobileAccordion === null) {
       setMobileAccordion(navGroups[0].label);
     }
-  }, [navGroups, mobileAccordion]);
+  }, [navGroups, mobileAccordion, navMenuLoading]);
 
   useEffect(() => {
     const header = headerRef.current;
@@ -259,7 +260,12 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.85, ease: EASE_SMOOTH }}
       >
-        <NavTopUtilityBar incVat={incVat} onVatToggle={toggleVat} shellClass={NAV_SHELL} />
+        <NavTopUtilityBar
+          incVat={incVat}
+          onVatToggle={toggleVat}
+          shellClass={NAV_SHELL}
+          className={mobileOpen ? "max-lg:hidden" : ""}
+        />
 
         {!mobileOpen && (
           <div className={NAV_SHELL}>
@@ -293,8 +299,14 @@ export default function Navbar() {
                 <BrandLogo />
               </div>
 
-              <nav className="flex flex-nowrap items-center justify-center min-w-0 gap-x-0 px-0 overflow-x-clip">
-                {navGroups.map((group) => {
+              <nav
+                className="flex flex-nowrap items-center justify-center min-w-0 gap-x-0 px-0 overflow-x-clip"
+                aria-busy={navMenuLoading}
+              >
+                {navMenuLoading ? (
+                  <NavMenuSkeleton variant="desktop" />
+                ) : (
+                  navGroups.map((group) => {
                   const isOpen = activeMenu === group.label;
                   return (
                     <div
@@ -315,7 +327,8 @@ export default function Navbar() {
                       )}
                     </div>
                   );
-                })}
+                  })
+                )}
                 {/* <a href="/services" className={`${NAV_MENU_ITEM} hover:text-[#3d3b39]`}>
                   Services
                 </a> */}
@@ -369,8 +382,11 @@ export default function Navbar() {
             </div>
           </div>
 
-          <nav className="flex-1 overflow-y-auto">
-            {navGroups.map((group) => {
+          <nav className="flex-1 overflow-y-auto" aria-busy={navMenuLoading}>
+            {navMenuLoading ? (
+              <NavMenuSkeleton variant="mobile" />
+            ) : (
+              navGroups.map((group) => {
               const isOpen = mobileAccordion === group.label;
               return (
                 <div key={group.slug ?? group.label} className="border-b border-[#ebebeb]">
@@ -408,7 +424,8 @@ export default function Navbar() {
                   )}
                 </div>
               );
-            })}
+              })
+            )}
             <Link
               href="/services"
               onClick={closeMobile}

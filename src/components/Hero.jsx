@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useSimpleServicesList } from "@/hooks/useServices";
 import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
@@ -9,6 +9,7 @@ import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResul
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
+import { AVAILABILITY_OPEN, getEngineerAvailability } from "@/lib/engineerAvailability";
 
 const MARQUEE_ITEMS = [
   {
@@ -104,7 +105,12 @@ export default function Hero() {
   const [postcode, setPostcode] = useState("");
   const [serviceRequiredOpen, setServiceRequiredOpen] = useState(false);
   const [postcodeRequiredOpen, setPostcodeRequiredOpen] = useState(false);
+  const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
   const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    setAvailability(getEngineerAvailability());
+  }, []);
 
   function handleBookSubmit(e) {
     e.preventDefault();
@@ -153,15 +159,16 @@ export default function Hero() {
         initial={reduceMotion ? false : "hidden"}
         animate={reduceMotion ? undefined : "visible"}
       >
-        <motion.p
+        <motion.div
           variants={reduceMotion ? undefined : HERO_ITEM}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#22C55E]/45 bg-[#22C55E]/10 mb-7"
+          id="availabilityBadge"
+          className={`home1-hero-availability${availability.limited ? " home1-hero-availability--limited" : ""}`}
         >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse shrink-0" aria-hidden="true" />
-          <span className="text-[#22C55E] text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.14em]">
-            Engineers available now in your area
+          <span className="home1-hero-availability-dot" aria-hidden="true" />
+          <span id="availabilityText" className="home1-hero-availability-text">
+            {availability.heroText}
           </span>
-        </motion.p>
+        </motion.div>
 
         <motion.h1
           id="hero-heading"

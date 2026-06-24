@@ -6,6 +6,7 @@ import ServicesHydrator from "@/components/providers/ServicesHydrator";
 import WebsiteGeneralDataHydrator from "@/components/providers/WebsiteGeneralDataHydrator";
 import { VatPreferenceProvider } from "@/components/providers/VatPreferenceProvider";
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
+import CopyProtection from "@/components/common/CopyProtection";
 import CookieSessionHydrator from "@/components/providers/CookieSessionHydrator";
 import ReduxProvider from "@/store/provider";
 
@@ -17,6 +18,7 @@ export default function AppProviders({ children }) {
         <CookieSessionHydrator />
         <ServicesHydrator />
         <WebsiteGeneralDataHydrator />
+        <CopyProtection />
         {children}
         <CookieConsentBanner />
       <Toaster

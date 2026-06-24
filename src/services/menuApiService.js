@@ -1,8 +1,18 @@
 import { MENU_API } from "@/constants/menuApi";
-import { getFallbackNavGroups, getSiteOrigin, parseNavMenuResponse } from "@/lib/menu/mapNavMenu";
+import { getSiteOrigin, parseNavMenuResponse } from "@/lib/menu/mapNavMenu";
 
-/** GET /public/api/menu */
-export async function fetchNavMenu() {
+/** @type {ReturnType<typeof parseNavMenuResponse> | null} */
+let cachedNavMenu = null;
+
+/** @type {Promise<ReturnType<typeof parseNavMenuResponse>> | null} */
+let navMenuInflight = null;
+
+/** Cached menu from a prior fetch this session (client-side). */
+export function getCachedNavMenu() {
+  return cachedNavMenu;
+}
+
+async function requestNavMenu() {
   const url = `${getSiteOrigin()}${MENU_API.list}`;
   let response;
 
@@ -30,10 +40,22 @@ export async function fetchNavMenu() {
     throw new Error("Menu API request failed.");
   }
 
-  const groups = parseNavMenuResponse(payload);
-  if (!groups.length) {
-    return getFallbackNavGroups();
-  }
+  return parseNavMenuResponse(payload);
+}
 
-  return groups;
+/** GET /public/api/menu — deduped and cached for the browser session. */
+export async function fetchNavMenu() {
+  if (cachedNavMenu) return cachedNavMenu;
+  if (navMenuInflight) return navMenuInflight;
+
+  navMenuInflight = requestNavMenu()
+    .then((groups) => {
+      cachedNavMenu = groups;
+      return groups;
+    })
+    .finally(() => {
+      navMenuInflight = null;
+    });
+
+  return navMenuInflight;
 }

@@ -32,6 +32,33 @@ body {
   max-width: 100%;
 }
 
+/* Soft copy protection — marketing content only; SEO HTML unchanged */
+html.copy-protected body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+html.copy-protected input,
+html.copy-protected textarea,
+html.copy-protected select,
+html.copy-protected option,
+html.copy-protected [contenteditable="true"],
+html.copy-protected .allow-copy,
+html.copy-protected .allow-copy * {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+html.copy-protected img {
+  -webkit-user-drag: none;
+}
+
+html.copy-protected .allow-copy img {
+  -webkit-user-drag: auto;
+}
+
 /* Pointer cursor on buttons and button-styled controls site-wide */
 button:not(:disabled):not([disabled]),
 input[type="button"]:not(:disabled):not([disabled]),
@@ -834,6 +861,38 @@ section {
     transform: scale(2.6);
     opacity: 0;
   }
+}
+
+/* Navbar — API menu loading placeholders */
+.nav-menu-skeleton--desktop {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-menu-skeleton__desktop-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.875rem;
+}
+
+.nav-menu-skeleton__bar--desktop {
+  display: block;
+  height: 0.95rem;
+  border-radius: 0.5rem;
+}
+
+.nav-menu-skeleton__mobile-row {
+  border-bottom: 1px solid #ebebeb;
+  background: #fff;
+  padding: 1.1rem 1.25rem;
+}
+
+.nav-menu-skeleton__bar--mobile {
+  display: block;
+  height: 1rem;
+  max-width: 16rem;
+  border-radius: 0.5rem;
 }
 
 .nav-book-now-cta::after,

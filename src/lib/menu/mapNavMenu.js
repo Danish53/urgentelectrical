@@ -1,9 +1,22 @@
-import { NAV_GROUPS } from "@/components/navData";
 import { getApiSiteOrigin } from "@/lib/siteUrl";
 
 /** @returns {string} */
 export function getSiteOrigin() {
   return getApiSiteOrigin();
+}
+
+/**
+ * @param {Record<string, unknown>} record
+ */
+function pickMenuItemLabel(record) {
+  const title = String(record.title ?? record.name ?? "Page").trim() || "Page";
+  const displayName = record.page_display_name;
+
+  if (displayName != null && String(displayName).trim()) {
+    return String(displayName).trim();
+  }
+
+  return title;
 }
 
 /**
@@ -13,7 +26,7 @@ export function getSiteOrigin() {
 function mapMenuChild(child, index) {
   const record = /** @type {Record<string, unknown>} */ (child ?? {});
   const slug = String(record.slug ?? "").trim();
-  const label = String(record.title ?? record.name ?? "Page").trim() || "Page";
+  const label = pickMenuItemLabel(record);
 
   return {
     label,
@@ -61,15 +74,4 @@ export function parseNavMenuResponse(payload) {
   }
 
   return [];
-}
-
-export function getFallbackNavGroups() {
-  return NAV_GROUPS.map((group) => ({
-    ...group,
-    slug: group.label.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-    items: group.items.map((item, index) => ({
-      ...item,
-      key: item.slug ? `${item.slug}-${index}` : `fallback-${index}`,
-    })),
-  }));
 }
