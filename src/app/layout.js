@@ -30,6 +30,7 @@
 
 
 import { Plus_Jakarta_Sans, Anton } from "next/font/google";
+import Script from "next/script";
 import AppProviders from "@/components/providers/AppProviders";
 import { getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 import "./globals.css";
@@ -110,6 +111,8 @@ export const metadata = {
   },
 };
 
+const GOOGLE_ADS_ID = "AW-975900232";
+
 export default function RootLayout({ children }) {
   const site = getSiteUrl();
 
@@ -183,6 +186,18 @@ export default function RootLayout({ children }) {
         className={`${plusJakarta.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}
         suppressHydrationWarning
       >
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_ADS_ID}');
+          `}
+        </Script>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
