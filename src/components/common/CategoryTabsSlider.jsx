@@ -78,10 +78,21 @@ export default function CategoryTabsSlider({
 
   useEffect(() => {
     const activeTab = tabRefs.current.get(active);
-    activeTab?.scrollIntoView({
+    const viewport = viewportRef.current;
+    if (!activeTab || !viewport || !hasOverflow) return;
+
+    const tabLeft = activeTab.offsetLeft;
+    const tabWidth = activeTab.offsetWidth;
+    const viewportWidth = viewport.clientWidth;
+    const maxScroll = viewport.scrollWidth - viewportWidth;
+    const targetScroll = Math.max(
+      0,
+      Math.min(tabLeft - (viewportWidth - tabWidth) / 2, maxScroll)
+    );
+
+    viewport.scrollTo({
+      left: targetScroll,
       behavior: reduceMotion ? "auto" : "smooth",
-      inline: hasOverflow ? "center" : "nearest",
-      block: "nearest",
     });
   }, [active, hasOverflow, reduceMotion]);
 

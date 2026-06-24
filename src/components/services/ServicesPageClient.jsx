@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
@@ -11,6 +12,11 @@ import ServicesCatalog from "@/components/services/ServicesCatalog";
 // import ServicesResources from "@/components/services/ServicesResources";
 
 export default function ServicesPageClient() {
+  useEffect(() => {
+    if (window.location.hash) return;
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className="home1-page home1-services-page w-full min-w-0">
       <Navbar />
