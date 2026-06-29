@@ -1,6 +1,6 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
-import { absoluteCmsUrl } from "@/lib/siteUrl";
+import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
 
@@ -197,7 +197,7 @@ export function mapLocationDetailFromApi(payload) {
     name,
     regionId: fallback.regionId,
     regionLabel,
-    canonicalUrl: `${SITE}/locations/${slug}`,
+    canonicalUrl: absoluteSiteUrl(`/locations/${slug}`),
     image: imagePath.startsWith("http") ? imagePath : imagePath,
     imageAlt: `Electrician in ${name} — Urgent Electrical Services`,
     hero: {

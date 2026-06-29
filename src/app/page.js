@@ -5,8 +5,6 @@ import "./home1/home1.css";
 
 export const metadata = HOME_METADATA;
 
-export const revalidate = 3600;
-
 export default async function Home() {
   const bookable = await getBookableServices();
   const itemList =

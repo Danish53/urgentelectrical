@@ -6,6 +6,8 @@ import { fetchLocationsPage } from "@/services/locationsApiService";
 import { fetchAllOtherServices, fetchPagesList } from "@/services/pagesApiService";
 import { fetchPolicies } from "@/services/policyApiService";
 
+export const dynamic = "force-dynamic";
+
 async function getLocationSitemapEntries(site) {
   try {
     const entries = [];

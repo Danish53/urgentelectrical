@@ -12,6 +12,7 @@ import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 
 import { getApiSiteOrigin, absoluteCmsUrl } from "@/lib/siteUrl";
+import { SERVER_FETCH } from "@/lib/api/serverFetch";
 
 function titleFromSlug(slug) {
   return slug
@@ -53,7 +54,7 @@ async function fetchPublicCmsPageBySlug(slug) {
     response = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json" },
-      next: { revalidate: 3600 },
+      ...SERVER_FETCH,
     });
   } catch {
     return null;
@@ -312,10 +313,7 @@ export async function fetchOtherServiceBySlug(slug) {
   let payload;
 
   try {
-    payload = await fetchOtherServiceDetailPayload(
-      urlSlug,
-      isServer ? { next: { revalidate: 3600 } } : {}
-    );
+    payload = await fetchOtherServiceDetailPayload(urlSlug, isServer ? SERVER_FETCH : {});
   } catch {
     return null;
   }
@@ -409,10 +407,7 @@ async function fetchOtherServicesPayload(page = 1, fetchOptions = {}) {
  */
 export async function fetchOtherServicesPage(page = 1) {
   const isServer = typeof window === "undefined";
-  const payload = await fetchOtherServicesPayload(
-    page,
-    isServer ? { next: { revalidate: 3600 } } : {}
-  );
+  const payload = await fetchOtherServicesPayload(page, isServer ? SERVER_FETCH : {});
   const parsed = parseOtherServicesListResponse(payload);
 
   if (!parsed) {
@@ -437,7 +432,7 @@ export async function fetchAllOtherServices() {
   let lastPage = 1;
 
   do {
-    const payload = await fetchOtherServicesPayload(page, { next: { revalidate: 3600 } });
+    const payload = await fetchOtherServicesPayload(page, SERVER_FETCH);
     const parsed = parseOtherServicesListResponse(payload);
     if (!parsed) break;
 

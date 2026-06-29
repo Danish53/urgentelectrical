@@ -3357,7 +3357,8 @@
     background 0.2s ease;
 }
 
-.home1-service-detail-jump-list a:hover {
+.home1-service-detail-jump-list a:hover,
+.home1-service-detail-jump-list a.is-active {
   color: var(--home1-red);
   border-color: rgba(211, 35, 31, 0.35);
   background: var(--home1-red-soft);
@@ -3415,6 +3416,7 @@
   margin: 0;
   padding: 0;
   border: none;
+  scroll-margin-top: calc(var(--site-header-height, 118px) + 1.25rem);
 }
 
 .home1-service-detail-section-head {

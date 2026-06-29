@@ -11,13 +11,14 @@ import {
 import { serviceSlug } from "@/lib/slugs";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 import { fetchRelatedServices } from "@/services/relatedServicesApiService";
+import { cache } from "react";
 
 const RELATED_FETCH_TIMEOUT_MS = 2500;
 
 /**
  * Fetch bookable services (server or client). Returns [] if API fails.
  */
-export async function getBookableServices() {
+export const getBookableServices = cache(async function getBookableServices() {
   try {
     const [{ services: apiList }, { categoryMap }] = await Promise.all([
       fetchServicesList(),
@@ -30,7 +31,7 @@ export async function getBookableServices() {
     /* build/SSR: no static fallback */
   }
   return [];
-}
+});
 
 export { getServiceCategories };
 
@@ -119,7 +120,7 @@ function uniqueSlugCandidates(slug) {
 }
 
 /** Fetch one service by slug from GET /services/{slug}. */
-export async function getServiceDetailBySlug(slug) {
+export const getServiceDetailBySlug = cache(async function getServiceDetailBySlug(slug) {
   const normalized = String(slug ?? "").trim();
   if (!normalized) return null;
 
@@ -142,4 +143,4 @@ export async function getServiceDetailBySlug(slug) {
   }
 
   return null;
-}
+});

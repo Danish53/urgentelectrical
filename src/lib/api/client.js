@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/api/errors";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
 import { ensureCsrfCookie, getXsrfTokenFromCookie } from "@/lib/api/csrf";
+import { SERVER_FETCH } from "@/lib/api/serverFetch";
 import { getApiBaseUrl } from "@/lib/siteUrl";
 
 function getBaseUrl() {
@@ -19,9 +20,24 @@ function getBaseUrl() {
  * @param {RequestInit & { auth?: boolean, csrf?: boolean }} options
  */
 export async function apiRequest(path, options = {}) {
-  const { auth = false, csrf = false, headers: customHeaders, body, credentials, ...rest } =
-    options;
+  const {
+    auth = false,
+    csrf = false,
+    headers: customHeaders,
+    body,
+    credentials,
+    cache,
+    next,
+    ...rest
+  } = options;
   const url = `${getBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
+  const isServer = typeof window === "undefined";
+  const fetchCache =
+    cache !== undefined || next !== undefined
+      ? cache
+      : isServer
+        ? SERVER_FETCH.cache
+        : undefined;
 
   if (csrf) {
     await ensureCsrfCookie();
@@ -48,6 +64,8 @@ export async function apiRequest(path, options = {}) {
   try {
     response = await fetch(url, {
       ...rest,
+      ...(fetchCache !== undefined ? { cache: fetchCache } : {}),
+      ...(next !== undefined ? { next } : {}),
       credentials: credentials ?? (csrf ? "include" : "same-origin"),
       headers,
       body: body !== undefined ? (typeof body === "string" ? body : JSON.stringify(body)) : undefined,

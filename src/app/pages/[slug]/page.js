@@ -2,7 +2,7 @@ import { buildPageDetailMetadata, buildPageDetailJsonLd } from "@/data/pagesSeo"
 import OtherServiceDetailClient from "@/components/pages/OtherServiceDetailClient";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getServiceCategories } from "@/lib/services/getServices";
-import { fetchPageBySlug } from "@/services/pagesApiService";
+import { getPageBySlug } from "@/lib/cms/serverLoads";
 import { fetchRelatedServiceLinks } from "@/services/relatedServicesApiService";
 import { serviceSlug } from "@/lib/slugs";
 import "../../home1/home1.css";
@@ -16,13 +16,11 @@ function titleFromSlug(slug) {
     .join(" ");
 }
 
-export const revalidate = 3600;
-
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
   try {
-    const page = await fetchPageBySlug(slug);
+    const page = await getPageBySlug(slug);
     return buildPageDetailMetadata(page);
   } catch {
     return {
@@ -40,7 +38,7 @@ export default async function OtherServiceDetailPage({ params }) {
   let relatedLinks = [];
 
   try {
-    page = await fetchPageBySlug(slug);
+    page = await getPageBySlug(slug);
   } catch (error) {
     loadError = getApiErrorMessage(error, "Could not load this page.");
     page = {

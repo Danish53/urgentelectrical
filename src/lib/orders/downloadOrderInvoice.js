@@ -1,5 +1,4 @@
 import { fetchOrderById } from "@/services/ordersApiService";
-import { CONTACT_BUSINESS_NAME } from "@/data/contactPage";
 import { ApiError } from "@/lib/api/errors";
 import {
   apiToOrderDetail,
@@ -45,7 +44,7 @@ const TOTALS_META = {
 const CUSTOMER_SECTION = {
   headingSize: 11,
   bodySize: 9.5,
-  lineGap: 14,
+  lineGap: 17,
   dividerGap: 4,
   gapAfterDivider: 18,
   addressIndent: 0,
@@ -308,6 +307,78 @@ function formatScheduledLabel(isoDate, time) {
 }
 
 /** @param {Record<string, unknown> | null | undefined} addr */
+function pickInvoiceTown(addr) {
+  if (!addr || typeof addr !== "object") return "";
+  return String(addr.town ?? addr.site_town ?? "").trim();
+}
+
+/**
+ * @param {Record<string, unknown> | null | undefined} embedded
+ * @param {Record<string, unknown>} source
+ */
+function mergeAddressWithFlatFields(embedded, source) {
+  if (!embedded || typeof embedded !== "object") return embedded;
+  return {
+    ...embedded,
+    title: embedded.title ?? source.title,
+    first_name: embedded.first_name ?? source.first_name,
+    last_name: embedded.last_name ?? source.last_name,
+    address_line_1: embedded.address_line_1 ?? source.address_line_1,
+    address_line_2: embedded.address_line_2 ?? source.address_line_2,
+    town: embedded.town ?? source.town,
+    county: embedded.county ?? source.county,
+    post_code: embedded.post_code ?? source.post_code,
+    site_address_line_1: embedded.site_address_line_1 ?? source.site_address_line_1,
+    site_address_line_2: embedded.site_address_line_2 ?? source.site_address_line_2,
+    site_town: embedded.site_town ?? source.site_town,
+    site_county: embedded.site_county ?? source.site_county,
+    site_post_code: embedded.site_post_code ?? source.site_post_code,
+  };
+}
+
+/**
+ * @param {Record<string, unknown> | null} detailBlock
+ * @param {Record<string, unknown>} raw
+ */
+function resolveBillingAddressRecord(detailBlock, raw) {
+  const source = detailBlock || raw;
+  const embedded =
+    (detailBlock?.address && typeof detailBlock.address === "object"
+      ? /** @type {Record<string, unknown>} */ (detailBlock.address)
+      : null) ||
+    (raw.address && typeof raw.address === "object"
+      ? /** @type {Record<string, unknown>} */ (raw.address)
+      : null);
+
+  if (embedded) {
+    return /** @type {Record<string, unknown>} */ (mergeAddressWithFlatFields(embedded, source));
+  }
+
+  const hasFlatBilling = [
+    source.address_line_1,
+    source.address_line_2,
+    source.town,
+    source.county,
+    source.post_code,
+    source.first_name,
+    source.last_name,
+  ].some((value) => String(value ?? "").trim());
+
+  if (!hasFlatBilling) return null;
+
+  return {
+    title: source.title,
+    first_name: source.first_name,
+    last_name: source.last_name,
+    address_line_1: source.address_line_1,
+    address_line_2: source.address_line_2,
+    town: source.town,
+    county: source.county,
+    post_code: source.post_code,
+  };
+}
+
+/** @param {Record<string, unknown> | null | undefined} addr @returns {{ text: string, bold?: boolean }[]} */
 function formatAddressLines(addr) {
   if (!addr || typeof addr !== "object") return [];
   const title = String(addr.title ?? "").trim();
@@ -316,21 +387,87 @@ function formatAddressLines(addr) {
   const name = [title, first, last].filter(Boolean).join(" ");
   const line1 = String(addr.address_line_1 ?? "").trim();
   const line2 = String(addr.address_line_2 ?? "").trim();
-  const town = String(addr.town ?? "").trim();
-  const county = String(addr.county ?? "").trim();
+  const town = pickInvoiceTown(addr);
   const postCode = String(addr.post_code ?? "").trim();
-  const country = String(addr.country ?? "").trim();
 
+  /** @type {{ text: string, bold?: boolean }[]} */
   const lines = [];
-  if (name) lines.push(name);
-  if (line1 || line2) lines.push([line1, line2].filter(Boolean).join(", "));
-  if (town) lines.push(town);
-  if (county) lines.push(county);
-  if (postCode) lines.push(postCode);
-  if (country) {
-    lines.push(country.toUpperCase() === "GB" ? "United Kingdom (UK)" : country);
-  }
+  if (name) lines.push({ text: name });
+  if (line1) lines.push({ text: line1 });
+  if (line2) lines.push({ text: line2 });
+  if (town) lines.push({ text: town });
+  if (postCode) lines.push({ text: postCode, bold: true });
   return lines;
+}
+
+/** Site address block — no customer name; town only (no county). @returns {string[]} */
+function formatSiteAddressLines(addr) {
+  if (!addr || typeof addr !== "object") return [];
+  const line1 = String(addr.address_line_1 ?? addr.site_address_line_1 ?? "").trim();
+  const line2 = String(addr.address_line_2 ?? addr.site_address_line_2 ?? "").trim();
+  const town = pickInvoiceTown(addr);
+  const postCode = String(addr.post_code ?? addr.site_post_code ?? "").trim();
+
+  return [line1, line2, town, postCode].filter(Boolean);
+}
+
+/**
+ * @param {Record<string, unknown> | null} detailBlock
+ * @param {Record<string, unknown>} raw
+ * @param {Record<string, unknown> | null} addressRow
+ */
+function resolveSiteAddressRecord(detailBlock, raw, addressRow) {
+  const source = detailBlock || raw;
+  const embedded =
+    (detailBlock?.site_address && typeof detailBlock.site_address === "object"
+      ? /** @type {Record<string, unknown>} */ (detailBlock.site_address)
+      : null) ||
+    (raw.site_address && typeof raw.site_address === "object"
+      ? /** @type {Record<string, unknown>} */ (raw.site_address)
+      : null);
+
+  if (embedded) {
+    return /** @type {Record<string, unknown>} */ (mergeAddressWithFlatFields(embedded, source));
+  }
+
+  const hasFlatSite = [
+    source.site_address_line_1,
+    source.site_address_line_2,
+    source.site_town,
+    source.site_county,
+    source.site_post_code,
+  ].some((value) => String(value ?? "").trim());
+
+  if (hasFlatSite) {
+    return {
+      site_address_line_1: source.site_address_line_1,
+      site_address_line_2: source.site_address_line_2,
+      town: source.site_town,
+      site_town: source.site_town,
+      county: source.site_county,
+      site_county: source.site_county,
+      site_post_code: source.site_post_code,
+      post_code: source.site_post_code,
+    };
+  }
+
+  return addressRow;
+}
+
+/** @param {string} address @param {string | string[]} partsToRemove */
+function stripAddressParts(address, partsToRemove) {
+  const trimmed = String(address ?? "").trim();
+  const removeList = (Array.isArray(partsToRemove) ? partsToRemove : [partsToRemove])
+    .map((part) => String(part ?? "").trim())
+    .filter(Boolean);
+  if (!trimmed || !removeList.length) return trimmed;
+
+  const removeLower = new Set(removeList.map((part) => part.toLowerCase()));
+  return trimmed
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part && !removeLower.has(part.toLowerCase()))
+    .join(", ");
 }
 
 /** @param {string} text @param {number} maxLen @param {number} [maxLines] */
@@ -755,7 +892,7 @@ function drawInvoiceMetaStack(pdf, metaBoxY, ctx, layout) {
 /**
  * @param {InvoicePdfWriter} pdf
  * @param {number} yTop
- * @param {string[]} lines
+ * @param {{ text: string, bold?: boolean }[]} lines
  * @param {ReturnType<typeof getCustomerInvoiceSectionLayout>} sectionLayout
  */
 function drawCustomerDetails(pdf, yTop, lines, sectionLayout) {
@@ -780,9 +917,9 @@ function drawCustomerDetails(pdf, yTop, lines, sectionLayout) {
   pdf.lineTop(headingX, dividerY, lineEndX, dividerY);
 
   let lineBaseline = firstLineBaseline;
-  lines.forEach((line, index) => {
-    pdf.text(line, contentX, lineBaseline, {
-      font: index === 0 ? "F2" : "F1",
+  lines.forEach((line) => {
+    pdf.text(line.text, contentX, lineBaseline, {
+      font: line.bold ? "F2" : "F1",
       size: bodySize,
       color: C.ink,
     });
@@ -1072,22 +1209,50 @@ function buildInvoiceContextFromDetail(order) {
       ? /** @type {Record<string, unknown>} */ (raw.order_detail)
       : null;
 
-  const addressRow =
-    detailBlock?.address && typeof detailBlock.address === "object"
-      ? /** @type {Record<string, unknown>} */ (detailBlock.address)
-      : null;
+  const addressRow = resolveBillingAddressRecord(detailBlock, raw);
 
   const reference = order.reference || String(raw.order_id ?? "");
   const serviceName = order.serviceName || "Electrical service";
   const invoiceDate = formatShortDate(order.visitDate || raw.selected_date);
   const scheduledLabel = formatScheduledLabel(order.visitDate, order.visitTime);
   const addressLines = formatAddressLines(addressRow);
+  const customerName = String(order.customerName ?? "").trim();
   const customerLines = addressLines.length
-    ? [CONTACT_BUSINESS_NAME, ...addressLines]
-    : order.customerName
-      ? [CONTACT_BUSINESS_NAME, order.customerName]
-      : [CONTACT_BUSINESS_NAME, "Customer"];
-  const siteAddress = order.address?.trim() || addressLines.slice(1).join(", ");
+    ? addressLines
+    : customerName
+      ? [{ text: customerName }]
+      : [{ text: "Customer" }];
+
+  const siteRow = resolveSiteAddressRecord(detailBlock, raw, addressRow);
+
+  const siteLineParts = formatSiteAddressLines(siteRow);
+  const addressPartsToStrip = [
+    addressRow?.county,
+    addressRow?.site_county,
+    siteRow?.county,
+    siteRow?.site_county,
+    detailBlock?.county,
+    detailBlock?.site_county,
+    raw.county,
+    raw.site_county,
+    addressRow?.country,
+    siteRow?.country,
+    detailBlock?.country,
+    detailBlock?.site_country,
+    raw.country,
+    raw.site_country,
+    "United Kingdom",
+    "GB",
+  ]
+    .map((value) => String(value ?? "").trim())
+    .filter(Boolean);
+  const siteAddress = siteLineParts.length
+    ? siteLineParts.join(", ")
+    : stripAddressParts(order.address?.trim(), addressPartsToStrip) ||
+      addressLines
+        .slice(1)
+        .map((line) => line.text)
+        .join(", ");
 
   const qty = parseMoney(detailBlock?.quantity) || 1;
   const variant =

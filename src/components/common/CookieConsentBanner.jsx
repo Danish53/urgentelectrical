@@ -115,13 +115,13 @@ export default function CookieConsentBanner() {
                 >
                   {content.rejectLabel}
                 </button>
-                <button
+                {/* <button
                   type="button"
                   className="ue-cookie-consent__btn ue-cookie-consent__btn--settings"
                   onClick={() => closeBanner("customized")}
                 >
                   {content.manageLabel}
-                </button>
+                </button> */}
               </div>
             </div>
           </motion.div>

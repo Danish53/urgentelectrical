@@ -16,8 +16,6 @@ const POLICIES_LISTING_JSON_LD = {
   isPartOf: { "@id": `${getSiteUrl()}/#website` },
 };
 
-export const revalidate = 3600;
-
 export default async function PoliciesPage() {
   let policies = [];
   let loadError = "";

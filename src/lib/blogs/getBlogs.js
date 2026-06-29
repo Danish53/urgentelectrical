@@ -9,18 +9,19 @@ import {
   fetchBlogCategories,
   fetchBlogsPage,
 } from "@/services/blogApiService";
+import { cache } from "react";
 
 /**
  * @returns {Promise<Array<{ id: string, slug: string, label: string }>>}
  */
-export async function getBlogCategories() {
+export const getBlogCategories = cache(async function getBlogCategories() {
   try {
     const api = await fetchBlogCategories();
     return buildBlogCategoriesFromApi(api);
   } catch {
     return [{ id: "all", slug: "all", label: "All articles" }];
   }
-}
+});
 
 /**
  * @param {import("@/services/blogApiService").ApiBlogListItem[]} blogs
@@ -71,10 +72,10 @@ export async function getAllBlogPosts() {
 /**
  * @param {string} slug
  */
-export async function getBlogBySlug(slug) {
+export const getBlogBySlug = cache(async function getBlogBySlug(slug) {
   const data = await fetchBlogBySlug(slug);
   return buildBlogPostFromDetail(data);
-}
+});
 
 /**
  * @param {{ slug: string }} post

@@ -5,8 +5,6 @@ import "../home1/home1.css";
 
 export { metadata } from "./layout";
 
-export const revalidate = 3600;
-
 export default async function ServicesPage() {
   const bookable = await getBookableServices();
   const jsonLd = buildServicesJsonLd(bookable);

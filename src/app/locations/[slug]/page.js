@@ -5,16 +5,14 @@ import {
   buildLocationMetadata,
 } from "@/data/locationDetails";
 import { mapLocationDetailFromApi } from "@/lib/locations/mapLocationDetail";
-import { fetchLocationBySlug } from "@/services/locationsApiService";
+import { getLocationBySlug } from "@/lib/cms/serverLoads";
 import "../../home1/home1.css";
-
-export const revalidate = 3600;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
   try {
-    const apiData = await fetchLocationBySlug(slug);
+    const apiData = await getLocationBySlug(slug);
     const location = mapLocationDetailFromApi(apiData);
     return buildLocationMetadata(location);
   } catch {
@@ -27,7 +25,7 @@ export default async function LocationDetailPage({ params }) {
 
   let apiData;
   try {
-    apiData = await fetchLocationBySlug(slug);
+    apiData = await getLocationBySlug(slug);
   } catch {
     notFound();
   }

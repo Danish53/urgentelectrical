@@ -111,6 +111,9 @@ export const metadata = {
   },
 };
 
+/** Fresh CMS/API HTML on each request; SEO metadata and JSON-LD still server-rendered. */
+export const dynamic = "force-dynamic";
+
 const GOOGLE_ADS_ID = "AW-975900232";
 
 export default function RootLayout({ children }) {

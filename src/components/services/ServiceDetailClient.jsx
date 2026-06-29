@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -415,6 +415,22 @@ function buildContentSections(service) {
   }));
 }
 
+function getSiteHeaderOffset(extra = 20) {
+  if (typeof document === "undefined") return 118 + extra;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue("--site-header-height");
+  const headerH = parseFloat(raw);
+  return (Number.isFinite(headerH) && headerH > 0 ? headerH : 118) + extra;
+}
+
+function scrollToServiceSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const top = el.getBoundingClientRect().top + window.scrollY - getSiteHeaderOffset();
+  window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  window.history.replaceState(null, "", `#${id}`);
+}
+
 function ServiceDetailJumpNav({ sections }) {
   if (sections.length < 2) return null;
 
@@ -425,13 +441,38 @@ function ServiceDetailJumpNav({ sections }) {
     faqs: "FAQs",
   };
 
+  const [activeId, setActiveId] = useState(() => sections[0]?.id ?? "");
+
+  const scrollToSection = useCallback((id) => {
+    scrollToServiceSection(id);
+    setActiveId(id);
+  }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash || !sections.some((section) => section.id === hash)) return;
+
+    setActiveId(hash);
+    requestAnimationFrame(() => scrollToServiceSection(hash));
+  }, [sections]);
+
   return (
     <nav className="home1-service-detail-jump" aria-label="On this page">
       <span className="home1-service-detail-jump-label">On this page</span>
       <ul className="home1-service-detail-jump-list">
         {sections.map((s) => (
           <li key={s.id}>
-            <a href={`#${s.id}`}>{labels[s.id] ?? s.title}</a>
+            <a
+              href={`#${s.id}`}
+              className={activeId === s.id ? "is-active" : undefined}
+              aria-current={activeId === s.id ? "true" : undefined}
+              onClick={(event) => {
+                event.preventDefault();
+                scrollToSection(s.id);
+              }}
+            >
+              {labels[s.id] ?? s.title}
+            </a>
           </li>
         ))}
       </ul>

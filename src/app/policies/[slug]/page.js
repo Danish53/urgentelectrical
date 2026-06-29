@@ -7,7 +7,8 @@ import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { getApiErrorMessage } from "@/lib/api/errors";
-import { fetchPolicyBySlug, getPolicyImageUrl } from "@/services/policyApiService";
+import { getPolicyBySlug } from "@/lib/cms/serverLoads";
+import { getPolicyImageUrl } from "@/services/policyApiService";
 import "../../home1/home1.css";
 import "../policies.css";
 
@@ -19,13 +20,11 @@ function toTitleFromSlug(slug) {
     .join(" ");
 }
 
-export const revalidate = 3600;
-
 export async function generateMetadata({ params }) {
   const { slug } = await params;
 
   try {
-    const policy = await fetchPolicyBySlug(slug);
+    const policy = await getPolicyBySlug(slug);
     return buildPolicyDetailMetadata(policy);
   } catch {
     return {
@@ -42,7 +41,7 @@ export default async function PolicyDetailPage({ params }) {
   let policy = null;
   let loadError = "";
   try {
-    policy = await fetchPolicyBySlug(slug);
+    policy = await getPolicyBySlug(slug);
   } catch (error) {
     loadError = getApiErrorMessage(error, "Could not load this policy.");
   }

@@ -1,16 +1,10 @@
 import { notFound } from "next/navigation";
 import ServiceDetailClient from "@/components/services/ServiceDetailClient";
 import { buildServiceJsonLd, buildServiceMetadata } from "@/data/servicesPage";
-import { getBookableServices, getServiceDetailBySlug } from "@/lib/services/getServices";
+import { getServiceDetailBySlug } from "@/lib/services/getServices";
 import "../../home1/home1.css";
 
-export const revalidate = 3600;
 export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const services = await getBookableServices();
-  return services.map((s) => ({ slug: s.slug }));
-}
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;

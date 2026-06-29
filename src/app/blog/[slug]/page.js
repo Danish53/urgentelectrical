@@ -4,15 +4,8 @@ import {
   buildBlogPostJsonLd,
   buildBlogPostMetadata,
 } from "@/data/blogs";
-import { getAllBlogSlugs, getBlogBySlug, getRelatedBlogPosts } from "@/lib/blogs/getBlogs";
+import { getBlogBySlug, getRelatedBlogPosts } from "@/lib/blogs/getBlogs";
 import "../../home1/home1.css";
-
-export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const slugs = await getAllBlogSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
 
 export const dynamicParams = true;
 
