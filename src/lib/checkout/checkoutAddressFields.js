@@ -72,6 +72,38 @@ export function writeCheckoutAddress(details, variant, values) {
 }
 
 /**
+ * Postcode for travel/delivery fee — based on where the work is carried out.
+ * Guest + same as billing → billing postcode; guest + different site → site postcode.
+ * Logged-in → selected site postcode.
+ * @param {Record<string, unknown>} details
+ */
+export function resolveTravelChargePostcode(details) {
+  const billing = readCheckoutAddress(details, "billing");
+  const site = readCheckoutAddress(details, "site");
+
+  if (details.siteAddressId) {
+    return site.postcode;
+  }
+
+  if (details.siteSameAsBilling === false) {
+    return site.postcode;
+  }
+
+  return billing.postcode;
+}
+
+/**
+ * @param {Record<string, unknown>} details
+ * @param {boolean} isLoggedIn
+ * @returns {"billingPostcode" | "sitePostcode" | "selectedSite"}
+ */
+export function resolveTravelChargePostcodeField(details, isLoggedIn) {
+  if (isLoggedIn) return "selectedSite";
+  if (details.siteSameAsBilling === false) return "sitePostcode";
+  return "billingPostcode";
+}
+
+/**
  * @param {Record<string, unknown>} address
  * @param {CheckoutAddressVariant} variant
  */

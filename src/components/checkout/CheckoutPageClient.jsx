@@ -56,7 +56,7 @@ import {
   formatCreateIntentApiResponse,
   logPaymentIntentDebug,
 } from "@/lib/checkout/logPaymentIntentDebug";
-import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
+import { readCheckoutAddress, resolveTravelChargePostcode, resolveTravelChargePostcodeField } from "@/lib/checkout/checkoutAddressFields";
 import { getDeliveryFeeApiErrorMessage, parseDeliveryFeeResult } from "@/lib/checkout/parseDeliveryFeeResponse";
 import { calculateDeliveryFee } from "@/services/checkoutApiService";
 
@@ -237,6 +237,17 @@ export default function CheckoutPageClient() {
   const paymentCouponSnapshotRef = useRef(null);
 
   const initialPostcode = searchParams.get("postcode") ?? "";
+  const travelPostcode = useMemo(() => {
+    const fromDetails = String(resolveTravelChargePostcode(details) ?? "").trim().toUpperCase();
+    if (fromDetails) return fromDetails;
+    return String(initialPostcode ?? "").trim().toUpperCase();
+  }, [
+    details.siteSameAsBilling,
+    details.siteAddressId,
+    details.postcode,
+    details.sitePostcode,
+    initialPostcode,
+  ]);
   const pageLoading = servicesLoading || (Boolean(slug) && detailLoading);
   const pageFailed = servicesFailed || (Boolean(slug) && detailFailed && !service);
 
@@ -361,7 +372,7 @@ export default function CheckoutPageClient() {
   }, [service?.apiId, selectedVariant?.apiVariantId, selectedVariant?.id]);
 
   useEffect(() => {
-    const postcode = String(details.postcode ?? "").trim().toUpperCase();
+    const postcode = travelPostcode;
     if (!postcode || postcode.length < 4) {
       lastFetchedPostcodeRef.current = "";
       setDeliveryFeeFromApi(0);
@@ -378,7 +389,7 @@ export default function CheckoutPageClient() {
       setDeliveryFeeOutOfRange(false);
       setDeliveryFeeError("");
     }
-  }, [details.postcode]);
+  }, [travelPostcode]);
 
   useEffect(() => {
     if (!service?.apiId || selectedDate) return;
@@ -525,6 +536,13 @@ export default function CheckoutPageClient() {
   }, [isLoggedIn, authUser]);
 
   function handleDetailsChange(next) {
+    const prevTravelPostcode = String(resolveTravelChargePostcode(details) ?? "")
+      .trim()
+      .toUpperCase();
+    const nextTravelPostcode = String(resolveTravelChargePostcode(next) ?? "")
+      .trim()
+      .toUpperCase();
+
     setDetails(next);
 
     const billingPostcode = readCheckoutAddress(next, "billing").postcode.trim();
@@ -540,7 +558,13 @@ export default function CheckoutPageClient() {
       selectedSite: next.siteAddressId ? "" : prev.selectedSite,
     }));
 
-    if (billingPostcode) {
+    if (nextTravelPostcode && nextTravelPostcode !== prevTravelPostcode) {
+      lastFetchedPostcodeRef.current = "";
+      setDeliveryFeeFromApi(0);
+      setDeliveryFeeResolved(false);
+      setDeliveryFeeOutOfRange(false);
+      setDeliveryFeeError("");
+    } else if (nextTravelPostcode) {
       setDeliveryFeeError("");
     }
   }
@@ -659,17 +683,20 @@ export default function CheckoutPageClient() {
       return;
     }
 
-    const billing = readCheckoutAddress(details, "billing");
-    const postcode = billing.postcode.trim();
+    const postcode = String(resolveTravelChargePostcode(details) ?? "").trim();
+    const postcodeField = resolveTravelChargePostcodeField(details, isLoggedIn);
     if (!postcode) {
-      setFieldErrors((prev) => ({ ...prev, billingPostcode: "Please enter a postcode." }));
+      setFieldErrors((prev) => ({
+        ...prev,
+        [postcodeField]: "Please enter a postcode.",
+      }));
       setStepError("");
       return;
     }
 
     const normalizedPostcode = postcode.toUpperCase();
     if (deliveryFeeError && lastFetchedPostcodeRef.current === normalizedPostcode) {
-      setFieldErrors((prev) => ({ ...prev, billingPostcode: deliveryFeeError }));
+      setFieldErrors((prev) => ({ ...prev, [postcodeField]: deliveryFeeError }));
       setStepError(deliveryFeeError);
       return;
     }
@@ -680,7 +707,7 @@ export default function CheckoutPageClient() {
     if (!deliveryFeeResolved || lastFetchedPostcodeRef.current !== normalizedPostcode) {
       const feeResult = await refreshDeliveryFee(postcode);
       if (!feeResult.ok) {
-        setFieldErrors((prev) => ({ ...prev, billingPostcode: feeResult.message }));
+        setFieldErrors((prev) => ({ ...prev, [postcodeField]: feeResult.message }));
         setStepError(feeResult.message);
         return;
       }
@@ -748,7 +775,7 @@ export default function CheckoutPageClient() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  const summaryPostcode = details.postcode || initialPostcode;
+  const summaryPostcode = travelPostcode;
 
   return (
     <div
@@ -833,7 +860,18 @@ export default function CheckoutPageClient() {
                           isLoggedIn={isLoggedIn}
                           fieldErrors={{
                             ...fieldErrors,
-                            billingPostcode: fieldErrors.billingPostcode || deliveryFeeError,
+                            billingPostcode:
+                              fieldErrors.billingPostcode ||
+                              (!isLoggedIn && details.siteSameAsBilling !== false
+                                ? deliveryFeeError
+                                : ""),
+                            sitePostcode:
+                              fieldErrors.sitePostcode ||
+                              (!isLoggedIn && details.siteSameAsBilling === false
+                                ? deliveryFeeError
+                                : ""),
+                            selectedSite:
+                              fieldErrors.selectedSite || (isLoggedIn ? deliveryFeeError : ""),
                           }}
                           onBack={() => {
                             setStep(1);
