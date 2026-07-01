@@ -75,7 +75,7 @@ export function buildValidateOrderPayload({
   coupon = null,
 }) {
   const serviceSubTotal = toMoneyNumber(lineItems.service?.amountExc);
-  const deliveryFee = toMoneyNumber(lineItems.travel?.amountExc);
+  const deliveryFee = toMoneyNumber(lineItems.travel?.amountInc);
   const serviceInc = toMoneyNumber(lineItems.service?.amountInc);
   const deliveryInc = toMoneyNumber(lineItems.travel?.amountInc);
   const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
@@ -129,6 +129,7 @@ export function buildValidateOrderPayload({
     mobile_number: String(details.phone ?? "").trim(),
     email: String(details.email ?? "").trim(),
     company: nullIfEmpty(details.company),
+    note: nullIfEmpty(details.notes),
     same_as_billing_address: sameAsBilling ? 1 : 0,
   };
 
