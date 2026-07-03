@@ -3,6 +3,7 @@ import { getApiErrorMessage } from "@/lib/api/errors";
 import { buildValidateOrderPayload } from "@/lib/checkout/buildValidateOrderPayload";
 import { setAuthToken } from "@/lib/auth/tokenStorage";
 import { parseAuthResponse } from "@/services/authService";
+import { applyAuthSession } from "@/store/slices/authSlice";
 import * as checkoutApi from "@/services/checkoutApiService";
 import { parsePaymentIntentResponse } from "@/lib/checkout/buildValidateOrderPayload";
 
@@ -50,10 +51,14 @@ export const checkPaymentStatus = createAsyncThunk(
  */
 export const createOrder = createAsyncThunk(
   "checkout/createOrder",
-  async (params, { rejectWithValue }) => {
+  async (params, { rejectWithValue, dispatch }) => {
     try {
       const payload = buildValidateOrderPayload(params);
       const data = await checkoutApi.createOrder(payload);
+      const { token, user } = parseAuthResponse(data);
+      if (token || user) {
+        dispatch(applyAuthSession({ token, user }));
+      }
       return data;
     } catch (error) {
       return rejectWithValue(getApiErrorMessage(error, "Could not create order."));
@@ -264,8 +269,6 @@ const checkoutSlice = createSlice({
       .addCase(createOrder.fulfilled, (state, action) => {
         state.createOrderStatus = "succeeded";
         state.createdOrder = action.payload;
-        const { token } = parseAuthResponse(action.payload);
-        if (token) setAuthToken(token);
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.createOrderStatus = "failed";

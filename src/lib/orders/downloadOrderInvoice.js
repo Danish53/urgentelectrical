@@ -3,7 +3,7 @@ import { ApiError } from "@/lib/api/errors";
 import {
   apiToOrderDetail,
   mergeOrderSummaryIntoApi,
-  orderApiHasDetailBlock,
+  normalizeInvoiceNumber,
   pickOrderApiId,
 } from "@/lib/orders/orderMapper";
 
@@ -860,7 +860,7 @@ function drawInvoiceMetaStack(pdf, metaBoxY, ctx, layout) {
     rowH,
     C.yellow,
     "INVOICE NUMBER:",
-    String(ctx.reference ?? "").toUpperCase(),
+    String(ctx.invoiceNumber ?? "").toUpperCase(),
     metaOpts
   );
   drawMetaRow(
@@ -1211,9 +1211,11 @@ function buildInvoiceContextFromDetail(order) {
 
   const addressRow = resolveBillingAddressRecord(detailBlock, raw);
 
-  const reference = order.reference || String(raw.order_id ?? "");
+  const invoiceNumber =
+    normalizeInvoiceNumber({ ...raw, order_detail: detailBlock ?? raw.order_detail }) ||
+    String(order.invoiceNumber ?? "").trim();
   const serviceName = order.serviceName || "Electrical service";
-  const invoiceDate = formatShortDate(order.visitDate || raw.selected_date);
+  const invoiceDate = formatShortDate(order.bookedAt || raw.created_at);
   const scheduledLabel = formatScheduledLabel(order.visitDate, order.visitTime);
   const addressLines = formatAddressLines(addressRow);
   const customerName = String(order.customerName ?? "").trim();
@@ -1282,7 +1284,7 @@ function buildInvoiceContextFromDetail(order) {
   const totals = buildInvoiceTotals(order, raw, tableAmountExVat);
 
   return {
-    reference,
+    invoiceNumber,
     invoiceDate,
     scheduledLabel,
     customerLines,
@@ -1408,16 +1410,12 @@ async function buildProfessionalInvoicePdf(order) {
 }
 
 async function loadOrderForInvoice(order) {
-  const merged = mergeOrderSummaryIntoApi(order);
-
-  if (orderApiHasDetailBlock(merged)) {
-    return apiToOrderDetail(merged);
-  }
-
   const fetchId = pickOrderApiId(order);
   if (!fetchId) {
     throw new Error("This order cannot be invoiced (missing ID).");
   }
+
+  const merged = mergeOrderSummaryIntoApi(order);
 
   try {
     return await fetchOrderById(fetchId);
@@ -1441,6 +1439,12 @@ export async function downloadOrderInvoicePdf(order) {
 
   const detail = await loadOrderForInvoice(order);
   const pdfBytes = await buildProfessionalInvoicePdf(detail);
-  const ref = String(detail.reference || order.reference || order.id).replace(/[^\w-]+/g, "-");
+  const invoiceRef =
+    normalizeInvoiceNumber(
+      detail.raw && typeof detail.raw === "object"
+        ? /** @type {Record<string, unknown>} */ (detail.raw)
+        : {}
+    ) || String(detail.invoiceNumber ?? "").trim();
+  const ref = invoiceRef ? String(invoiceRef).replace(/[^\w-]+/g, "-") : "document";
   triggerPdfDownload(pdfBytes, `invoice-${ref}.pdf`);
 }

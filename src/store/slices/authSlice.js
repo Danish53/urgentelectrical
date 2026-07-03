@@ -179,6 +179,22 @@ const authSlice = createSlice({
       state.user = { ...(state.user ?? {}), ...next };
       setStoredAuthUser(state.user);
     },
+    /** Apply token + user from login/order API without running login thunk. */
+    applyAuthSession(state, action) {
+      const payload = action.payload;
+      if (!payload || typeof payload !== "object") return;
+
+      const { token, user } = payload;
+      if (token) {
+        state.token = token;
+        state.isAuthenticated = true;
+        setAuthToken(token);
+      }
+      if (user && typeof user === "object") {
+        state.user = user;
+        setStoredAuthUser(user);
+      }
+    },
     clearResetFlow(state) {
       state.resetFlow = { email: null, otp: null, otpVerified: false };
       clearResetFlowStorage();
@@ -232,6 +248,7 @@ export const {
   hydrateAuthSession,
   hydrateResetFlow,
   setAuthUser,
+  applyAuthSession,
   clearResetFlow,
 } = authSlice.actions;
 

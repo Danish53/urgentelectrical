@@ -52,6 +52,7 @@ export function mergeOrderSummaryIntoApi(order) {
     ...raw,
     id: pickOrderApiId(order) || raw.id,
     order_id: order.reference || raw.order_id,
+    invoice_number: normalizeInvoiceNumber(raw) || raw.invoice_number,
     selected_date: order.visitDate || raw.selected_date,
     paid_amount: raw.paid_amount ?? order.totalInc,
     totalSubtotal: order.serviceSubTotal ?? raw.totalSubtotal,
@@ -73,6 +74,55 @@ export function normalizeOrderReference(api) {
   const ref = api.order_id ?? api.order_number ?? api.reference ?? api.booking_reference;
   if (ref == null || ref === "") return "";
   return String(ref).trim();
+}
+
+/**
+ * Invoice number for PDF display e.g. INV-12345
+ * @param {Record<string, unknown>} api
+ */
+export function normalizeInvoiceNumber(api) {
+  if (!api || typeof api !== "object") return "";
+
+  /** @type {Record<string, unknown>[]} */
+  const roots = [api];
+  if (api.data && typeof api.data === "object" && !Array.isArray(api.data)) {
+    roots.push(/** @type {Record<string, unknown>} */ (api.data));
+  }
+  if (api.order && typeof api.order === "object") {
+    roots.push(/** @type {Record<string, unknown>} */ (api.order));
+  }
+
+  for (const root of roots) {
+    const detail = pickOrderDetailBlock(root);
+    const invoiceBlock =
+      root.invoice && typeof root.invoice === "object"
+        ? /** @type {Record<string, unknown>} */ (root.invoice)
+        : detail?.invoice && typeof detail.invoice === "object"
+          ? /** @type {Record<string, unknown>} */ (detail.invoice)
+          : null;
+
+    const candidates = [
+      root.invoice_number,
+      root.invoiceNumber,
+      root.invoice_no,
+      root.invoiceNo,
+      detail?.invoice_number,
+      detail?.invoiceNumber,
+      detail?.invoice_no,
+      invoiceBlock?.invoice_number,
+      invoiceBlock?.invoiceNumber,
+      invoiceBlock?.number,
+      invoiceBlock?.no,
+    ];
+
+    for (const value of candidates) {
+      if (value == null || value === "" || typeof value === "object") continue;
+      const text = String(value).trim();
+      if (text) return text;
+    }
+  }
+
+  return "";
 }
 
 /**
@@ -326,6 +376,7 @@ export function apiToOrderSummary(api) {
   return {
     id: normalizeOrderApiId(api),
     reference: normalizeOrderReference(api),
+    invoiceNumber: normalizeInvoiceNumber(api),
     serviceName: pickServiceName(api),
     serviceSlug: pickServiceSlugFromOrderApi(api),
     category: String(api.category ?? api.service_category ?? api.category_name ?? "").trim(),
@@ -365,6 +416,7 @@ export function apiToOrderDetail(api) {
   return {
     ...summary,
     reference: normalizeOrderReference(api) || summary.reference,
+    invoiceNumber: normalizeInvoiceNumber(api) || summary.invoiceNumber,
     address: formatOrderAddress(api) || summary.address,
     customerName: [title, first, last].filter(Boolean).join(" ").trim() || undefined,
     customerPhone: String(addressRow?.mobile ?? api.mobile ?? api.mobile_number ?? api.phone ?? "").trim() || undefined,

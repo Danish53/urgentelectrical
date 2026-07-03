@@ -15,6 +15,7 @@
  * @typedef {object} OrderSummary
  * @property {string} id
  * @property {string} reference
+ * @property {string} invoiceNumber
  * @property {string} serviceName
  * @property {string} serviceSlug
  * @property {string} category
