@@ -115,6 +115,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 const GOOGLE_ADS_ID = "AW-975900232";
+const GA_MEASUREMENT_ID = "G-DXS9TPTD4Y";
 
 export default function RootLayout({ children }) {
   const site = getSiteUrl();
@@ -190,14 +191,15 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
           strategy="afterInteractive"
         />
-        <Script id="google-ads-gtag" strategy="afterInteractive">
+        <Script id="google-gtag" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+            gtag('config', '${GA_MEASUREMENT_ID}');
             gtag('config', '${GOOGLE_ADS_ID}');
           `}
         </Script>
