@@ -40,6 +40,9 @@ function Field({ id, label, optional, children }) {
  *   mode?: "create" | "edit",
  *   initialForm?: import("@/lib/sites/siteForm").SiteFormValues,
  *   siteName?: string,
+ *   onBeforePostcodeLookup?: (
+ *     postcode: string
+ *   ) => Promise<boolean | { allowed: boolean, message?: string }>,
  *   hideContactDetails?: boolean,
  * }} props
  */
@@ -52,11 +55,13 @@ export default function CreateSiteModal({
   initialForm,
   siteName = "",
   hideContactDetails = false,
+  onBeforePostcodeLookup,
 }) {
   const titleId = useId();
   const postcodeErrorId = useId();
   const [form, setForm] = useState(EMPTY_SITE_FORM);
   const [lookupLoading, setLookupLoading] = useState(false);
+  const [coverageChecking, setCoverageChecking] = useState(false);
   const [lookupError, setLookupError] = useState("");
   const [lookupSuggestions, setLookupSuggestions] = useState([]);
   const [addressOptions, setAddressOptions] = useState([]);
@@ -109,6 +114,28 @@ export default function CreateSiteModal({
     }));
   }
 
+  async function verifyPostcodeCoverage(postcode, { forSubmit = false } = {}) {
+    if (!onBeforePostcodeLookup) {
+      return { allowed: true };
+    }
+
+    const trimmed = String(postcode ?? "").trim();
+    const initialPostcode = String(initialForm?.postcode ?? "").trim().toUpperCase();
+    const shouldVerify =
+      forSubmit || !isEdit || trimmed.toUpperCase() !== initialPostcode;
+
+    if (!shouldVerify) {
+      return { allowed: true };
+    }
+
+    const result = await onBeforePostcodeLookup(trimmed);
+    if (typeof result === "boolean") {
+      return { allowed: result };
+    }
+
+    return result ?? { allowed: false };
+  }
+
   async function handleFind() {
     const postcode = form.postcode.trim();
     if (!postcode) {
@@ -123,6 +150,15 @@ export default function CreateSiteModal({
     setAddressPicked(false);
 
     try {
+      setCoverageChecking(true);
+      const coverage = await verifyPostcodeCoverage(postcode);
+      if (!coverage.allowed) {
+        if (coverage.message) {
+          setLookupError(coverage.message);
+        }
+        return;
+      }
+
       const { addresses } = await fetchAddressesByPostcode(postcode);
       if (!addresses.length) {
         setLookupError("No addresses found for this postcode.");
@@ -136,6 +172,7 @@ export default function CreateSiteModal({
       }
     } finally {
       setLookupLoading(false);
+      setCoverageChecking(false);
     }
   }
 
@@ -157,9 +194,30 @@ export default function CreateSiteModal({
   async function handleSubmit(e) {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    if (!form.postcode.trim() || !form.addressLine1.trim() || !form.townCity.trim()) return;
-    await onSubmit(form);
+    if (saving || lookupLoading || coverageChecking) return;
+
+    const postcode = form.postcode.trim();
+    if (!postcode || !form.addressLine1.trim() || !form.townCity.trim()) return;
+
+    setLookupError("");
+
+    try {
+      setCoverageChecking(true);
+      const coverage = await verifyPostcodeCoverage(postcode, { forSubmit: true });
+      if (!coverage.allowed) {
+        if (coverage.message) {
+          setLookupError(coverage.message);
+        }
+        return;
+      }
+
+      await onSubmit(form);
+    } finally {
+      setCoverageChecking(false);
+    }
   }
+
+  const submitBusy = saving || coverageChecking;
 
   const modal = (
     <div className="home1-sites-modal-root" role="presentation">
@@ -167,7 +225,7 @@ export default function CreateSiteModal({
         type="button"
         className="home1-sites-modal-backdrop"
         aria-label="Close dialog"
-        onClick={() => !saving && onClose()}
+        onClick={() => !submitBusy && !lookupLoading && onClose()}
       />
       <div
         className="home1-sites-modal"
@@ -186,7 +244,7 @@ export default function CreateSiteModal({
             type="button"
             className="home1-sites-modal-close"
             onClick={onClose}
-            disabled={saving}
+            disabled={submitBusy}
             aria-label="Close"
           >
             ×
@@ -450,18 +508,18 @@ export default function CreateSiteModal({
               type="button"
               className="home1-btn-outline home1-sites-modal-btn"
               onClick={onClose}
-              disabled={saving}
+              disabled={submitBusy}
             >
               Cancel
             </button>
             <button
               type="button"
               className="home1-btn-primary home1-sites-modal-btn inline-flex items-center justify-center gap-2"
-              disabled={saving}
+              disabled={submitBusy || lookupLoading}
               onClick={handleSubmit}
             >
-              {saving ? <ButtonSpinner /> : null}
-              {saving ? "Saving…" : isEdit ? "Update site" : "Add site"}
+              {submitBusy ? <ButtonSpinner /> : null}
+              {coverageChecking ? "Checking…" : saving ? "Saving…" : isEdit ? "Update site" : "Add site"}
             </button>
           </footer>
         </form>

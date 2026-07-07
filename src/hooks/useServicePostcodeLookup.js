@@ -12,7 +12,9 @@ export function useServicePostcodeLookup(source) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalVariant, setModalVariant] = useState(/** @type {"success" | "error"} */ ("error"));
+  const [modalVariant, setModalVariant] = useState(
+    /** @type {"success" | "outOfArea" | "error"} */ ("error"),
+  );
   const [modalMessage, setModalMessage] = useState("");
   const [matchedServiceSlug, setMatchedServiceSlug] = useState("");
 
@@ -36,10 +38,17 @@ export function useServicePostcodeLookup(source) {
       setModalOpen(false);
       try {
         const result = await checkServiceByPostalCode({ source, serviceSlug, postCode });
-        if (result.matched) {
+        if (result.outcome === "in_area") {
           setMatchedServiceSlug(serviceSlug);
           setModalVariant("success");
           setModalMessage("");
+          setModalOpen(true);
+          return;
+        }
+        if (result.outcome === "out_of_area") {
+          setMatchedServiceSlug("");
+          setModalVariant("outOfArea");
+          setModalMessage("Our services are unavailable in this area");
           setModalOpen(true);
           return;
         }

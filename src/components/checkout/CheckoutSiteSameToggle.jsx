@@ -1,13 +1,16 @@
 "use client";
 
+import ButtonSpinner from "@/components/ui/ButtonSpinner";
+
 /**
  * @param {{
  *   value: boolean | null | undefined,
  *   onChange: (sameAsBilling: boolean) => void,
+ *   checking?: boolean,
  *   error?: string,
  * }} props
  */
-export default function CheckoutSiteSameToggle({ value, onChange, error = "" }) {
+export default function CheckoutSiteSameToggle({ value, onChange, checking = false, error = "" }) {
   const yesSelected = value === true;
   const noSelected = value === false;
 
@@ -26,17 +29,20 @@ export default function CheckoutSiteSameToggle({ value, onChange, error = "" }) 
           className={`home1-checkout-same-btn home1-checkout-same-btn--yes${yesSelected ? " is-active" : ""}`}
           onClick={() => onChange(true)}
           aria-pressed={yesSelected}
+          disabled={checking}
+          aria-busy={checking}
         >
           <span className="home1-checkout-same-btn-icon" aria-hidden="true">
-            ✓
+            {checking ? <ButtonSpinner className="h-3.5 w-3.5" /> : "✓"}
           </span>
-          <span>Yes</span>
+          <span>{checking ? "Checking…" : "Yes"}</span>
         </button>
         <button
           type="button"
           className={`home1-checkout-same-btn home1-checkout-same-btn--no${noSelected ? " is-active" : ""}`}
           onClick={() => onChange(false)}
           aria-pressed={noSelected}
+          disabled={checking}
         >
           <span className="home1-checkout-same-btn-icon" aria-hidden="true">
             ✕

@@ -59,6 +59,8 @@ import {
 import { readCheckoutAddress, resolveTravelChargePostcode, resolveTravelChargePostcodeField } from "@/lib/checkout/checkoutAddressFields";
 import { getDeliveryFeeApiErrorMessage, parseDeliveryFeeResult } from "@/lib/checkout/parseDeliveryFeeResponse";
 import { calculateDeliveryFee } from "@/services/checkoutApiService";
+import { verifyServicePostcodeCoverage } from "@/lib/postcode/verifyServicePostcodeCoverage";
+import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
 
 const EMPTY_DETAILS = {
   firstName: "",
@@ -112,6 +114,8 @@ export default function CheckoutPageClient() {
   const [deliveryFeeOutOfRange, setDeliveryFeeOutOfRange] = useState(false);
   const [deliveryFeeError, setDeliveryFeeError] = useState("");
   const [deliveryFeeLoading, setDeliveryFeeLoading] = useState(false);
+  const [siteSameChecking, setSiteSameChecking] = useState(false);
+  const [coverageModalOpen, setCoverageModalOpen] = useState(false);
   const lastFetchedPostcodeRef = useRef("");
 
   const dispatch = useAppDispatch();
@@ -543,19 +547,26 @@ export default function CheckoutPageClient() {
       .trim()
       .toUpperCase();
 
-    setDetails(next);
+    const prevBillingPostcode = String(details.postcode ?? "").trim().toUpperCase();
+    const nextBillingPostcode = String(next.postcode ?? "").trim().toUpperCase();
+    const normalizedNext =
+      prevBillingPostcode !== nextBillingPostcode && next.siteSameAsBilling === true
+        ? { ...next, siteSameAsBilling: null }
+        : next;
 
-    const billingPostcode = readCheckoutAddress(next, "billing").postcode.trim();
-    const sitePostcode = readCheckoutAddress(next, "site").postcode.trim();
+    setDetails(normalizedNext);
+
+    const billingPostcode = readCheckoutAddress(normalizedNext, "billing").postcode.trim();
+    const sitePostcode = readCheckoutAddress(normalizedNext, "site").postcode.trim();
 
     setFieldErrors((prev) => ({
       billingPostcode: billingPostcode ? "" : prev.billingPostcode,
       sitePostcode: sitePostcode ? "" : prev.sitePostcode,
       siteSameAsBilling:
-        next.siteSameAsBilling === true || next.siteSameAsBilling === false
+        normalizedNext.siteSameAsBilling === true || normalizedNext.siteSameAsBilling === false
           ? ""
           : prev.siteSameAsBilling,
-      selectedSite: next.siteAddressId ? "" : prev.selectedSite,
+      selectedSite: normalizedNext.siteAddressId ? "" : prev.selectedSite,
     }));
 
     if (nextTravelPostcode && nextTravelPostcode !== prevTravelPostcode) {
@@ -568,6 +579,77 @@ export default function CheckoutPageClient() {
       setDeliveryFeeError("");
     }
   }
+
+  const verifyPostcodeCoverage = useCallback(
+    async (postcode) => {
+      const result = await verifyServicePostcodeCoverage({
+        source: "checkout",
+        serviceSlug: service?.slug ?? slug,
+        postCode: postcode,
+      });
+
+      if (!result.allowed && !result.message) {
+        setCoverageModalOpen(true);
+      }
+
+      return result;
+    },
+    [service?.slug, slug]
+  );
+
+  const handleSiteSameAsBillingChange = useCallback(
+    async (same) => {
+      if (same === false) {
+        setDetails((prev) => ({ ...prev, siteSameAsBilling: false }));
+        setFieldErrors((prev) => ({ ...prev, siteSameAsBilling: "" }));
+        return;
+      }
+
+      const postcode = String(details.postcode ?? "").trim();
+
+      if (!postcode) {
+        setFieldErrors((prev) => ({
+          ...prev,
+          billingPostcode: "Please enter a postcode and find your billing address first.",
+        }));
+        return;
+      }
+
+      setSiteSameChecking(true);
+      setFieldErrors((prev) => ({ ...prev, siteSameAsBilling: "" }));
+
+      try {
+        const coverage = await verifyPostcodeCoverage(postcode);
+
+        if (!coverage.allowed) {
+          setDetails((prev) => ({ ...prev, siteSameAsBilling: null }));
+          if (coverage.message) {
+            setFieldErrors((prev) => ({
+              ...prev,
+              siteSameAsBilling: coverage.message,
+            }));
+          }
+          return;
+        }
+
+        setDetails((prev) => ({ ...prev, siteSameAsBilling: true }));
+      } finally {
+        setSiteSameChecking(false);
+      }
+    },
+    [details.postcode, verifyPostcodeCoverage]
+  );
+
+  const handleSitePostcodeBeforeLookup = useCallback(
+    async (postcode) => {
+      const coverage = await verifyPostcodeCoverage(postcode);
+      if (!coverage.allowed && coverage.message) {
+        setFieldErrors((prev) => ({ ...prev, sitePostcode: coverage.message }));
+      }
+      return coverage;
+    },
+    [verifyPostcodeCoverage]
+  );
 
   function validateStep2() {
     if (isLoggedIn) {
@@ -857,6 +939,9 @@ export default function CheckoutPageClient() {
                         <CheckoutDetailsStep
                           details={details}
                           onChange={handleDetailsChange}
+                          onSiteSameChange={handleSiteSameAsBillingChange}
+                          onSitePostcodeBeforeLookup={handleSitePostcodeBeforeLookup}
+                          siteSameChecking={siteSameChecking}
                           isLoggedIn={isLoggedIn}
                           fieldErrors={{
                             ...fieldErrors,
@@ -999,6 +1084,13 @@ export default function CheckoutPageClient() {
       {!complete ? <CTAHome1 /> : null}
       {!complete ? <Footer /> : null}
       {!complete ? <FloatingCTA /> : null}
+
+      <ServicePostcodeResultModal
+        open={coverageModalOpen}
+        variant="outOfArea"
+        message="Our services are unavailable in this area"
+        onClose={() => setCoverageModalOpen(false)}
+      />
     </div>
   );
 }

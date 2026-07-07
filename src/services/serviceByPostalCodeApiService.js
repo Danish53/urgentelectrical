@@ -3,10 +3,35 @@ import { DEFAULT_NO_MATCH_MESSAGE } from "@/lib/postcode/parseServicePostcodeRes
 import { normalizePostcodeForApi } from "@/lib/postcode/normalizePostcode";
 
 /**
- * @typedef {{ matched: true, distance?: number }} ServicePostcodeMatch
- * @typedef {{ matched: false, message: string, distance?: number }} ServicePostcodeNoMatch
- * @typedef {ServicePostcodeMatch | ServicePostcodeNoMatch} ServicePostcodeResult
+ * @typedef {{ outcome: "in_area", distance?: number }} ServicePostcodeInArea
+ * @typedef {{ outcome: "out_of_area", distance?: number }} ServicePostcodeOutOfArea
+ * @typedef {{ outcome: "error", message: string }} ServicePostcodeError
+ * @typedef {ServicePostcodeInArea | ServicePostcodeOutOfArea | ServicePostcodeError} ServicePostcodeResult
  */
+
+/**
+ * @param {unknown} value
+ */
+function isApiSuccessTrue(value) {
+  if (value === true || value === 1) return true;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes";
+  }
+  return false;
+}
+
+/**
+ * @param {unknown} value
+ */
+function isApiSuccessFalse(value) {
+  if (value === false || value === 0) return true;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    return normalized === "false" || normalized === "0" || normalized === "no";
+  }
+  return false;
+}
 
 /**
  * @param {unknown} data
@@ -47,7 +72,7 @@ export async function checkServiceByPostalCode({ source, serviceSlug, postCode }
   const slug = String(serviceSlug ?? "").trim();
 
   if (!slug || !normalized) {
-    return { matched: false, message: "Please select a service and enter a valid postcode." };
+    return { outcome: "error", message: "Please select a service and enter a valid postcode." };
   }
 
   let response;
@@ -67,23 +92,30 @@ export async function checkServiceByPostalCode({ source, serviceSlug, postCode }
     });
   } catch {
     return {
-      matched: false,
+      outcome: "error",
       message: "Unable to reach the server. Check your connection and try again.",
     };
   }
 
   const { data, ok } = await parseProxyResponse(response);
+  const record = data && typeof data === "object" ? /** @type {Record<string, unknown>} */ (data) : null;
+  const distance = readDistanceFromPayload(data);
 
-  if (ok) {
-    return { matched: true, distance: readDistanceFromPayload(data) };
+  if (ok && record) {
+    // Laravel API: success:true = out of service area, success:false = in coverage area.
+    if (isApiSuccessTrue(record.success)) {
+      return { outcome: "out_of_area", distance };
+    }
+    if (isApiSuccessFalse(record.success)) {
+      return { outcome: "in_area", distance };
+    }
   }
 
-  const record = data && typeof data === "object" ? /** @type {Record<string, unknown>} */ (data) : null;
   const message =
     String(record?.error ?? record?.message ?? "").trim() ||
     (record?.errors && typeof record.errors === "object"
       ? Object.values(record.errors).flat().filter(Boolean).join(" ")
       : "") ||
     DEFAULT_NO_MATCH_MESSAGE;
-  return { matched: false, message };
+  return { outcome: "error", message };
 }

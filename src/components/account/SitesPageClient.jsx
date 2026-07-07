@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import AccountLayout from "@/components/account/AccountLayout";
 import CreateSiteModal from "@/components/account/CreateSiteModal";
 import SiteCardSummary from "@/components/account/SiteCardSummary";
 import BlogPagination from "@/components/blog/BlogPagination";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
+import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
+import { useBookableServices } from "@/hooks/useServices";
+import { verifyServicePostcodeCoverage } from "@/lib/postcode/verifyServicePostcodeCoverage";
 import { siteToForm } from "@/lib/sites/siteForm";
 import { matchesSiteSearch } from "@/lib/sites/matchesSiteSearch";
 import { toastError, toastSuccess } from "@/lib/toast";
@@ -114,13 +117,34 @@ function SitesEmpty({ onCreate, disabled }) {
 export default function SitesPageClient() {
   const dispatch = useAppDispatch();
   const { sites, status, error, pagination, saving, saveError } = useAppSelector((state) => state.sites);
+  const { bookable } = useBookableServices();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [coverageModalOpen, setCoverageModalOpen] = useState(false);
   const listAnchorRef = useRef(null);
   const searchId = useId();
+
+  const defaultServiceSlug = useMemo(() => bookable[0]?.slug ?? "", [bookable]);
+
+  const handlePostcodeBeforeLookup = useCallback(
+    async (postcode) => {
+      const result = await verifyServicePostcodeCoverage({
+        source: "sites",
+        serviceSlug: defaultServiceSlug,
+        postCode: postcode,
+      });
+
+      if (!result.allowed && !result.message) {
+        setCoverageModalOpen(true);
+      }
+
+      return result;
+    },
+    [defaultServiceSlug]
+  );
 
   const initialLoading = (status === "loading" || status === "idle") && sites.length === 0;
   const pageLoading = status === "loading" && sites.length > 0;
@@ -340,6 +364,13 @@ export default function SitesPageClient() {
         mode={editingId ? "edit" : "create"}
         initialForm={editForm ?? undefined}
         siteName={editingId ? (sites.find((s) => s.id === editingId)?.addressLine1 || "") : ""}
+        onBeforePostcodeLookup={handlePostcodeBeforeLookup}
+      />
+
+      <ServicePostcodeResultModal
+        open={coverageModalOpen}
+        variant="outOfArea"
+        onClose={() => setCoverageModalOpen(false)}
       />
     </AccountLayout>
   );

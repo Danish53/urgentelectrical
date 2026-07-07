@@ -120,12 +120,16 @@ function CheckoutSiteSelectCard({ site, selected, onSelect, onEdit }) {
  *   selectedSiteId?: string | null,
  *   onSelectSite: (site: import("@/lib/sites/siteTypes").SavedSite) => void,
  *   selectionError?: string,
+ *   onBeforePostcodeLookup?: (
+ *     postcode: string
+ *   ) => Promise<boolean | { allowed: boolean, message?: string }>,
  * }} props
  */
 export default function CheckoutSavedSitesSection({
   selectedSiteId = null,
   onSelectSite,
   selectionError = "",
+  onBeforePostcodeLookup,
 }) {
   const dispatch = useAppDispatch();
   const searchId = useId();
@@ -376,6 +380,7 @@ export default function CheckoutSavedSitesSection({
         initialForm={editForm ?? undefined}
         siteName={editingId ? (sites.find((s) => s.id === editingId)?.addressLine1 || "") : ""}
         hideContactDetails
+        onBeforePostcodeLookup={onBeforePostcodeLookup}
       />
     </>
   );

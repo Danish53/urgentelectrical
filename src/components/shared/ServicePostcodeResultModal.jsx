@@ -31,7 +31,7 @@ function SuccessIcon() {
 /**
  * @param {{
  *   open: boolean,
- *   variant: "success" | "error",
+ *   variant: "success" | "outOfArea" | "error",
  *   title?: string,
  *   message?: string,
  *   onClose: () => void,
@@ -48,28 +48,28 @@ export default function ServicePostcodeResultModal({
 }) {
   const titleId = useId();
   const isSuccess = variant === "success";
-  const title = titleOverride ?? (isSuccess ? "We Proudly Serve Your Area" : "Invalid Postcode");
-  const bodyText = isSuccess ? "" : message || "Invalid Postcode";
+  const isOutOfArea = variant === "outOfArea";
+  const title =
+    titleOverride ??
+    (isSuccess ? "We Proudly Serve Your Area" : isOutOfArea ? "Out of Service Area" : "Invalid Postcode");
+  const bodyText = isSuccess
+    ? ""
+    : message || (isOutOfArea ? "Our services are unavailable in this area" : "Invalid Postcode");
 
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const onKey = (event) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
     return () => {
       document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open || typeof document === "undefined") return null;
 
   const modal = (
     <div className="home1-postcode-result-root" role="presentation">
-      <button type="button" className="home1-postcode-result-backdrop" onClick={onClose} aria-label="Close" />
+      <div className="home1-postcode-result-backdrop" aria-hidden="true" />
       <div
         className="home1-postcode-result-modal"
         role="dialog"

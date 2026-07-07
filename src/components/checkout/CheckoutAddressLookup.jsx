@@ -33,6 +33,9 @@ function IconSearch({ className = "w-4 h-4" }) {
  *   selectedSiteLabel?: string,
  *   onClearSavedSite?: () => void,
  *   postcodeError?: string,
+ *   onBeforePostcodeLookup?: (
+ *     postcode: string
+ *   ) => Promise<boolean | { allowed: boolean, message?: string }>,
  * }} props
  */
 export default function CheckoutAddressLookup({
@@ -45,6 +48,7 @@ export default function CheckoutAddressLookup({
   selectedSiteLabel = "",
   onClearSavedSite,
   postcodeError = "",
+  onBeforePostcodeLookup,
 }) {
   const [lookupLoading, setLookupLoading] = useState(false);
   const [lookupError, setLookupError] = useState("");
@@ -96,6 +100,17 @@ export default function CheckoutAddressLookup({
     setAddressPicked(false);
 
     try {
+      if (onBeforePostcodeLookup) {
+        const result = await onBeforePostcodeLookup(postcode);
+        const allowed = typeof result === "boolean" ? result : result.allowed;
+        if (!allowed) {
+          if (typeof result !== "boolean" && result.message) {
+            setLookupError(result.message);
+          }
+          return;
+        }
+      }
+
       const { addresses } = await fetchAddressesByPostcode(postcode);
       if (!addresses.length) {
         setLookupError("No addresses found for this postcode.");

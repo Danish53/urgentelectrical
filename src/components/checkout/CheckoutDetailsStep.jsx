@@ -47,6 +47,9 @@ function CheckoutStepActions({ onBack, submitting }) {
 export default function CheckoutDetailsStep({
   details,
   onChange,
+  onSiteSameChange,
+  onSitePostcodeBeforeLookup,
+  siteSameChecking = false,
   onBack,
   onContinue,
   error,
@@ -66,7 +69,7 @@ export default function CheckoutDetailsStep({
   }
 
   function handleSiteSameChange(same) {
-    onChange({ ...details, siteSameAsBilling: same });
+    onSiteSameChange?.(same);
   }
 
   if (isLoggedIn) {
@@ -96,6 +99,7 @@ export default function CheckoutDetailsStep({
             selectedSiteId={details.siteAddressId}
             onSelectSite={handleLoggedInSiteSelect}
             selectionError={fieldErrors.selectedSite}
+            onBeforePostcodeLookup={onSitePostcodeBeforeLookup}
           />
 
           <CheckoutNotesField details={details} onChange={onChange} />
@@ -235,6 +239,7 @@ export default function CheckoutDetailsStep({
         <CheckoutSiteSameToggle
           value={details.siteSameAsBilling ?? null}
           onChange={handleSiteSameChange}
+          checking={siteSameChecking}
           error={fieldErrors.siteSameAsBilling}
         />
 
@@ -245,6 +250,7 @@ export default function CheckoutDetailsStep({
             variant="site"
             sectionTitle="Site Address"
             postcodeError={fieldErrors.sitePostcode}
+            onBeforePostcodeLookup={onSitePostcodeBeforeLookup}
           />
         ) : null}
 
