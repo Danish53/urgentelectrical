@@ -1,5 +1,6 @@
 import { getScheduleSlotsForDate, normalizeApiDate } from "@/lib/schedules";
 import { readCheckoutAddress } from "@/lib/checkout/checkoutAddressFields";
+import { computeCheckoutSummaryTotals } from "@/lib/checkout/computeCheckoutSummaryTotals";
 
 /**
  * @param {unknown} value
@@ -76,10 +77,12 @@ export function buildValidateOrderPayload({
 }) {
   const serviceSubTotal = toMoneyNumber(lineItems.service?.amountExc);
   const deliveryFee = toMoneyNumber(lineItems.travel?.amountInc);
-  const serviceInc = toMoneyNumber(lineItems.service?.amountInc);
-  const deliveryInc = toMoneyNumber(lineItems.travel?.amountInc);
   const discountAmount = Math.max(0, Number(coupon?.discountAmount ?? 0) || 0);
-  const amount = Math.max(0, serviceInc + deliveryInc - discountAmount);
+  const { payableTotalInc: amount } = computeCheckoutSummaryTotals({
+    serviceExc: lineItems.service?.amountExc,
+    travelExc: lineItems.travel?.amountExc,
+    discount: discountAmount,
+  });
 
   const sameAsBilling = details.siteSameAsBilling === true;
   const billing = readCheckoutAddress(details, "billing");

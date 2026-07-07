@@ -20,6 +20,7 @@ import {
   buildCheckoutLineItems,
   getDefaultCheckoutService,
 } from "@/data/checkoutPage";
+import { computeCheckoutSummaryTotals } from "@/lib/checkout/computeCheckoutSummaryTotals";
 import { useCheckoutSessionTimer } from "@/hooks/useCheckoutSessionTimer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchServices } from "@/store/slices/servicesSlice";
@@ -180,10 +181,13 @@ export default function CheckoutPageClient() {
   );
 
   const payableTotalInc = useMemo(() => {
-    const subtotal = parseFloat(lineItems.totalInc) || 0;
-    const discount = appliedCoupon?.discountAmount ?? 0;
-    return Math.max(0, subtotal - discount).toFixed(2);
-  }, [lineItems.totalInc, appliedCoupon]);
+    const { payableTotalInc: total } = computeCheckoutSummaryTotals({
+      serviceExc: lineItems.service?.amountExc,
+      travelExc: lineItems.travel?.amountExc,
+      discount: appliedCoupon?.discountAmount ?? 0,
+    });
+    return total.toFixed(2);
+  }, [lineItems.service?.amountExc, lineItems.travel?.amountExc, appliedCoupon]);
 
   const buildOrderParams = useCallback(
     (intentId) => ({
@@ -799,8 +803,11 @@ export default function CheckoutPageClient() {
     const updatedLineItems = buildCheckoutLineItems(service, fee, selectedVariant, {
       travelFeeIsInc: false,
     });
-    const discount = appliedCoupon?.discountAmount ?? 0;
-    const amount = Math.max(0, parseFloat(updatedLineItems.totalInc) - discount);
+    const { payableTotalInc: amount } = computeCheckoutSummaryTotals({
+      serviceExc: updatedLineItems.service?.amountExc,
+      travelExc: updatedLineItems.travel?.amountExc,
+      discount: appliedCoupon?.discountAmount ?? 0,
+    });
 
     const intentResult = await dispatch(createPaymentIntent(amount));
     if (createPaymentIntent.rejected.match(intentResult)) {

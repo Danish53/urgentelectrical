@@ -4,15 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { formatMoney } from "@/components/checkout/checkoutUtils";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
+import { computeCheckoutSummaryTotals } from "@/lib/checkout/computeCheckoutSummaryTotals";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { parseApplyCouponResponse } from "@/lib/checkout/parseCouponResponse";
 import { applyCoupon as applyCouponApi } from "@/services/checkoutApiService";
-
-function roundMoney(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 100) / 100;
-}
 
 const TRAVEL_CHARGE_INFO =
   "No travel fee within 20 miles. For locations outside this radius, a travel charge will be added automatically based on distance.";
@@ -167,11 +162,11 @@ export default function CheckoutSummary({
   const serviceExc = parseFloat(lineItems.service?.amountExc) || 0;
   const travelExc = parseFloat(lineItems.travel?.amountExc) || 0;
   const totalInc = parseFloat(lineItems.totalInc) || 0;
-  const grossExc = roundMoney(serviceExc + travelExc);
-  const discount = roundMoney(appliedCoupon?.discountAmount ?? 0);
-  const payableTotalInc = roundMoney(Math.max(0, totalInc - discount));
-  const subtotalExc = roundMoney(Math.max(0, grossExc - discount));
-  const vatAmount = roundMoney(Math.max(0, payableTotalInc - subtotalExc));
+  const { discount, subtotalExc, vatAmount, payableTotalInc } = computeCheckoutSummaryTotals({
+    serviceExc,
+    travelExc,
+    discount: appliedCoupon?.discountAmount ?? 0,
+  });
 
   const travelPrice =
     deliveryFeeLoading
