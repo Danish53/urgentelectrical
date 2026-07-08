@@ -106,15 +106,18 @@ export function resolveServiceSlugFromApi(api) {
 }
 
 /**
- * @param {{ id: number, service_category_id: number, title: string, price: string, slug?: string | null, description?: string | null, image?: string | null }} api
+ * @param {{ id: number, service_category_id: number, title: string, service_display_name?: string | null, price: string, slug?: string | null, description?: string | null, image?: string | null }} api
  * @param {Record<number, import("@/lib/services/buildServiceCategory").ReturnType<import("@/lib/services/buildServiceCategory").buildServiceCategoryFromApi>>} [categoryMap]
  */
 export function buildBookableServiceFromApi(api, categoryMap = {}) {
-  const name = api.title?.trim() ?? "Electrical service";
+  const fullTitle = api.title?.trim() || "Electrical service";
+  const displayName =
+    (typeof api.service_display_name === "string" && api.service_display_name.trim()) || fullTitle;
+  const name = displayName;
   const price = String(api.price ?? "0");
-  const slug = resolveServiceSlugFromApi(api);
-  const extra = resolveDetailExtra(slug, name);
-  const meta = IMAGE_MAP[name] ?? { image: "/featured/pat.jpg", color: "#D3231F" };
+  const slug = resolveServiceSlugFromApi({ slug: api.slug, title: fullTitle });
+  const extra = resolveDetailExtra(slug, fullTitle);
+  const meta = IMAGE_MAP[fullTitle] ?? IMAGE_MAP[name] ?? { image: "/featured/pat.jpg", color: "#D3231F" };
   const { category, categoryLabel, serviceCategoryId } = resolveServiceCategoryFields(
     categoryMap[api.service_category_id],
     api.service_category_id
@@ -129,6 +132,7 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
       : meta.image;
   const description =
     api.description?.trim() ||
+    SERVICE_DESCRIPTIONS[fullTitle] ||
     SERVICE_DESCRIPTIONS[name] ||
     "Fixed-price electrical service — book online with NICEIC approved engineers.";
 
@@ -138,7 +142,7 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     name,
     price,
     priceExcVat,
-    tag: name === "Emergency Response - 24/7" ? "Most Popular" : undefined,
+    tag: fullTitle === "Emergency Response - 24/7" || name === "Emergency Response - 24/7" ? "Most Popular" : undefined,
     slug,
     id: String(api.id),
     category,

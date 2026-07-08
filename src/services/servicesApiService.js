@@ -7,6 +7,7 @@ import { apiRequest } from "@/lib/api/client";
  * @property {number} id
  * @property {number} service_category_id
  * @property {string} title
+ * @property {string | null | undefined} [service_display_name]
  * @property {string} price
  * @property {string | null} description
  * @property {string | null} image

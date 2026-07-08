@@ -99,8 +99,11 @@ function parseLongDescriptionFromApi(longDescription) {
  * @param {Record<number, { slug: string, label: string, id: number }>} [categoryMap]
  */
 export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
-  const name = String(api.title ?? "").trim() || "Electrical service";
-  const slug = resolveServiceSlugFromApi({ slug: api.slug, title: name });
+  const fullTitle = String(api.title ?? "").trim() || "Electrical service";
+  const displayName =
+    (typeof api.service_display_name === "string" && api.service_display_name.trim()) || fullTitle;
+  const name = displayName;
+  const slug = resolveServiceSlugFromApi({ slug: api.slug, title: fullTitle });
   const price = String(api.price ?? "0");
   const priceExcVat = formatPriceAmount(price);
   const variants = buildApiVariants(api.variants);
@@ -110,10 +113,12 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const description =
     String(api.description ?? "").trim() ||
     "Fixed-price electrical service — book online with NICEIC approved engineers.";
-  const extra = resolveDetailExtra(slug, name);
-  const meta = FALLBACK_META[name] ?? { color: "#D3231F" };
+  const extra = resolveDetailExtra(slug, fullTitle);
+  const meta = FALLBACK_META[fullTitle] ?? FALLBACK_META[name] ?? { color: "#D3231F" };
   const isEmergency =
-    name.toLowerCase().includes("emergency") || slug.includes("emergency");
+    fullTitle.toLowerCase().includes("emergency") ||
+    name.toLowerCase().includes("emergency") ||
+    slug.includes("emergency");
 
   const apiLongDescription = parseLongDescriptionFromApi(api.long_description);
   const apiIncludes = parseApiStringList(api.included_items);
@@ -130,7 +135,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     category,
     categoryLabel,
     description,
-    image: resolveImage(api, name),
+    image: resolveImage(api, fullTitle),
     color: meta.color,
     href: `/services/${slug}`,
     canonicalUrl: absoluteSiteUrl(`/services/${slug}`),

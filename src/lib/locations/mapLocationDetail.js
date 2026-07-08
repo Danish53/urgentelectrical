@@ -164,17 +164,22 @@ function buildServicesOffered() {
  */
 export function mapLocationDetailFromApi(payload) {
   const root = /** @type {Record<string, unknown>} */ (payload?.data ?? payload ?? {});
-  const name = String(root.area_name ?? root.areaName ?? "").trim();
+  const fullName = String(root.area_name ?? root.areaName ?? "").trim();
+  const displayName =
+    (typeof root.area_display_name === "string" && root.area_display_name.trim()) ||
+    (typeof root.areaDisplayName === "string" && root.areaDisplayName.trim()) ||
+    fullName;
+  const name = displayName;
   const slug = String(root.slug ?? "").trim();
 
-  if (!name || !slug) {
+  if (!fullName || !slug) {
     throw new Error("Invalid location detail response.");
   }
 
   const city = /** @type {Record<string, unknown> | undefined} */ (root.city);
-  const cityName = String(city?.name ?? name).trim();
+  const cityName = String(city?.name ?? fullName).trim();
   const regionLabel = cityName;
-  const fallback = buildLocationRecord(name);
+  const fallback = buildLocationRecord(fullName);
   const heroParts = parseHeroTitle(String(root.main_title ?? root.mainTitle ?? ""), name);
   const imagePath = getLocationImageUrl(
     typeof root.main_image === "string"

@@ -11,6 +11,7 @@ import { apiRequest } from "@/lib/api/client";
 /**
  * @typedef {object} ApiBlogListItem
  * @property {string} title
+ * @property {string | null | undefined} [blog_display_name]
  * @property {string} slug
  * @property {string} description
  * @property {string | null} image

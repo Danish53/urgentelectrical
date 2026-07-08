@@ -40,11 +40,14 @@ export function buildBlogPostFromListItem(api, options = {}) {
   const excerpt = api.description?.trim() || "";
   const categorySlug = options.categorySlug ?? "all";
   const categoryLabel = options.categoryLabel ?? "Article";
+  const displayName =
+    typeof api.blog_display_name === "string" ? api.blog_display_name.trim() : "";
+  const title = displayName || (typeof api.title === "string" ? api.title : "Article");
 
   return {
     slug,
     id: slug,
-    title: api.title,
+    title,
     excerpt,
     image: resolveImageUrl(api.image),
     color: DEFAULT_COLOR,
@@ -87,13 +90,17 @@ export function buildBlogPostFromDetail(api, options = {}) {
     typeof api.seo_description === "string" && api.seo_description.trim()
       ? api.seo_description.trim()
       : "";
+  const displayName =
+    typeof api.blog_display_name === "string" ? api.blog_display_name.trim() : "";
+  const title =
+    displayName || (typeof api.title === "string" ? api.title : "Article");
 
   const readSource = longHtml ? longHtml.replace(/<[^>]+>/g, " ") : excerpt;
 
   return {
     slug,
     id: slug,
-    title: typeof api.title === "string" ? api.title : "Article",
+    title,
     excerpt,
     image: resolveImageUrl(typeof api.image === "string" ? api.image : null),
     color: DEFAULT_COLOR,
