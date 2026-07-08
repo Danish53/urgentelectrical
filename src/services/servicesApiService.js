@@ -125,7 +125,7 @@ export function parseServiceDetailResponse(payload) {
 }
 
 /**
- * GET /services/{slug} — full detail (variants, long_description, schedules).
+ * GET /services/{slug} — full detail (variants, long_description, schedules, faqs).
  * @param {string} slug
  */
 export async function fetchServiceBySlug(slug) {

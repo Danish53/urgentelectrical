@@ -627,7 +627,7 @@ function ServiceFaq({ faqs }) {
               </span>
             </button>
             {isOpen && (
-              <p className="px-5 pb-5 text-[14px] leading-relaxed text-[var(--home1-muted)] border-t border-[var(--home1-border)]">
+              <p className="px-5 py-5 text-[14px] leading-relaxed text-[var(--home1-muted)] border-t border-[var(--home1-border)]">
                 {item.a}
               </p>
             )}

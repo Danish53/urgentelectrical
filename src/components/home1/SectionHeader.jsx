@@ -24,7 +24,7 @@ export default function SectionHeader({
         {title}
       </h2>
       {description && (
-        <p className={`mt-4 text-[15px] leading-relaxed ${light ? "text-white/80" : "text-[var(--home1-muted)]"}`}>
+        <p className={`mb-4 text-[15px] leading-relaxed ${light ? "text-white/80" : "text-[var(--home1-muted)]"}`}>
           {description}
         </p>
       )}

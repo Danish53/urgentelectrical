@@ -94,6 +94,44 @@ function parseLongDescriptionFromApi(longDescription) {
 }
 
 /**
+ * Prefer API faqs when present; shape matches ServiceFaq ({ q, a }).
+ * Supports array of objects, or { question/questions, answer/answers }.
+ * @param {unknown} value
+ * @returns {{ q: string, a: string }[]}
+ */
+function parseFaqsFromApi(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const record = /** @type {Record<string, unknown>} */ (value);
+    const questions = record.question ?? record.questions ?? record.q;
+    const answers = record.answer ?? record.answers ?? record.a;
+
+    if (Array.isArray(questions) && Array.isArray(answers)) {
+      return questions
+        .map((question, index) => {
+          const q = String(question ?? "").trim();
+          const a = String(answers[index] ?? "").trim();
+          if (!q || !a) return null;
+          return { q, a };
+        })
+        .filter(Boolean);
+    }
+  }
+
+  if (!Array.isArray(value) || !value.length) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object") return null;
+      const row = /** @type {Record<string, unknown>} */ (item);
+      const q = String(row.question ?? row.q ?? row.title ?? "").trim();
+      const a = String(row.answer ?? row.a ?? row.description ?? "").trim();
+      if (!q || !a) return null;
+      return { q, a };
+    })
+    .filter(Boolean);
+}
+
+/**
  * Full service detail payload from GET /services/{slug}
  * @param {Record<string, unknown>} api
  * @param {Record<number, { slug: string, label: string, id: number }>} [categoryMap]
@@ -123,6 +161,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const apiLongDescription = parseLongDescriptionFromApi(api.long_description);
   const apiIncludes = parseApiStringList(api.included_items);
   const apiBenefits = parseApiStringList(api.benefits);
+  const apiFaqs = parseFaqsFromApi(api.faqs ?? api.faq);
 
   return {
     apiId: api.id,
@@ -149,7 +188,7 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
       : getServiceLongDescription(extra, description, name),
     includes: apiIncludes.length ? apiIncludes : (extra.includes ?? []),
     features: apiBenefits.length ? apiBenefits : (extra.features ?? []),
-    faqs: extra.faqs ?? [],
+    faqs: apiFaqs.length ? apiFaqs : (extra.faqs ?? []),
     schedules: Array.isArray(api.schedules) ? api.schedules : [],
     metaTitle: extra.metaTitle ?? name,
     metaDescription: extra.metaDescription ?? description,

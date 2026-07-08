@@ -9,7 +9,7 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import AppImage from "@/components/common/AppImage";
 import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { SERVICE_AREAS } from "@/data/areas";
+import { SERVICE_AREAS, getAreaLocationHref } from "@/data/areas";
 import { IconCheck, IconPhone } from "@/components/home1/icons";
 
 function PageDetailFaq({ faqs }) {
@@ -257,7 +257,14 @@ export default function OtherServiceDetailRich({
                   </header>
                   <ul className="home1-page-detail-areas">
                     {SERVICE_AREAS.map((area) => (
-                      <li key={area}>{area}</li>
+                      <li key={area}>
+                        <Link
+                          href={getAreaLocationHref(area)}
+                          className="home1-page-detail-areas-item"
+                        >
+                          {area}
+                        </Link>
+                      </li>
                     ))}
                   </ul>
                   <Link href="/locations" className="home1-page-detail-areas-link">

@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
-import BlogCard from "@/components/blog/BlogCard";
+import RelatedBlogsSlider from "@/components/blog/RelatedBlogsSlider";
 import SectionHeader from "@/components/home1/SectionHeader";
 import { SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
@@ -279,13 +279,7 @@ export default function BlogDetailClient({ post, sections, related }) {
                 align="left"
                 compact
               />
-              <ul className="home1-blog-related-grid list-none p-0 m-0">
-                {related.map((p) => (
-                  <li key={p.slug} className="min-w-0">
-                    <BlogCard post={p} />
-                  </li>
-                ))}
-              </ul>
+              <RelatedBlogsSlider posts={related} />
             </div>
           </section>
         )}

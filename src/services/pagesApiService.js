@@ -7,74 +7,11 @@ import {
 import { ApiError } from "@/lib/api/errors";
 import { apiRequest } from "@/lib/api/client";
 import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
-import { resolveServiceApiSlugCandidates } from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
-import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
+import { fetchServicesList } from "@/services/servicesApiService";
 
 import { getApiSiteOrigin, absoluteCmsUrl } from "@/lib/siteUrl";
 import { SERVER_FETCH } from "@/lib/api/serverFetch";
-
-function titleFromSlug(slug) {
-  return slug
-    .split("-")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-/**
- * @param {Record<string, unknown>} api
- * @param {string} urlSlug
- * @returns {ApiInfoPageDetail}
- */
-function pageFromServiceApi(api, urlSlug) {
-  const base = normalizePageListItem(/** @type {Record<string, unknown>} */ (api));
-  return {
-    ...base,
-    slug: urlSlug,
-    detail:
-      (typeof api.long_description === "string" && api.long_description) ||
-      (typeof api.description === "string" && api.description) ||
-      "",
-    long_description:
-      typeof api.long_description === "string" ? api.long_description : undefined,
-    seo_title: typeof api.seo_title === "string" ? api.seo_title : undefined,
-    seo_description:
-      typeof api.seo_description === "string" ? api.seo_description : undefined,
-  };
-}
-
-/** @param {string} slug */
-async function fetchPublicCmsPageBySlug(slug) {
-  const encoded = encodeURIComponent(slug);
-  const url = `${getApiSiteOrigin()}/public/api/pages/${encoded}`;
-  let response;
-
-  try {
-    response = await fetch(url, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      ...SERVER_FETCH,
-    });
-  } catch {
-    return null;
-  }
-
-  if (!response.ok) return null;
-
-  let payload = null;
-  const text = await response.text();
-  if (!text) return null;
-
-  try {
-    payload = JSON.parse(text);
-  } catch {
-    return null;
-  }
-
-  const page = parsePageDetailResponse(payload);
-  return page ? { ...page, slug } : null;
-}
 
 /**
  * @typedef {object} ApiInfoPage
@@ -532,8 +469,9 @@ async function fetchPagesFromServicesFallback() {
 }
 
 /**
- * GET /pages/{slug} — public CMS, then services API (resolved slugs), then local fallback.
+ * GET other-services/{slug} only. No soft stub / services fallback pages.
  * @param {string} slug
+ * @returns {Promise<ApiInfoPageDetail>}
  */
 export async function fetchPageBySlug(slug) {
   const urlSlug = String(slug ?? "").trim();
@@ -544,34 +482,7 @@ export async function fetchPageBySlug(slug) {
   const otherService = await fetchOtherServiceBySlug(urlSlug);
   if (otherService) return otherService;
 
-  const encoded = encodeURIComponent(urlSlug);
-
-  try {
-    const payload = await apiRequest(`${PAGES_API.list}/${encoded}`, { method: "GET" });
-    const page = parsePageDetailResponse(payload);
-    if (page) return { ...page, slug: urlSlug };
-  } catch {
-    /* CMS /pages API not available on all environments */
-  }
-
-  const publicPage = await fetchPublicCmsPageBySlug(urlSlug);
-  if (publicPage) return publicPage;
-
-  for (const candidate of resolveServiceApiSlugCandidates(urlSlug)) {
-    try {
-      const api = await fetchServiceBySlug(candidate);
-      return pageFromServiceApi(api, urlSlug);
-    } catch {
-      /* try next candidate */
-    }
-  }
-
-  return {
-    id: 0,
-    title: titleFromSlug(urlSlug),
-    slug: serviceSlug(urlSlug) || urlSlug,
-    description: "",
-  };
+  throw new ApiError("Page not found.", { status: 404 });
 }
 
 /**

@@ -28,11 +28,10 @@ export const SERVICE_API_SLUG_OVERRIDES = {
 
 const SERVICE_DETAIL_SLUG_HINTS = [
   { hint: "eicr", key: "electrical-installation-condition-report-eicr" },
-  { hint: "emergency-response", key: "emergency-response-24-7" },
-  { hint: "emergency", key: "emergency-response-24-7" },
-  { hint: "pat", key: "portable-appliance-testing-pat" },
-  { hint: "fire-alarm", key: "fire-alarm-inspection-and-testing" },
   { hint: "emergency-lighting", key: "emergency-lighting-periodic-inspection-and-testing" },
+  { hint: "emergency-response", key: "emergency-response-24-7" },
+  { hint: "fire-alarm", key: "fire-alarm-inspection-and-testing" },
+  { hint: "pat", key: "portable-appliance-testing-pat" },
   { hint: "fault", key: "domestic-electrical-fault-investigation" },
   { hint: "fuse-box", key: "fuse-box-consumer-unit-replacement" },
   { hint: "consumer-unit", key: "fuse-box-consumer-unit-replacement" },

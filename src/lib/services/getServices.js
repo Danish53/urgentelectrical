@@ -1,4 +1,4 @@
-import {
+﻿import {
   buildBookableServicesFromApi,
   resolveServiceSlugFromApi,
 } from "@/lib/services/buildBookableService";
@@ -9,11 +9,13 @@ import {
   resolveServiceDetailSlug,
 } from "@/lib/services/resolveServiceDetailSlug";
 import { serviceSlug } from "@/lib/slugs";
+import { ApiError } from "@/lib/api/errors";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
 import { fetchRelatedServices } from "@/services/relatedServicesApiService";
 import { cache } from "react";
 
 const RELATED_FETCH_TIMEOUT_MS = 2500;
+const DETAIL_LOAD_RETRIES = 1;
 
 /**
  * Fetch bookable services (server or client). Returns [] if API fails.
@@ -55,6 +57,10 @@ export function getAllSlugsFromList(list) {
   return list.map((s) => s.slug);
 }
 
+function isNotFoundError(error) {
+  return error instanceof ApiError && error.status === 404;
+}
+
 /**
  * When the URL slug was generated from title (legacy) but the API uses a different slug.
  * @param {string} requestedSlug
@@ -65,18 +71,27 @@ function resolveSlugForDetailRequest(requestedSlug, apiList) {
   if (!normalized) return null;
 
   const candidates = new Set(resolveServiceApiSlugCandidates(normalized));
+  candidates.add(serviceSlug(normalized));
 
   const match = apiList.find((item) => {
     const apiSlug = resolveServiceSlugFromApi(item);
-    const generated = serviceSlug(String(item.title ?? "").trim() || "Electrical service");
-    return candidates.has(apiSlug) || candidates.has(generated);
+    const title = String(item.title ?? "").trim() || "Electrical service";
+    const displayName =
+      (typeof item.service_display_name === "string" && item.service_display_name.trim()) || title;
+    const generatedFromTitle = serviceSlug(title);
+    const generatedFromDisplay = serviceSlug(displayName);
+    return (
+      candidates.has(apiSlug) ||
+      candidates.has(generatedFromTitle) ||
+      candidates.has(generatedFromDisplay)
+    );
   });
 
   return match ? resolveServiceSlugFromApi(match) : null;
 }
 
 /**
- * @param {import("@/lib/services/buildBookableServiceFromDetail").ReturnType<typeof buildBookableServiceFromDetailApi>} service
+ * @param {ReturnType<typeof buildBookableServiceFromDetailApi>} service
  * @param {Awaited<ReturnType<typeof getServiceCategories>>["categoryMap"]} categoryMap
  */
 async function fetchRelatedWithTimeout(service, categoryMap) {
@@ -104,13 +119,40 @@ async function loadServiceDetail(slug) {
   return { service, related };
 }
 
+/**
+ * Retry transient API/network failures; 404 fails immediately.
+ * @param {string} slug
+ */
+async function loadServiceDetailWithRetry(slug) {
+  let lastError;
+  for (let attempt = 0; attempt <= DETAIL_LOAD_RETRIES; attempt += 1) {
+    try {
+      return await loadServiceDetail(slug);
+    } catch (error) {
+      lastError = error;
+      if (isNotFoundError(error)) throw error;
+      if (attempt < DETAIL_LOAD_RETRIES) continue;
+      throw lastError;
+    }
+  }
+  throw lastError;
+}
+
 function uniqueSlugCandidates(slug) {
-  const normalized = String(slug ?? "").trim();
+  let normalized = String(slug ?? "").trim();
   if (!normalized) return [];
+
+  try {
+    const decoded = decodeURIComponent(normalized);
+    if (decoded) normalized = decoded.trim();
+  } catch {
+    /* keep original */
+  }
 
   const fromResolver = resolveServiceApiSlugCandidates(normalized);
   const detailSlug = resolveServiceDetailSlug(normalized);
-  const merged = [...fromResolver, normalized];
+  /** Prefer the URL slug first so alias/hint mismatches don't mask a working API slug. */
+  const merged = [normalized, ...fromResolver];
 
   if (detailSlug && detailSlug !== normalized) {
     merged.push(detailSlug, ...resolveServiceApiSlugCandidates(detailSlug));
@@ -124,10 +166,16 @@ export const getServiceDetailBySlug = cache(async function getServiceDetailBySlu
   const normalized = String(slug ?? "").trim();
   if (!normalized) return null;
 
+  /** @type {unknown} */
+  let lastTransientError = null;
+
   for (const candidate of uniqueSlugCandidates(normalized)) {
     try {
-      return await loadServiceDetail(candidate);
-    } catch {
+      return await loadServiceDetailWithRetry(candidate);
+    } catch (error) {
+      if (isNotFoundError(error)) continue;
+      lastTransientError = error;
+      // Non-404: still try remaining candidates (legacy aliases), then fall back.
       continue;
     }
   }
@@ -136,10 +184,21 @@ export const getServiceDetailBySlug = cache(async function getServiceDetailBySlu
     const { services: apiList } = await fetchServicesList();
     const resolved = resolveSlugForDetailRequest(normalized, apiList);
     if (resolved) {
-      return await loadServiceDetail(resolved);
+      try {
+        return await loadServiceDetailWithRetry(resolved);
+      } catch (error) {
+        if (!isNotFoundError(error)) lastTransientError = error;
+      }
     }
-  } catch {
-    /* no match */
+  } catch (error) {
+    lastTransientError = error;
+  }
+
+  // Temporary API/network failure must not become a soft 404.
+  if (lastTransientError) {
+    throw lastTransientError instanceof Error
+      ? lastTransientError
+      : new ApiError("Unable to load this service right now. Please try again.", { status: 503 });
   }
 
   return null;
