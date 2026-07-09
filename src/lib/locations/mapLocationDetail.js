@@ -197,9 +197,11 @@ export function mapLocationDetailFromApi(payload) {
   );
   const faqs = parseFaqs(root.faqs, name, regionLabel, fallback.faqs);
   const metaTitle = String(root.main_title ?? root.mainTitle ?? fallback.metaTitle).trim();
+  const descriptionText = stripHtml(root.description);
   const metaDescription =
-    stripHtml(root.description) ||
-    `NICEIC approved electricians in ${name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Book online with Urgent Electrical.`;
+    descriptionText && descriptionText.toLowerCase() !== "null"
+      ? descriptionText
+      : fallback.metaDescription;
 
   return {
     slug,

@@ -197,14 +197,24 @@ export function getLocationShareImageUrl(location) {
   return absoluteCmsUrl(trimmed);
 }
 
+/** Same-origin OG image URL — proxies API `main_image` for social share previews. */
+export function getLocationOgMetadataImageUrl(location) {
+  if (!location?.slug) return getOgImageUrl();
+  return absoluteSiteUrl(`/api/location-og/${encodeURIComponent(location.slug)}`);
+}
+
 export function buildLocationMetadata(location) {
-  const imageUrl = getLocationShareImageUrl(location);
+  const imageUrl = getLocationOgMetadataImageUrl(location);
   const imageAlt =
     location.imageAlt || `Electrician in ${location.name} — Urgent Electrical Services`;
+  const description =
+    location.metaDescription && location.metaDescription.toLowerCase() !== "null"
+      ? location.metaDescription
+      : `NICEIC approved electricians in ${location.name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Book online with Urgent Electrical.`;
 
   return {
     title: location.metaTitle,
-    description: location.metaDescription,
+    description,
     keywords: location.keywords,
     openGraph: {
       type: "website",
@@ -212,7 +222,7 @@ export function buildLocationMetadata(location) {
       url: location.canonicalUrl,
       siteName: "Urgent Electrical Services",
       title: location.metaTitle,
-      description: location.metaDescription,
+      description,
       images: [
         {
           url: imageUrl,
@@ -225,7 +235,7 @@ export function buildLocationMetadata(location) {
     twitter: {
       card: "summary_large_image",
       title: location.metaTitle,
-      description: location.metaDescription,
+      description,
       images: [imageUrl],
     },
     alternates: { canonical: location.canonicalUrl },
