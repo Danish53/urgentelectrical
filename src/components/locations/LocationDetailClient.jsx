@@ -11,6 +11,7 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import LocationRelatedAreas from "@/components/locations/LocationRelatedAreas";
+import PageDetailFaq from "@/components/common/PageDetailFaq";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 
 function LocationHeroImage({ location }) {
@@ -34,19 +35,6 @@ function LocationHeroImage({ location }) {
         </div>
       )}
       <div className="home1-location-detail-hero-media-overlay" aria-hidden="true" />
-    </div>
-  );
-}
-
-function LocationFaq({ faqs }) {
-  return (
-    <div className="home1-location-detail-faqs">
-      {faqs.map((faq) => (
-        <details key={faq.id} className="home1-location-detail-faq">
-          <summary>{faq.q}</summary>
-          <p>{faq.a}</p>
-        </details>
-      ))}
     </div>
   );
 }
@@ -85,7 +73,7 @@ export default function LocationDetailClient({ location }) {
                   <span className="text-[#ff5a3c]">{location.hero.titleAccent}</span>
                 </h1>
 
-                <p className="home1-location-detail-lead">{location.hero.description}</p>
+                <p className="home1-location-detail-lead">{location.hero.lead}</p>
 
                 <ul className="home1-location-detail-pills list-none p-0 m-0">
                   {location.highlights.map((h) => (
@@ -158,13 +146,31 @@ export default function LocationDetailClient({ location }) {
                 </article>
                 ) : null}
 
+                {location.commonJobs.length > 0 ? (
+                <article id="jobs" className="home1-location-detail-block">
+                  <h2 className="home1-location-detail-h2">
+                    Common jobs we handle in {location.name}
+                  </h2>
+                  <ul className="home1-location-detail-why-grid list-none p-0 m-0">
+                    {location.commonJobs.map((job) => (
+                      <li key={job}>
+                        <span className="home1-location-detail-why-icon" aria-hidden="true">
+                          <IconCheck className="w-4 h-4" />
+                        </span>
+                        <span>{job}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                ) : null}
+
                 {location.faqs.length > 0 ? (
                 <article id="faqs" className="home1-location-detail-block">
                   <h2 className="home1-location-detail-h2">Frequently asked questions</h2>
                   <p className="home1-location-detail-sub">
                     Common questions about electrical work in {location.name}
                   </p>
-                  <LocationFaq faqs={location.faqs} />
+                  <PageDetailFaq faqs={location.faqs} />
                 </article>
                 ) : null}
               </div>

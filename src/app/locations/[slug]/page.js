@@ -7,6 +7,7 @@ import {
 import { mapLocationDetailFromApi } from "@/lib/locations/mapLocationDetail";
 import { getLocationBySlug } from "@/lib/cms/serverLoads";
 import "../../home1/home1.css";
+import "../../pages/pages.css";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;

@@ -2,9 +2,12 @@ import { LOCATION_AREAS_BY_REGION, LOCATION_FILTERS } from "@/data/locationsPage
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { slugify } from "@/lib/slugs";
 
-import { getSiteUrl } from "@/lib/siteUrl";
+import { absoluteCmsUrl, absoluteSiteUrl, getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 
 const SITE = getSiteUrl();
+
+export const LOCATION_OG_IMAGE_WIDTH = 1200;
+export const LOCATION_OG_IMAGE_HEIGHT = 630;
 
 const REGION_LABELS = Object.fromEntries(
   LOCATION_FILTERS.filter((f) => f.id !== "all").map((f) => [f.id, f.label])
@@ -26,6 +29,15 @@ const WHY_CHOOSE = [
   "Clear communication before and after every visit",
 ];
 
+export const LOCATION_COMMON_JOBS = [
+  "24/7 emergency call-outs for power loss and dangerous faults",
+  "Landlord EICR inspections and tenancy compliance",
+  "PAT testing for businesses, landlords, and HMOs",
+  "Consumer unit upgrades and fuse board replacement",
+  "Fault finding for tripping RCDs and flickering lights",
+  "Fire alarm and emergency lighting inspections",
+];
+
 const TOP_SERVICE_SLUGS = [
   "emergency-response-24-7",
   "electrical-installation-condition-report-eicr",
@@ -40,6 +52,10 @@ function findRegionForName(name) {
     if (areas.includes(name)) return regionId;
   }
   return "nottingham";
+}
+
+export function buildLocationHeroLead(name) {
+  return `NICEIC-approved electricians serving ${name} — 24/7 emergencies, fixed online pricing, and professional certification on every job.`;
 }
 
 function buildParagraphs(name, regionLabel) {
@@ -114,11 +130,12 @@ export function buildLocationRecord(name) {
       eyebrow: `${regionLabel} coverage`,
       title: "Emergency electrician in",
       titleAccent: name,
-      description: `NICEIC-approved electricians serving ${name} — 24/7 emergencies, fixed online pricing, and professional certification on every job.`,
+      lead: buildLocationHeroLead(name),
     },
     highlights: ["24/7 emergencies", "NICEIC approved", "Fixed online pricing"],
     paragraphs: buildParagraphs(name, regionLabel),
     whyChoose: WHY_CHOOSE,
+    commonJobs: LOCATION_COMMON_JOBS,
     responseNote:
       "Emergency attendance across the East Midlands is typically within 60–90 minutes, subject to engineer availability and traffic.",
     servicesIntro: `Electrical services available in ${name}`,
@@ -170,7 +187,21 @@ export function getRelatedLocations(location, limit = 6) {
   );
 }
 
+export function getLocationShareImageUrl(location) {
+  const raw = location?.image;
+  if (!raw || typeof raw !== "string") return getOgImageUrl();
+  const trimmed = raw.trim();
+  if (!trimmed) return getOgImageUrl();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return absoluteSiteUrl(trimmed);
+  return absoluteCmsUrl(trimmed);
+}
+
 export function buildLocationMetadata(location) {
+  const imageUrl = getLocationShareImageUrl(location);
+  const imageAlt =
+    location.imageAlt || `Electrician in ${location.name} — Urgent Electrical Services`;
+
   return {
     title: location.metaTitle,
     description: location.metaDescription,
@@ -182,12 +213,20 @@ export function buildLocationMetadata(location) {
       siteName: "Urgent Electrical Services",
       title: location.metaTitle,
       description: location.metaDescription,
-      images: [{ url: `${SITE}${location.image}`, alt: location.imageAlt }],
+      images: [
+        {
+          url: imageUrl,
+          width: LOCATION_OG_IMAGE_WIDTH,
+          height: LOCATION_OG_IMAGE_HEIGHT,
+          alt: imageAlt,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: location.metaTitle,
       description: location.metaDescription,
+      images: [imageUrl],
     },
     alternates: { canonical: location.canonicalUrl },
   };
@@ -205,6 +244,12 @@ export function buildLocationJsonLd(location) {
         description: location.metaDescription,
         isPartOf: { "@id": `${SITE}/#website` },
         about: { "@type": "Place", name: location.name },
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: getLocationShareImageUrl(location),
+          width: LOCATION_OG_IMAGE_WIDTH,
+          height: LOCATION_OG_IMAGE_HEIGHT,
+        },
       },
       {
         "@type": "ElectricalContractor",

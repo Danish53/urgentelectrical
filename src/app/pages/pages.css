@@ -593,6 +593,10 @@
   margin-bottom: 0.9rem;
 }
 
+.home1-page-detail-card-head--no-num {
+  gap: 0;
+}
+
 .home1-page-detail-card-num {
   flex-shrink: 0;
   font-size: 0.75rem;

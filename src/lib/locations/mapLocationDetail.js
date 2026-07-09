@@ -1,5 +1,5 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
-import { buildLocationRecord } from "@/data/locationDetails";
+import { buildLocationHeroLead, buildLocationRecord } from "@/data/locationDetails";
 import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
@@ -191,6 +191,10 @@ export function mapLocationDetailFromApi(payload) {
 
   const paragraphs = parseParagraphs(root.description, name, regionLabel, fallback.paragraphs);
   const whyChoose = parseWhyChoose(root.why_choose ?? root.whyChoose, fallback.whyChoose);
+  const commonJobs = parseWhyChoose(
+    root.common_signs ?? root.commonSigns ?? root.common_jobs ?? root.commonJobs,
+    fallback.commonJobs,
+  );
   const faqs = parseFaqs(root.faqs, name, regionLabel, fallback.faqs);
   const metaTitle = String(root.main_title ?? root.mainTitle ?? fallback.metaTitle).trim();
   const metaDescription =
@@ -209,13 +213,12 @@ export function mapLocationDetailFromApi(payload) {
       eyebrow: `${regionLabel} coverage`,
       title: heroParts.title,
       titleAccent: heroParts.titleAccent,
-      description:
-        stripHtml(root.description) ||
-        `NICEIC-approved electricians serving ${name} — 24/7 emergencies, fixed online pricing, and professional certification on every job.`,
+      lead: buildLocationHeroLead(name),
     },
     highlights: fallback.highlights,
     paragraphs,
     whyChoose,
+    commonJobs,
     responseNote: fallback.responseNote,
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),

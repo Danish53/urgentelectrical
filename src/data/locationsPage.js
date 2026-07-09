@@ -1,4 +1,4 @@
-import { getSiteUrl } from "@/lib/siteUrl";
+import { getOgImageUrl, getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 
 const SITE = getSiteUrl();
 
@@ -138,11 +138,20 @@ export function buildLocationsMetadata() {
       siteName: "Urgent Electrical Services",
       title: "Areas We Cover | Urgent Electrical",
       description: LOCATIONS_HERO.description,
+      images: [
+        {
+          url: OG_IMAGE_PATH,
+          width: 1200,
+          height: 630,
+          alt: "Urgent Electrical service areas across the East Midlands",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: "Service areas | Urgent Electrical Nottingham",
       description: LOCATIONS_HERO.description,
+      images: [getOgImageUrl()],
     },
     alternates: { canonical: LOCATIONS_CANONICAL },
   };

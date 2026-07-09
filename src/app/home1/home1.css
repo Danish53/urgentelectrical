@@ -6713,16 +6713,16 @@
 }
 
 .home1-location-detail-lead {
-  margin: 0 0 1.25rem;
-  max-width: 36rem;
-  font-size: 15px;
-  line-height: 1.65;
-  color: rgba(255, 255, 255, 0.78);
+  margin: 0.75rem 0 1.25rem;
+  max-width: 40rem;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 @media (min-width: 640px) {
   .home1-location-detail-lead {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 

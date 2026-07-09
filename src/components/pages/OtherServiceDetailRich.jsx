@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -11,34 +10,33 @@ import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { SERVICE_AREAS, getAreaLocationHref } from "@/data/areas";
 import { IconCheck, IconPhone } from "@/components/home1/icons";
+import PageDetailFaq from "@/components/common/PageDetailFaq";
 
-function PageDetailFaq({ faqs }) {
-  const [openId, setOpenId] = useState(-1);
-  if (!faqs?.length) return null;
+function formatSectionNumber(index) {
+  return String(index).padStart(2, "0");
+}
 
-  return (
-    <div className="home1-page-detail-faq">
-      {faqs.map((item, i) => {
-        const isOpen = openId === i;
-        return (
-          <div key={item.q} data-open={isOpen} className="home1-faq-item home1-page-detail-faq-item">
-            <button
-              type="button"
-              onClick={() => setOpenId(isOpen ? -1 : i)}
-              className="home1-faq-trigger home1-page-detail-faq-trigger"
-              aria-expanded={isOpen}
-            >
-              <span>{item.q}</span>
-              <span className="home1-page-detail-faq-icon" aria-hidden="true">
-                +
-              </span>
-            </button>
-            {isOpen ? <p className="home1-page-detail-faq-answer">{item.a}</p> : null}
-          </div>
-        );
-      })}
-    </div>
-  );
+/**
+ * @param {NonNullable<import("@/data/pageDetailMocks").getPageDetailLayout extends (...args: unknown[]) => infer R ? R : never>} layout
+ */
+function buildPageSectionNumbers(layout) {
+  /** @type {Record<string, string>} */
+  const numbers = {};
+  let index = 0;
+
+  const assign = (key) => {
+    index += 1;
+    numbers[key] = formatSectionNumber(index);
+  };
+
+  if (layout.paragraphs.length) assign("overview");
+  if (layout.features.length) assign("benefits");
+  if (layout.process.length) assign("process");
+  if (layout.symptoms.length) assign("symptoms");
+  assign("areas");
+  if (layout.faqs.length) assign("faqs");
+
+  return numbers;
 }
 
 /**
@@ -59,12 +57,13 @@ export default function OtherServiceDetailRich({
 }) {
   const heroImage = imageUrl || layout.image;
   const related = relatedLinks.length ? relatedLinks : layout.related;
-  const isApiPage = layout.source === "other-services";
+  const sectionNumbers = buildPageSectionNumbers(layout);
   const sections = [
     layout.paragraphs.length ? { id: "overview", label: "Overview" } : null,
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
     layout.process.length ? { id: "process", label: "How it works" } : null,
     layout.symptoms.length ? { id: "symptoms", label: "Common signs" } : null,
+    { id: "areas", label: "Areas we cover" },
     layout.faqs.length ? { id: "faqs", label: "FAQs" } : null,
   ].filter(Boolean);
 
@@ -146,7 +145,7 @@ export default function OtherServiceDetailRich({
                 {layout.paragraphs.length ? (
                 <article className="home1-page-detail-card" id="overview">
                   <header className="home1-page-detail-card-head">
-                    <span className="home1-page-detail-card-num">01</span>
+                    <span className="home1-page-detail-card-num">{sectionNumbers.overview}</span>
                     <div>
                       <h2>Overview</h2>
                       <p>What this service covers and when to book</p>
@@ -170,7 +169,7 @@ export default function OtherServiceDetailRich({
                 {layout.features.length ? (
                   <section className="home1-page-detail-card" id="benefits">
                     <header className="home1-page-detail-card-head">
-                      <span className="home1-page-detail-card-num">02</span>
+                      <span className="home1-page-detail-card-num">{sectionNumbers.benefits}</span>
                       <div>
                         <h2>Why choose us</h2>
                         <p>Structured diagnosis from qualified engineers</p>
@@ -190,7 +189,7 @@ export default function OtherServiceDetailRich({
                 {layout.process.length ? (
                   <section className="home1-page-detail-card" id="process">
                     <header className="home1-page-detail-card-head">
-                      <span className="home1-page-detail-card-num">03</span>
+                      <span className="home1-page-detail-card-num">{sectionNumbers.process}</span>
                       <div>
                         <h2>How it works</h2>
                         <p>From your call to a clear repair plan</p>
@@ -213,7 +212,7 @@ export default function OtherServiceDetailRich({
                 {layout.symptoms.length ? (
                   <section className="home1-page-detail-card home1-page-detail-card--muted" id="symptoms">
                     <header className="home1-page-detail-card-head">
-                      <span className="home1-page-detail-card-num">04</span>
+                      <span className="home1-page-detail-card-num">{sectionNumbers.symptoms}</span>
                       <div>
                         <h2>Common signs you need fault finding</h2>
                         <p>Book an investigation if you notice any of the following</p>
@@ -249,7 +248,7 @@ export default function OtherServiceDetailRich({
 
                 <section className="home1-page-detail-card home1-page-detail-card--areas" id="areas">
                   <header className="home1-page-detail-card-head">
-                    <span className="home1-page-detail-card-num">06</span>
+                    <span className="home1-page-detail-card-num">{sectionNumbers.areas}</span>
                     <div>
                       <h2>Areas we cover</h2>
                       <p>Nottingham, Nottinghamshire &amp; the East Midlands</p>
@@ -275,7 +274,7 @@ export default function OtherServiceDetailRich({
                 {layout.faqs.length ? (
                   <section className="home1-page-detail-card" id="faqs">
                     <header className="home1-page-detail-card-head">
-                      <span className="home1-page-detail-card-num">07</span>
+                      <span className="home1-page-detail-card-num">{sectionNumbers.faqs}</span>
                       <div>
                         <h2>Frequently asked questions</h2>
                         <p>Before you book your visit</p>
