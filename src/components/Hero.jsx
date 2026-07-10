@@ -176,7 +176,7 @@ export default function Hero() {
           className="font-sans text-[28px] sm:text-[40px] lg:text-[48px] text-white leading-[1.1] tracking-tight mb-5"
           style={{ fontWeight: 800 }}
         >
-          Book a trusted electrician <span className="text-[#ff5a3c]">in minutes</span>
+          Book a trusted electrician online <span className="text-[#ff5a3c]">in minutes</span>
         </motion.h1>
 
         <motion.p

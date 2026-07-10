@@ -1,5 +1,5 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
-import { buildLocationHeroLead, buildLocationRecord } from "@/data/locationDetails";
+import { buildLocationRecord } from "@/data/locationDetails";
 import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
@@ -160,6 +160,20 @@ function buildServicesOffered() {
 }
 
 /**
+ * @param {Record<string, unknown>} root
+ * @param {string} fallback
+ */
+function parseHeroLead(root, fallback) {
+  const raw =
+    (typeof root.short_description === "string" && root.short_description.trim()) ||
+    (typeof root.shortDescription === "string" && root.shortDescription.trim()) ||
+    "";
+  if (!raw || raw.toLowerCase() === "null") return fallback;
+  const text = stripHtml(raw);
+  return text || fallback;
+}
+
+/**
  * @param {unknown} payload
  */
 export function mapLocationDetailFromApi(payload) {
@@ -215,7 +229,7 @@ export function mapLocationDetailFromApi(payload) {
       eyebrow: `${regionLabel} coverage`,
       title: heroParts.title,
       titleAccent: heroParts.titleAccent,
-      lead: buildLocationHeroLead(name),
+      lead: parseHeroLead(root, fallback.hero.lead),
     },
     highlights: fallback.highlights,
     paragraphs,
