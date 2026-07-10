@@ -27,6 +27,9 @@ export default function HomePageClient() {
       <main id="main-content" className="w-full min-w-0">
         <Hero />
         <MotionSection variant="fade-up">
+          <HowItWorksHome1 />
+        </MotionSection>
+        <MotionSection variant="fade-up">
           <TrustedCertificationsHome1 />
         </MotionSection>
         <CompanyStatsHome1 />
@@ -44,9 +47,6 @@ export default function HomePageClient() {
         </MotionSection>
         <MotionSection variant="fade-up">
           <ProjectsHome1 />
-        </MotionSection>
-        <MotionSection variant="fade-up" delay={0.06}>
-          <HowItWorksHome1 />
         </MotionSection>
         <MotionSection variant="fade-up">
           <TestimonialsHome1 />

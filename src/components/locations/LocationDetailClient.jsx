@@ -130,22 +130,7 @@ export default function LocationDetailClient({ location }) {
                   <p className="home1-location-detail-response">{location.responseNote}</p>
                 </article>
 
-                {location.whyChoose.length > 0 ? (
-                <article id="why" className="home1-location-detail-block">
-                  <h2 className="home1-location-detail-h2">Why choose Urgent Electrical</h2>
-                  <ul className="home1-location-detail-why-grid list-none p-0 m-0">
-                    {location.whyChoose.map((item) => (
-                      <li key={item}>
-                        <span className="home1-location-detail-why-icon" aria-hidden="true">
-                          <IconCheck className="w-4 h-4" />
-                        </span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
-                ) : null}
-
+                
                 {location.commonJobs.length > 0 ? (
                 <article id="jobs" className="home1-location-detail-block">
                   <h2 className="home1-location-detail-h2">
@@ -163,6 +148,23 @@ export default function LocationDetailClient({ location }) {
                   </ul>
                 </article>
                 ) : null}
+
+                {location.whyChoose.length > 0 ? (
+                <article id="why" className="home1-location-detail-block">
+                  <h2 className="home1-location-detail-h2">Why choose Urgent Electrical</h2>
+                  <ul className="home1-location-detail-why-grid list-none p-0 m-0">
+                    {location.whyChoose.map((item) => (
+                      <li key={item}>
+                        <span className="home1-location-detail-why-icon" aria-hidden="true">
+                          <IconCheck className="w-4 h-4" />
+                        </span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                ) : null}
+
 
                 {location.faqs.length > 0 ? (
                 <article id="faqs" className="home1-location-detail-block">
