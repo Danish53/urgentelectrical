@@ -15,6 +15,7 @@ import SectionHeader from "@/components/home1/SectionHeader";
 import { SECTION_PY, SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+import { SERVICE_AREAS, getAreaLocationHref } from "@/data/areas";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { getVariantById } from "@/lib/services/buildBookableServiceFromDetail";
@@ -400,6 +401,28 @@ function buildContentSections(service) {
     });
   }
 
+  items.push({
+    id: "areas",
+    title: "Areas we cover",
+    subtitle: "Nottingham, Nottinghamshire & the East Midlands",
+    render: () => (
+      <>
+        <ul className="home1-service-detail-areas list-none p-0 m-0">
+          {SERVICE_AREAS.map((area) => (
+            <li key={area}>
+              <Link href={getAreaLocationHref(area)} className="home1-service-detail-areas-item">
+                {area}
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <Link href="/locations" className="home1-service-detail-areas-link">
+          View all locations →
+        </Link>
+      </>
+    ),
+  });
+
   if ((service.faqs?.length ?? 0) > 0) {
     items.push({
       id: "faqs",
@@ -438,6 +461,7 @@ function ServiceDetailJumpNav({ sections }) {
     about: "Overview",
     included: "Included",
     benefits: "Benefits",
+    areas: "Areas we cover",
     faqs: "FAQs",
   };
 

@@ -214,7 +214,7 @@ export default function OtherServiceDetailRich({
                     <header className="home1-page-detail-card-head">
                       <span className="home1-page-detail-card-num">{sectionNumbers.symptoms}</span>
                       <div>
-                        <h2>Common signs you need fault finding</h2>
+                        <h2>Common signs you need {layout.title}</h2>
                         <p>Book an investigation if you notice any of the following</p>
                       </div>
                     </header>

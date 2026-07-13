@@ -29,9 +29,6 @@ export default function HomePageClient() {
         <MotionSection variant="fade-up">
           <HowItWorksHome1 />
         </MotionSection>
-        <MotionSection variant="fade-up">
-          <TrustedCertificationsHome1 />
-        </MotionSection>
         <CompanyStatsHome1 />
         <MotionSection variant="fade-up">
           <FeaturedServicesHome1 compact />
@@ -47,6 +44,9 @@ export default function HomePageClient() {
         </MotionSection>
         <MotionSection variant="fade-up">
           <ProjectsHome1 />
+        </MotionSection>
+        <MotionSection variant="fade-up">
+          <TrustedCertificationsHome1 />
         </MotionSection>
         <MotionSection variant="fade-up">
           <TestimonialsHome1 />

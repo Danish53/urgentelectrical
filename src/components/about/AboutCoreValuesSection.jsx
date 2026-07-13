@@ -65,7 +65,7 @@ function ValuesHub() {
               <path d="M13 2L3 14h8l-1 8 10-12h-7l1-8z" />
             </svg>
           </span>
-          <p className="home1-about-values-hub__eyebrow">Since 2012</p>
+          <p className="home1-about-values-hub__eyebrow">Since 2014</p>
           <p className="home1-about-values-hub__label">NICEIC approved</p>
         </div>
       </div>

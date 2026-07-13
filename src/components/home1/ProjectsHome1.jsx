@@ -43,7 +43,7 @@ export default function ProjectsHome1() {
         <SectionHeader
           id="home-projects-heading"
           eyebrow="Recent projects"
-          title="Recent work across Nottingham"
+          title="Recent Work across Nottingham & East Midlands"
           description="A snapshot of domestic upgrades, commercial testing, and emergency repairs completed by our team."
           align="center"
         />

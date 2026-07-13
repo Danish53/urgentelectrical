@@ -8,7 +8,7 @@ export const LOCATIONS_HERO = {
   title: "Areas we",
   titleAccent: "cover",
   description:
-    "Emergency electricians across Nottingham, Derby, Leicester, Lincoln and the wider East Midlands — 24/7 response and fixed pricing.",
+    "From Nottingham city centre to surrounding towns and villages, we proudly serve communities throughout the region — browse the areas we regularly attend.",
   highlights: ["24/7 cover", "NICEIC approved", "Fast response"],
 };
 
@@ -18,7 +18,6 @@ export const LOCATIONS_INTRO = {
   paragraphs: [
     "At Urgent Electrical, we are proud to be your trusted local electricians, offering a comprehensive range of electrical services to homes and businesses across Nottingham and the East Midlands. With years of experience and a team of fully qualified, NICEIC-approved electricians, we are committed to delivering safe, reliable, and high-quality electrical solutions.",
     "Whether you need an emergency electrician in the middle of the night, a routine electrical inspection, or a full rewire, our expert team is here to help. We understand the importance of keeping your property safe and powered — which is why we offer 24/7 emergency call-outs, transparent pricing, and professional workmanship on every job.",
-    "From Nottingham city centre to surrounding towns and villages, we proudly serve communities throughout the region. Use the search below to check coverage in your postcode, then browse the areas we regularly attend.",
   ],
 };
 

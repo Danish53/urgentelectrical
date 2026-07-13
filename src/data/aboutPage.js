@@ -8,8 +8,8 @@ export const ABOUT_HERO = {
   title: "About Urgent Electrical",
   titleAccent: "Services",
   description:
-    "Trusted NICEIC approved electricians in Nottingham since 2012 — 24/7 emergency response, fixed pricing, and quality workmanship across the East Midlands.",
-  highlights: ["Est. 2012", "NICEIC approved", "24/7 emergency"],
+    "Trusted NICEIC approved electricians in Nottingham since 2014 — 24/7 emergency response, fixed pricing, and quality workmanship across the East Midlands.",
+  highlights: ["Est. 2014", "NICEIC approved", "24/7 emergency"],
 };
 
 export const ABOUT_JOURNEY_IMAGE = {
@@ -23,7 +23,7 @@ export const ABOUT_JOURNEY_IMAGE = {
 export const ABOUT_JOURNEY = {
   beganTitle: "How We Began Our Journey",
   beganParagraphs: [
-    "Urgent Electrical Services was founded in 2012 with a simple goal — to provide fast, reliable, and high-quality electrical services to homes and businesses across Nottingham and the East Midlands.",
+    "Urgent Electrical Services was founded in 2014 with a simple goal — to provide fast, reliable, and high-quality electrical services to homes and businesses across Nottingham and the East Midlands.",
     "Starting as a small, dedicated team of skilled electricians, we focused on building a reputation for trust, professionalism, and excellent customer service. From our first job to now, our commitment to safety, quality workmanship, and 24/7 availability has remained at the core of everything we do.",
     "Today, Urgent Electrical Services is proud to be a trusted name in the region, known for dependability, expertise, and a customer-first approach — continuing to power homes and businesses safely and efficiently.",
   ],
@@ -80,7 +80,7 @@ export const ABOUT_CORE_VALUES = {
       id: "improvement",
       title: "Continuous Improvement",
       description:
-        "Since 2012, we've continued to grow by embracing new technologies, training, and best practices to provide the most efficient and modern electrical solutions.",
+        "Since 2014, we've continued to grow by embracing new technologies, training, and best practices to provide the most efficient and modern electrical solutions.",
       icon: "bulb",
     },
   ],
@@ -88,9 +88,9 @@ export const ABOUT_CORE_VALUES = {
 
 export function buildAboutMetadata() {
   return {
-    title: "About Us | NICEIC Electricians Nottingham Since 2012",
+    title: "About Us | NICEIC Electricians Nottingham Since 2014",
     description:
-      "Learn about Urgent Electrical Services — founded in 2012, NICEIC approved, 24/7 emergency electricians serving Nottingham and the East Midlands with safety, reliability, and transparent pricing.",
+      "Learn about Urgent Electrical Services — founded in 2014, NICEIC approved, 24/7 emergency electricians serving Nottingham and the East Midlands with safety, reliability, and transparent pricing.",
     keywords: [
       "about Urgent Electrical",
       "electrician Nottingham company",
@@ -146,7 +146,7 @@ export const ABOUT_JSON_LD = {
       "@type": "ElectricalContractor",
       "@id": `${SITE}/#organization`,
       name: "Urgent Electrical Services",
-      foundingDate: "2012",
+      foundingDate: "2014",
       url: SITE,
       description: ABOUT_HERO.description,
       areaServed: ["Nottingham", "Nottinghamshire", "East Midlands"],
