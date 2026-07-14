@@ -55,7 +55,7 @@ function SocialIcon({ id }) {
 function FooterLinkList({ title, links }) {
   return (
     <div>
-      <h3 className="text-[#888888] text-[11px] font-semibold uppercase tracking-[0.14em] mb-4">{title}</h3>
+      <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4">{title}</h3>
       <ul className="space-y-2.5">
         {links.map((link) => (
           <li key={link.label}>
@@ -139,7 +139,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="text-white font-bold text-sm mb-4">Services</h3>
+            <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4">Services</h3>
             <FooterServicesLinks />
           </div>
           <FooterLinkList title="Company" links={FOOTER_COMPANY} />
