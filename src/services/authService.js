@@ -5,6 +5,7 @@ const AUTH_PROXY = {
   login: "/api/auth/login",
   forgotPassword: "/api/auth/forgot-password",
   verifyOtp: "/api/auth/verify-otp",
+  verifyLoginOtp: "/api/auth/verify-login-otp",
   resetPassword: "/api/auth/reset-password",
 };
 
@@ -53,6 +54,11 @@ export function forgotPassword(payload) {
 /** @param {{ email: string, otp: string }} payload */
 export function verifyOtp(payload) {
   return sameOriginJsonPost(AUTH_PROXY.verifyOtp, payload);
+}
+
+/** @param {{ email: string, otp: string }} payload */
+export function verifyLoginOtp(payload) {
+  return sameOriginJsonPost(AUTH_PROXY.verifyLoginOtp, payload);
 }
 
 /** @param {{ email: string, otp: string, password: string, password_confirmation: string }} payload */

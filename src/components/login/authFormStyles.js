@@ -7,3 +7,7 @@ export const AUTH_INPUT_CLASS =
 export const AUTH_STORAGE_EMAIL = "auth_reset_email";
 export const AUTH_STORAGE_OTP = "auth_reset_otp";
 export const AUTH_STORAGE_OTP_OK = "auth_otp_verified";
+/** "login" | "reset" — which OTP flow is active */
+export const AUTH_STORAGE_PURPOSE = "auth_otp_purpose";
+/** Temporary password for login-OTP resend only (sessionStorage) */
+export const AUTH_STORAGE_LOGIN_PASSWORD = "auth_login_pending_password";

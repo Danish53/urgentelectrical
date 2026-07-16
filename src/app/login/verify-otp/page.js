@@ -1,5 +1,4 @@
-import AuthLayout from "@/components/login/AuthLayout";
-import VerifyOtpForm from "@/components/login/VerifyOtpForm";
+import VerifyOtpPageClient from "@/components/login/VerifyOtpPageClient";
 import { buildVerifyOtpMetadata } from "@/data/authPages";
 import { getSiteUrl } from "@/lib/siteUrl";
 import "../../home1/home1.css";
@@ -15,9 +14,5 @@ export const metadata = {
 };
 
 export default function VerifyOtpPage() {
-  return (
-    <AuthLayout authStep={2} showSteps>
-      <VerifyOtpForm />
-    </AuthLayout>
-  );
+  return <VerifyOtpPageClient />;
 }

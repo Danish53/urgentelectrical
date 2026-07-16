@@ -30,6 +30,15 @@ const ACTIONS = {
       return { email, otp };
     },
   },
+  "verify-login-otp": {
+    upstream: AUTH_API.verifyLoginOtp,
+    pick: (body) => {
+      const email = typeof body.email === "string" ? body.email.trim() : "";
+      const otp = typeof body.otp === "string" ? body.otp.trim() : "";
+      if (!email || !otp) return null;
+      return { email, otp };
+    },
+  },
   "reset-password": {
     upstream: AUTH_API.resetPassword,
     pick: (body) => {

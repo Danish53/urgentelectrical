@@ -7,7 +7,7 @@ import { selectResetFlow } from "@/store/selectors/authSelectors";
 import { hydrateResetFlow } from "@/store/slices/authSlice";
 
 /**
- * Ensures password-reset flow state is hydrated before route guards run.
+ * Ensures OTP / password-reset flow state is hydrated before route guards run.
  * @param {{ requireEmail?: boolean, requireOtp?: boolean }} options
  */
 export function useResetFlowGuard({ requireEmail = false, requireOtp = false } = {}) {
@@ -25,7 +25,9 @@ export function useResetFlowGuard({ requireEmail = false, requireOtp = false } =
     if (!ready) return;
 
     if (requireEmail && !resetFlow.email) {
-      router.replace("/login/forgot-password");
+      const fallback =
+        resetFlow.purpose === "login" ? "/login" : "/login/forgot-password";
+      router.replace(fallback);
       return;
     }
 

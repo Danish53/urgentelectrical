@@ -7552,6 +7552,14 @@
   color: #64748b;
 }
 
+.home1-auth-email-plain {
+  pointer-events: none;
+  user-select: text;
+  text-decoration: none !important;
+  cursor: default;
+  color: inherit;
+}
+
 .home1-login-form {
   display: flex;
   flex-direction: column;

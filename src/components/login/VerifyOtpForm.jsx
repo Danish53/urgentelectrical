@@ -6,11 +6,15 @@ import { useRouter } from "next/navigation";
 import { useResetFlowGuard } from "@/hooks/useResetFlowGuard";
 import { toastError, toastSuccess } from "@/lib/toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { selectForgotPasswordStatus, selectVerifyOtpStatus } from "@/store/selectors/authSelectors";
+import { selectForgotPasswordStatus, selectLoginStatus, selectVerifyOtpStatus } from "@/store/selectors/authSelectors";
 import {
   clearForgotPasswordError,
+  clearLoginError,
   clearVerifyOtpError,
+  getPendingLoginPassword,
+  loginUser,
   requestPasswordReset,
+  verifyLoginOtp,
   verifyResetOtp,
 } from "@/store/slices/authSlice";
 
@@ -21,6 +25,7 @@ export default function VerifyOtpForm() {
   const dispatch = useAppDispatch();
   const verifyStatus = useAppSelector(selectVerifyOtpStatus);
   const resendStatus = useAppSelector(selectForgotPasswordStatus);
+  const loginStatus = useAppSelector(selectLoginStatus);
   const { ready, resetFlow } = useResetFlowGuard({ requireEmail: true });
 
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
@@ -28,8 +33,9 @@ export default function VerifyOtpForm() {
   const inputRefs = useRef([]);
 
   const email = resetFlow.email;
+  const isLoginOtp = resetFlow.purpose === "login";
   const verifying = verifyStatus === "loading";
-  const resending = resendStatus === "loading";
+  const resending = isLoginOtp ? loginStatus === "loading" : resendStatus === "loading";
   const loading = verifying || resending;
 
   useEffect(() => {
@@ -80,7 +86,20 @@ export default function VerifyOtpForm() {
     }
 
     if (!email) {
-      router.replace("/login/forgot-password");
+      router.replace(isLoginOtp ? "/login" : "/login/forgot-password");
+      return;
+    }
+
+    if (isLoginOtp) {
+      const result = await dispatch(verifyLoginOtp({ email, otp: code }));
+
+      if (verifyLoginOtp.fulfilled.match(result)) {
+        toastSuccess(result.payload.message || "Signed in successfully.");
+        router.replace("/");
+        return;
+      }
+
+      toastError(result.payload, "Invalid or expired code. Please try again.");
       return;
     }
 
@@ -100,8 +119,29 @@ export default function VerifyOtpForm() {
 
     setDigits(Array(OTP_LENGTH).fill(""));
     setLocalError("");
-    dispatch(clearForgotPasswordError());
 
+    if (isLoginOtp) {
+      const password = getPendingLoginPassword();
+      if (!password) {
+        toastError(null, "Please sign in again to receive a new code.");
+        router.replace("/login");
+        return;
+      }
+
+      dispatch(clearLoginError());
+      const result = await dispatch(loginUser({ email, password }));
+
+      if (loginUser.fulfilled.match(result)) {
+        toastSuccess(result.payload.message || "A new code has been sent to your email.");
+        inputRefs.current[0]?.focus();
+        return;
+      }
+
+      toastError(result.payload, "Could not resend code. Please try again.");
+      return;
+    }
+
+    dispatch(clearForgotPasswordError());
     const result = await dispatch(requestPasswordReset({ email }));
 
     if (requestPasswordReset.fulfilled.match(result)) {
@@ -127,7 +167,12 @@ export default function VerifyOtpForm() {
         <h1 className="home1-login-form-title">Verify code</h1>
         <p className="home1-login-form-lead">
           Enter the 6-digit code we sent to{" "}
-          {email ? <strong className="text-[#111827]">{email}</strong> : "your email"}.
+          {email ? (
+            <strong className="text-[#111827] home1-auth-email-plain">{email}</strong>
+          ) : (
+            "your email"
+          )}
+          .
         </p>
       </div>
 
@@ -160,8 +205,8 @@ export default function VerifyOtpForm() {
           ))}
         </div>
 
-        <button type="submit" className="home1-login-submit" disabled={verifying || resending}>
-          {verifying ? "Verifying…" : "Verify code"}
+        <button type="submit" className="home1-login-submit" disabled={loading}>
+          {verifying ? "Verifying…" : isLoginOtp ? "Verify & sign in" : "Verify code"}
         </button>
       </form>
 
@@ -178,12 +223,15 @@ export default function VerifyOtpForm() {
       </p>
 
       <p className="home1-login-register">
-        <Link href="/login/forgot-password" className="home1-login-register-link">
-          Change email
+        <Link
+          href={isLoginOtp ? "/login" : "/login/forgot-password"}
+          className="home1-login-register-link"
+        >
+          {isLoginOtp ? "Back to sign in" : "Change email"}
         </Link>
         {" · "}
         <Link href="/login" className="home1-login-register-link">
-          Back to sign in
+          {isLoginOtp ? "Need help?" : "Back to sign in"}
         </Link>
       </p>
     </div>

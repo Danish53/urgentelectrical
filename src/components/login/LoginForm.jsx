@@ -24,6 +24,7 @@ export default function LoginForm() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    e.stopPropagation();
     setLocalError("");
     dispatch(clearLoginError());
 
@@ -36,8 +37,8 @@ export default function LoginForm() {
     const result = await dispatch(loginUser({ email: trimmedEmail, password }));
 
     if (loginUser.fulfilled.match(result)) {
-      toastSuccess(result.payload.message || "Signed in successfully.");
-      router.replace("/");
+      toastSuccess(result.payload.message || "Verification code sent. Please check your email.");
+      router.push("/login/verify-otp");
       return;
     }
 
@@ -51,7 +52,14 @@ export default function LoginForm() {
         <p className="home1-login-form-lead">Enter your account details to continue</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="home1-login-form" aria-label="Sign in form" noValidate>
+      <form
+        onSubmit={handleSubmit}
+        className="home1-login-form"
+        aria-label="Sign in form"
+        method="post"
+        action="#"
+        noValidate
+      >
         {localError ? (
           <p className="home1-login-error" role="alert">
             {localError}
