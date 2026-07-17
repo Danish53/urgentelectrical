@@ -1,4 +1,5 @@
 import { PARTNERS } from "@/data/partners";
+import { absoluteCmsUrl } from "@/lib/siteUrl";
 
 /**
  * @param {string} name
@@ -19,12 +20,16 @@ export function partnerIdFromName(name, index) {
 export function mapApiPartner(item, index) {
   const record = /** @type {Record<string, unknown>} */ (item ?? {});
   const name = String(record.partner_name ?? record.name ?? "Partner").trim() || "Partner";
-  const image = String(record.image ?? "").trim();
+  const rawImage = String(record.image ?? "").trim();
+  let image = null;
+  if (rawImage) {
+    image = /^https?:\/\//i.test(rawImage) ? rawImage : absoluteCmsUrl(rawImage);
+  }
 
   return {
     id: partnerIdFromName(name, index),
     name,
-    image: image || null,
+    image,
   };
 }
 

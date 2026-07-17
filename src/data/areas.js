@@ -2,7 +2,7 @@ import { slugify } from "@/lib/slugs";
 import { guessLocationSlug } from "@/lib/locations/resolveLocationSlug";
 
 /**
- * Display labels for "Areas we cover" on other-service detail pages.
+ * Display labels for "Areas we cover" on service / other-service detail pages.
  * Keys that need a different CMS location slug go in AREA_LOCATION_SLUG_OVERRIDES.
  */
 export const SERVICE_AREAS = [
@@ -21,30 +21,33 @@ export const SERVICE_AREAS = [
 ];
 
 /**
- * Static display name → CMS `/locations/{slug}` when slugify(name) does not match API.
- * Confirmed against portal locations API.
+ * Static display name → CMS `/locations/{slug}`.
+ * Use `null` when the portal has no published location row (avoid inventing a 404 slug).
  */
 export const AREA_LOCATION_SLUG_OVERRIDES = {
   "Nottingham City Centre": "nottingham",
-  /**
-   * Portal currently has no "Long Eaton" location row (`/locations/long-eaton` 404).
-   * Use the nearest live CMS area until Long Eaton is published, or replace with the real slug.
-   */
-  "Long Eaton": "breaston",
+  "Derby City Centre": "derby",
+  "Leicester City Centre": "leicester",
+  Arnold: "electrician-arnold-nottingham",
+  "Long Eaton": null,
+  Sandiacre: null,
+  Spondon: null,
+  Mickleover: null,
 };
 
 /**
  * @param {string} areaName
- * @returns {string}
+ * @returns {string} CMS slug, or "" when no live location page exists
  */
 export function getAreaLocationSlug(areaName) {
   const name = String(areaName ?? "").trim();
   if (!name) return "";
 
-  const override = AREA_LOCATION_SLUG_OVERRIDES[name];
-  if (override) return override;
+  if (Object.prototype.hasOwnProperty.call(AREA_LOCATION_SLUG_OVERRIDES, name)) {
+    const override = AREA_LOCATION_SLUG_OVERRIDES[name];
+    return typeof override === "string" && override.trim() ? override.trim() : "";
+  }
 
-  // Strips trailing "City Centre" so "Nottingham City Centre" → "nottingham"
   const guessed = guessLocationSlug(name);
   if (guessed) return guessed;
 

@@ -1,15 +1,16 @@
 import { getSiteUrl, getOgImageUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import { getPolicyImageUrl } from "@/services/policyApiService";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 export function buildPoliciesListingMetadata() {
   const site = getSiteUrl();
   const canonical = `${site}/policies`;
-  const title = "Policies | Privacy, Cookies & Terms";
+  const pageTitle = documentTitle("Policies | Privacy, Cookies & Terms");
   const description =
     "Read Urgent Electrical privacy policy, cookie policy, terms of service, and company legal information for customers in Nottingham and the East Midlands.";
 
   return {
-    title,
+    title: pageTitle,
     description,
     keywords: [
       "Urgent Electrical privacy policy",
@@ -22,7 +23,7 @@ export function buildPoliciesListingMetadata() {
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title,
+      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -35,7 +36,7 @@ export function buildPoliciesListingMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: pageTitle.absolute,
       description,
       images: [getOgImageUrl()],
     },
@@ -50,21 +51,21 @@ export function buildPoliciesListingMetadata() {
 export function buildPolicyDetailMetadata(policy) {
   const site = getSiteUrl();
   const canonical = `${site}/policies/${policy.slug}`;
-  const title = policy.seo_title?.trim() || policy.title;
+  const pageTitle = documentTitle(policy.seo_title?.trim() || policy.title);
   const description =
     policy.seo_description?.trim() ||
     `Read the full ${policy.title} for Urgent Electrical Services — NICEIC approved electricians in Nottingham and the East Midlands.`;
   const imageUrl = getPolicyImageUrl(policy) || getOgImageUrl();
 
   return {
-    title,
+    title: pageTitle,
     description,
     openGraph: {
       type: "article",
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title,
+      title: pageTitle.absolute,
       description,
       images: imageUrl
         ? [{ url: imageUrl, width: 1200, height: 630, alt: policy.title }]
@@ -72,7 +73,7 @@ export function buildPolicyDetailMetadata(policy) {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: pageTitle.absolute,
       description,
       images: imageUrl ? [imageUrl] : [getOgImageUrl()],
     },

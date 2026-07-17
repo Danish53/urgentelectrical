@@ -26,21 +26,24 @@ export default function FAQHome2() {
                   {item.q}
                   <span className="text-[var(--h2-red)] text-xl font-light shrink-0">{open ? "−" : "+"}</span>
                 </button>
-                {open && (
-                  <div className="px-5 pb-4 text-sm text-[var(--h2-muted)] leading-relaxed border-t border-[var(--h2-border)] pt-3">
-                    {item.phone ? (
-                      <>
-                        {item.a.split("0115 778 0622")[0]}
-                        <a href={`tel:${item.phone}`} className="text-[var(--h2-red)] font-semibold">
-                          0115 778 0622
-                        </a>
-                        {item.a.split("0115 778 0622")[1]}
-                      </>
-                    ) : (
-                      item.a
-                    )}
-                  </div>
-                )}
+                <div
+                  id={`home2-faq-answer-${item.id}`}
+                  role="region"
+                  hidden={!open}
+                  className="px-5 pb-4 text-sm text-[var(--h2-muted)] leading-relaxed border-t border-[var(--h2-border)] pt-3"
+                >
+                  {item.phone ? (
+                    <>
+                      {item.a.split("0115 778 0622")[0]}
+                      <a href={`tel:${item.phone}`} className="text-[var(--h2-red)] font-semibold">
+                        0115 778 0622
+                      </a>
+                      {item.a.split("0115 778 0622")[1]}
+                    </>
+                  ) : (
+                    item.a
+                  )}
+                </div>
               </div>
             );
           })}

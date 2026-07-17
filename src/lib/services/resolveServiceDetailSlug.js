@@ -18,13 +18,23 @@ export const DETAIL_SLUG_ALIASES = {
   "electrical-certificates-nottingham": "electrical-installation-condition-report-eicr",
 };
 
-/** Canonical mock slug → live services API slug */
+/** Canonical mock slug → live services API slug (public URLs / hrefs) */
 export const SERVICE_API_SLUG_OVERRIDES = {
   "emergency-response-24-7": "emergency-response-247",
   "fire-alarm-inspection-and-testing": "fire-alarm-inspection-testing",
   "emergency-lighting-periodic-inspection-and-testing":
     "emergency-lighting-periodic-inspection-testing-certificate",
 };
+
+/**
+ * Slug used in public `/services/{slug}` links (matches GET /services/{slug}).
+ * @param {string} [slug]
+ */
+export function toPublicServiceSlug(slug) {
+  const trimmed = String(slug ?? "").trim();
+  if (!trimmed) return "";
+  return SERVICE_API_SLUG_OVERRIDES[trimmed] ?? trimmed;
+}
 
 const SERVICE_DETAIL_SLUG_HINTS = [
   { hint: "eicr", key: "electrical-installation-condition-report-eicr" },

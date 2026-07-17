@@ -1,5 +1,6 @@
 import { getSiteUrl, getOgImageUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import { getPageImageUrl } from "@/services/pagesApiService";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 export function buildPagesListingMetadata() {
   const site = getSiteUrl();
@@ -9,7 +10,7 @@ export function buildPagesListingMetadata() {
     "Browse specialist electrical guides and informative service pages from Urgent Electrical — expert help across Nottingham and the East Midlands.";
 
   return {
-    title,
+    title: documentTitle(title),
     description,
     keywords: [
       "electrical guides Nottingham",
@@ -22,7 +23,7 @@ export function buildPagesListingMetadata() {
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title,
+      title: documentTitle(title).absolute,
       description,
       images: [
         {
@@ -35,7 +36,7 @@ export function buildPagesListingMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: documentTitle(title).absolute,
       description,
       images: [getOgImageUrl()],
     },
@@ -51,7 +52,8 @@ export function buildPageDetailMetadata(page) {
   const site = getSiteUrl();
   const slug = page.slug;
   const canonical = `${site}/pages/${slug}`;
-  const title = page.seo_title?.trim() || `${page.title} | Urgent Electrical`;
+  const rawTitle = page.seo_title?.trim() || page.title || "Electrical guide";
+  const pageTitle = documentTitle(rawTitle);
   const description =
     page.seo_description?.trim() ||
     page.description?.trim() ||
@@ -59,14 +61,14 @@ export function buildPageDetailMetadata(page) {
   const imageUrl = getPageImageUrl(page) || getOgImageUrl();
 
   return {
-    title,
+    title: pageTitle,
     description,
     openGraph: {
       type: "article",
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title,
+      title: pageTitle.absolute,
       description,
       images: imageUrl
         ? [{ url: imageUrl, width: 1200, height: 630, alt: page.title }]
@@ -74,7 +76,7 @@ export function buildPageDetailMetadata(page) {
     },
     twitter: {
       card: "summary_large_image",
-      title,
+      title: pageTitle.absolute,
       description,
       images: imageUrl ? [imageUrl] : [getOgImageUrl()],
     },

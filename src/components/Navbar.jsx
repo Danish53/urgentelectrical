@@ -105,12 +105,13 @@ function NavEngineerAvailability({ compact = false, className = "" }) {
     setAvailability(getEngineerAvailability());
   }, []);
 
+  // Night / limited — hide from navbar (shown on emergency service page instead).
+  if (availability.limited) return null;
+
   const text = compact ? availability.navTextCompact : availability.navText;
 
   return (
-    <span
-      className={`nav-availability${availability.limited ? " nav-availability--limited" : ""} ${className}`.trim()}
-    >
+    <span className={`nav-availability ${className}`.trim()}>
       <span className="nav-availability-dot-wrap" aria-hidden="true">
         <span className="nav-availability-dot" />
       </span>

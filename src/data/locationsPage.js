@@ -1,4 +1,5 @@
 import { getOgImageUrl, getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 const SITE = getSiteUrl();
 
@@ -119,8 +120,9 @@ export function getLocationsForFilter(filterId) {
 export const LOCATIONS_INITIAL_VISIBLE = 24;
 
 export function buildLocationsMetadata() {
+  const pageTitle = documentTitle("Service Areas | Electricians Nottingham");
   return {
-    title: "Service Areas | Electricians Nottingham & East Midlands",
+    title: pageTitle,
     description:
       "Urgent Electrical covers Nottingham, Derby, Leicester, Lincoln and the East Midlands. Find your area, check postcode availability, and book NICEIC approved electricians 24/7.",
     keywords: [
@@ -135,7 +137,7 @@ export function buildLocationsMetadata() {
       locale: "en_GB",
       url: LOCATIONS_CANONICAL,
       siteName: "Urgent Electrical Services",
-      title: "Areas We Cover | Urgent Electrical",
+      title: pageTitle.absolute,
       description: LOCATIONS_HERO.description,
       images: [
         {
@@ -148,7 +150,7 @@ export function buildLocationsMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title: "Service areas | Urgent Electrical Nottingham",
+      title: pageTitle.absolute,
       description: LOCATIONS_HERO.description,
       images: [getOgImageUrl()],
     },

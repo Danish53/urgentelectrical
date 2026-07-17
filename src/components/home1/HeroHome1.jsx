@@ -21,7 +21,7 @@ import {
 const MARQUEE_ITEMS = [
   "12-month warranty",
   "NICEIC Approved",
-  "1-hour response",
+  "60–90 min response",
   "24/7 always available",
   "Fully insured",
   "No hidden fees",
@@ -64,7 +64,7 @@ function HeroMarqueeHome1() {
 
 const HERO_STATS = [
   { value: "24/7", label: "Emergency" },
-  { value: "60 min", label: "Avg response" },
+  { value: "60-90 min", label: "Avg response" },
   { value: "NICEIC", label: "Approved" },
   { value: "2014", label: "Est. since" },
 ];
@@ -137,16 +137,18 @@ export default function HeroHome1() {
               </div>
             </motion.div> */}
 
-            <motion.div
-              variants={reduceMotion ? undefined : HERO_ITEM}
-              id="availabilityBadge"
-              className={`home1-hero-availability${availability.limited ? " home1-hero-availability--limited" : ""}`}
-            >
-              <span className="home1-hero-availability-dot" aria-hidden="true" />
-              <span id="availabilityText" className="home1-hero-availability-text">
-                {availability.heroText}
-              </span>
-            </motion.div>
+            {!availability.limited ? (
+              <motion.div
+                variants={reduceMotion ? undefined : HERO_ITEM}
+                id="availabilityBadge"
+                className="home1-hero-availability"
+              >
+                <span className="home1-hero-availability-dot" aria-hidden="true" />
+                <span id="availabilityText" className="home1-hero-availability-text">
+                  {availability.heroText}
+                </span>
+              </motion.div>
+            ) : null}
 
             <motion.h1
               id="home1-hero-heading"

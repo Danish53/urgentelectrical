@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/siteUrl";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 const SITE = getSiteUrl();
 
@@ -15,8 +16,9 @@ export const LOGIN_PANEL = {
 };
 
 export function buildLoginMetadata() {
+  const pageTitle = documentTitle("Sign in");
   return {
-    title: "Sign in | Urgent Electrical Services",
+    title: pageTitle,
     description:
       "Sign in to your Urgent Electrical customer account to manage bookings and access your electrical service history.",
     openGraph: {
@@ -24,7 +26,7 @@ export function buildLoginMetadata() {
       locale: "en_GB",
       url: LOGIN_CANONICAL,
       siteName: "Urgent Electrical Services",
-      title: "Sign in | Urgent Electrical",
+      title: pageTitle.absolute,
       description: "Customer portal sign-in for Urgent Electrical Services.",
     },
     alternates: { canonical: LOGIN_CANONICAL },

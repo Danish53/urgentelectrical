@@ -1,8 +1,11 @@
 import { LOCATION_AREAS_BY_REGION, LOCATION_FILTERS } from "@/data/locationsPage";
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
+import { getAreaLocationSlug } from "@/data/areas";
 import { slugify } from "@/lib/slugs";
+import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 
 import { absoluteCmsUrl, absoluteSiteUrl, getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 const SITE = getSiteUrl();
 
@@ -93,24 +96,37 @@ function titleFromSlug(slug) {
 }
 
 function buildServicesOffered() {
-  return TOP_SERVICE_SLUGS.map((slug) => ({
-    name: titleFromSlug(slug),
-    slug,
-    href: `/services/${slug}`,
-    priceIncVat: null,
-    tag: slug === "emergency-response-24-7" ? "Most Popular" : undefined,
-  }));
+  return TOP_SERVICE_SLUGS.map((slug) => {
+    const publicSlug = toPublicServiceSlug(slug);
+    return {
+      name: titleFromSlug(slug),
+      slug: publicSlug,
+      href: `/services/${publicSlug}`,
+      priceIncVat: null,
+      tag: slug === "emergency-response-24-7" ? "Most Popular" : undefined,
+    };
+  });
 }
 
 function getNearby(name, regionId, limit = 8) {
   const areas = LOCATION_AREAS_BY_REGION[regionId] ?? [];
+  const shortName = String(name ?? "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
   return areas
-    .filter((a) => a !== name)
-    .slice(0, limit)
+    .filter((areaName) => {
+      const lower = areaName.toLowerCase();
+      return lower !== String(name ?? "").toLowerCase() && lower !== shortName;
+    })
     .map((areaName) => {
-      const slug = slugify(areaName);
+      const slug = getAreaLocationSlug(areaName);
+      if (!slug) return null;
       return { name: areaName, slug, href: `/locations/${slug}` };
-    });
+    })
+    .filter(Boolean)
+    .slice(0, limit);
 }
 
 export function buildLocationRecord(name) {
@@ -144,7 +160,7 @@ export function buildLocationRecord(name) {
     mapEmbed: `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
     nearby: getNearby(name, regionId),
     bookHref: "/services",
-    metaTitle: `Electrician ${name} | 24/7 Emergency | Urgent Electrical`,
+    metaTitle: `Electrician ${name} | 24/7 Emergency`,
     metaDescription: `NICEIC approved electricians in ${name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Fixed prices — book online or call Urgent Electrical.`,
     keywords: [
       `electrician ${name}`,
@@ -212,8 +228,10 @@ export function buildLocationMetadata(location) {
       ? location.metaDescription
       : `NICEIC approved electricians in ${location.name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Book online with Urgent Electrical.`;
 
+  const pageTitle = documentTitle(location.metaTitle);
+
   return {
-    title: location.metaTitle,
+    title: pageTitle,
     description,
     keywords: location.keywords,
     openGraph: {
@@ -221,7 +239,7 @@ export function buildLocationMetadata(location) {
       locale: "en_GB",
       url: location.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: location.metaTitle,
+      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -234,7 +252,7 @@ export function buildLocationMetadata(location) {
     },
     twitter: {
       card: "summary_large_image",
-      title: location.metaTitle,
+      title: pageTitle.absolute,
       description,
       images: [imageUrl],
     },
@@ -243,6 +261,7 @@ export function buildLocationMetadata(location) {
 }
 
 export function buildLocationJsonLd(location) {
+  const pageTitle = documentTitle(location.metaTitle).absolute;
   return {
     "@context": "https://schema.org",
     "@graph": [
@@ -250,7 +269,7 @@ export function buildLocationJsonLd(location) {
         "@type": "WebPage",
         "@id": `${location.canonicalUrl}#webpage`,
         url: location.canonicalUrl,
-        name: location.metaTitle,
+        name: pageTitle,
         description: location.metaDescription,
         isPartOf: { "@id": `${SITE}/#website` },
         about: { "@type": "Place", name: location.name },

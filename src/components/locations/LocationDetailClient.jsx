@@ -69,8 +69,13 @@ export default function LocationDetailClient({ location }) {
                   id="location-detail-heading"
                   className="home1-location-detail-title"
                 >
-                  {location.hero.title}{" "}
-                  <span className="text-[#ff5a3c]">{location.hero.titleAccent}</span>
+                  {location.hero.title}
+                  {location.hero.titleAccent ? (
+                    <>
+                      {" "}
+                      <span className="text-[#ff5a3c]">{location.hero.titleAccent}</span>
+                    </>
+                  ) : null}
                 </h1>
 
                 <p className="home1-location-detail-lead">{location.hero.lead}</p>
@@ -127,7 +132,7 @@ export default function LocationDetailClient({ location }) {
                       <p key={para.slice(0, 40)}>{para}</p>
                     ))}
                   </div>
-                  <p className="home1-location-detail-response">{location.responseNote}</p>
+                  {/* <p className="home1-location-detail-response">{location.responseNote}</p> */}
                 </article>
 
                 
@@ -216,6 +221,32 @@ export default function LocationDetailClient({ location }) {
           </div>
         </section>
 
+        {location.mapEmbed ? (
+          <section
+            id="map"
+            className="home1-location-detail-map"
+            aria-labelledby="location-map-heading"
+          >
+            <div className={SERVICES_PAGE_CONTAINER}>
+              <h2 id="location-map-heading" className="home1-location-detail-h2">
+                Find us in {location.name}
+              </h2>
+              <p className="home1-location-detail-sub">
+                Coverage map for {location.name} and surrounding areas
+              </p>
+              <div className="home1-location-detail-map-frame">
+                <iframe
+                  title={`Map of ${location.name}`}
+                  src={location.mapEmbed}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {/* Services in this area */}
         <section
           className="home1-location-detail-services"
@@ -252,7 +283,7 @@ export default function LocationDetailClient({ location }) {
           </div>
         </section>
 
-        <LocationRelatedAreas currentSlug={location.slug} />
+        <LocationRelatedAreas currentSlug={location.slug} areas={location.nearby} />
 
         <CTAHome1 bookHref={location.bookHref} />
       </main>

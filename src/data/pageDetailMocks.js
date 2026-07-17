@@ -224,29 +224,41 @@ export const PAGE_SLUG_META = {
 };
 
 const RELATED_LINKS = [
-  { slug: "emergency-response-24-7", label: "Emergency Electrician", href: "/pages/emergency-response-24-7" },
+  {
+    slug: "emergency-response-247",
+    label: "Emergency Electrician",
+    href: "/services/emergency-response-247",
+  },
   {
     slug: "electrical-installation-condition-report-eicr",
     label: "EICR Nottingham",
-    href: "/pages/electrical-installation-condition-report-eicr",
+    href: "/services/electrical-installation-condition-report-eicr",
   },
-  { slug: "portable-appliance-testing-pat", label: "PAT Testing", href: "/pages/portable-appliance-testing-pat" },
   {
-    slug: "fire-alarm-inspection-and-testing",
+    slug: "portable-appliance-testing-pat",
+    label: "PAT Testing",
+    href: "/services/portable-appliance-testing-pat",
+  },
+  {
+    slug: "fire-alarm-inspection-testing",
     label: "Fire alarm testing",
-    href: "/pages/fire-alarm-inspection-and-testing",
+    href: "/services/fire-alarm-inspection-testing",
   },
   {
     slug: "domestic-electrical-fault-investigation",
     label: "Fault finding",
-    href: "/pages/domestic-electrical-fault-investigation",
+    href: "/services/domestic-electrical-fault-investigation",
   },
   {
     slug: "fuse-box-consumer-unit-replacement",
     label: "Fuse box replacement",
-    href: "/pages/fuse-box-consumer-unit-replacement",
+    href: "/services/fuse-box-consumer-unit-replacement",
   },
-  { slug: "socket-replacement", label: "Socket replacement", href: "/pages/socket-replacement" },
+  {
+    slug: "socket-replacment",
+    label: "Socket replacement",
+    href: "/services/socket-replacment",
+  },
 ];
 
 function titleFromSlug(slug) {

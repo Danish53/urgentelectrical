@@ -1,6 +1,7 @@
 import { NAV_GROUPS } from "@/components/navData";
 import { serviceSlug } from "@/lib/slugs";
 import { formatApiPrice, priceIncVatFromString } from "@/lib/pricing";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 import { getSiteUrl } from "@/lib/siteUrl";
 
@@ -21,10 +22,10 @@ export function getRelatedServices(service, list, limit = 3) {
 }
 
 export function buildServiceMetadata(service) {
-  const title = service.metaTitle;
+  const pageTitle = documentTitle(service.metaTitle);
   const description = service.metaDescription;
   return {
-    title: { absolute: `${title} | Urgent Electrical Services` },
+    title: pageTitle,
     description,
     keywords: [
       ...service.keywords,
@@ -37,7 +38,7 @@ export function buildServiceMetadata(service) {
       locale: "en_GB",
       url: service.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: `${title} | Urgent Electrical Services`,
+      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -50,7 +51,7 @@ export function buildServiceMetadata(service) {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | Urgent Electrical`,
+      title: pageTitle.absolute,
       description,
     },
     alternates: {

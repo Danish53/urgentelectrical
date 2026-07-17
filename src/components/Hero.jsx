@@ -29,7 +29,7 @@ const MARQUEE_ITEMS = [
     ),
   },
   {
-    label: "1-hour response",
+    label: "60–90 min response",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
         <circle cx="12" cy="12" r="9" />
@@ -159,16 +159,18 @@ export default function Hero() {
         initial={reduceMotion ? false : "hidden"}
         animate={reduceMotion ? undefined : "visible"}
       >
-        <motion.div
-          variants={reduceMotion ? undefined : HERO_ITEM}
-          id="availabilityBadge"
-          className={`home1-hero-availability${availability.limited ? " home1-hero-availability--limited" : ""}`}
-        >
-          <span className="home1-hero-availability-dot" aria-hidden="true" />
-          <span id="availabilityText" className="home1-hero-availability-text">
-            {availability.heroText}
-          </span>
-        </motion.div>
+        {!availability.limited ? (
+          <motion.div
+            variants={reduceMotion ? undefined : HERO_ITEM}
+            id="availabilityBadge"
+            className="home1-hero-availability"
+          >
+            <span className="home1-hero-availability-dot" aria-hidden="true" />
+            <span id="availabilityText" className="home1-hero-availability-text">
+              {availability.heroText}
+            </span>
+          </motion.div>
+        ) : null}
 
         <motion.h1
           id="hero-heading"

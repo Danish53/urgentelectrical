@@ -48,7 +48,21 @@ const initialState = {
 const locationsSlice = createSlice({
   name: "locations",
   initialState,
-  reducers: {},
+  reducers: {
+    /**
+     * Seed list from SSR so crawlers and first paint see real internal links.
+     * @param {typeof initialState} state
+     * @param {{ payload: { locations: import("@/lib/locations/parseLocationsList").LocationListItem[], pagination: import("@/lib/locations/parseLocationsList").LocationsPagination | null } }} action
+     */
+    hydrateLocations(state, action) {
+      state.locations = action.payload.locations ?? [];
+      state.pagination = action.payload.pagination ?? null;
+      state.status = state.locations.length ? "succeeded" : "idle";
+      state.error = null;
+      state.loadMoreError = null;
+      state.loadingMore = false;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchLocations.pending, (state) => {
@@ -87,4 +101,5 @@ const locationsSlice = createSlice({
   },
 });
 
+export const { hydrateLocations } = locationsSlice.actions;
 export default locationsSlice.reducer;

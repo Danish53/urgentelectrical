@@ -1,43 +1,38 @@
-/** Nav label → other-services page slug (`GET /api/other-services/{slug}` → `/pages/{slug}`) */
-const SLUG = {
-  emergency: "emergency-response-24-7",
-  eicr: "electrical-installation-condition-report-eicr",
-  pat: "portable-appliance-testing-pat-test",
-  fireAlarm: "fire-alarm-inspection-and-testing",
-  emergencyLighting: "emergency-lighting-periodic-inspection-and-testing",
-  faultFinding: "domestic-electrical-fault-investigation",
-  fuseBox: "fuse-box-consumer-unit-replacement",
-  socket: "socket-replacement",
-};
+/** Nav label → bookable `/services/{slug}` or other-services `/pages/{slug}` */
 
-function navItem(label, slug) {
-  return {
-    label,
-    slug: slug ?? null,
-    href: slug ? `/pages/${slug}` : "/pages",
-  };
+/**
+ * @param {string} label
+ * @param {string | null} [href]
+ */
+function navItem(label, href = null) {
+  const path = typeof href === "string" && href.trim() ? href.trim() : "/pages";
+  const slug = path === "/pages" ? null : path.split("/").filter(Boolean).pop() || null;
+  return { label, slug, href: path };
 }
 
 export const NAV_DOMESTIC = [
-  navItem("Domestic Electrician", SLUG.faultFinding),
-  navItem("EICR Nottingham", SLUG.eicr),
-  navItem("Emergency Electrician Nottingham", SLUG.emergency),
-  navItem("Electrical Fault Finding Nottingham", SLUG.faultFinding),
-  navItem("Fuse Box Replacement Nottingham", SLUG.fuseBox),
-  navItem("Socket Replacement & Installation Nottingham", SLUG.socket),
+  navItem("Domestic Electrician", "/services/domestic-electrical-fault-investigation"),
+  navItem("EICR Nottingham", "/services/electrical-installation-condition-report-eicr"),
+  navItem("Emergency Electrician Nottingham", "/services/emergency-response-247"),
+  navItem("Electrical Fault Finding Nottingham", "/services/domestic-electrical-fault-investigation"),
+  navItem("Fuse Box Replacement Nottingham", "/services/fuse-box-consumer-unit-replacement"),
+  navItem("Socket Replacement & Installation Nottingham", "/services/socket-replacment"),
 ];
 
 export const NAV_COMMERCIAL = [
-  navItem("Fire Alarm Installation Nottingham", SLUG.fireAlarm),
-  navItem("Commercial Electrician", SLUG.pat),
-  navItem("PAT Testing Nottingham", SLUG.pat),
-  navItem("Emergency Lighting Nottingham", SLUG.emergencyLighting),
+  navItem("Fire Alarm Installation Nottingham", "/services/fire-alarm-inspection-testing"),
+  navItem("Commercial Electrician", "/pages/portable-appliance-testing-pat-test"),
+  navItem("PAT Testing Nottingham", "/services/portable-appliance-testing-pat"),
+  navItem(
+    "Emergency Lighting Nottingham",
+    "/services/emergency-lighting-periodic-inspection-testing-certificate",
+  ),
 ];
 
 export const NAV_INDUSTRIAL = [
-  navItem("Industrial Electrician", SLUG.eicr),
-  navItem("Planned Electrical Maintenance", SLUG.emergency),
-  navItem("Electrical Certificates Nottingham", SLUG.eicr),
+  navItem("Industrial Electrician", "/services/electrical-installation-condition-report-eicr"),
+  navItem("Planned Electrical Maintenance", "/services/emergency-response-247"),
+  navItem("Electrical Certificates Nottingham", "/services/electrical-installation-condition-report-eicr"),
 ];
 
 export const NAV_RENEWABLES = [
@@ -46,10 +41,13 @@ export const NAV_RENEWABLES = [
 ];
 
 export const NAV_TESTING_SAFETY = [
-  navItem("EICR Testing Nottingham", SLUG.eicr),
-  navItem("PAT Testing Nottingham", SLUG.pat),
-  navItem("Emergency Lighting Testing", SLUG.emergencyLighting),
-  navItem("Fire Alarm Testing Nottingham", SLUG.fireAlarm),
+  navItem("EICR Testing Nottingham", "/services/electrical-installation-condition-report-eicr"),
+  navItem("PAT Testing Nottingham", "/services/portable-appliance-testing-pat"),
+  navItem(
+    "Emergency Lighting Testing",
+    "/services/emergency-lighting-periodic-inspection-testing-certificate",
+  ),
+  navItem("Fire Alarm Testing Nottingham", "/services/fire-alarm-inspection-testing"),
 ];
 
 export const NAV_GROUPS = [

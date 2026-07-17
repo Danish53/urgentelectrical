@@ -1,4 +1,5 @@
-import { getSiteUrl } from "@/lib/siteUrl";
+import { getSiteUrl, OG_IMAGE_PATH, getOgImageUrl } from "@/lib/siteUrl";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 const SITE = getSiteUrl();
 
@@ -46,15 +47,16 @@ export function getBlogImageAlt(post) {
 
 export function getBlogImageUrl(post) {
   const image = post?.image;
-  if (!image || typeof image !== "string") return `${SITE}/og-image.jpg`;
+  if (!image || typeof image !== "string") return getOgImageUrl();
   const trimmed = image.trim();
-  if (!trimmed || trimmed === SITE || trimmed === `${SITE}/`) return `${SITE}/og-image.jpg`;
+  if (!trimmed || trimmed === SITE || trimmed === `${SITE}/`) return getOgImageUrl();
   return trimmed.startsWith("http") ? trimmed : `${SITE}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
 }
 
 export function buildBlogListingMetadata() {
+  const pageTitle = documentTitle("Blog & Electrical News | Nottingham");
   return {
-    title: "Blog & Electrical News | Nottingham Electricians",
+    title: pageTitle,
     description:
       "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.",
     keywords: [
@@ -69,10 +71,10 @@ export function buildBlogListingMetadata() {
       locale: "en_GB",
       url: `${SITE}/blog`,
       siteName: "Urgent Electrical Services",
-      title: "Blog & News | Urgent Electrical Nottingham",
+      title: pageTitle.absolute,
       description:
         "Read guides on EICR, PAT testing, emergency electrics, fuse boards, and commercial compliance from local experts.",
-      images: [{ url: "/og-image.jpg", width: 1200, height: 630, alt: "Urgent Electrical blog" }],
+      images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: "Urgent Electrical blog" }],
     },
     alternates: { canonical: `${SITE}/blog` },
   };
@@ -81,9 +83,10 @@ export function buildBlogListingMetadata() {
 export function buildBlogPostMetadata(post) {
   const imageUrl = getBlogImageUrl(post);
   const imageAlt = getBlogImageAlt(post);
+  const pageTitle = documentTitle(post.title);
 
   return {
-    title: post.title,
+    title: pageTitle,
     description: post.metaDescription,
     keywords: [...post.keywords, "Urgent Electrical blog", "Nottingham electrician"],
     authors: [{ name: post.author }],
@@ -92,7 +95,7 @@ export function buildBlogPostMetadata(post) {
       locale: "en_GB",
       url: post.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: post.title,
+      title: pageTitle.absolute,
       description: post.metaDescription,
       publishedTime: post.publishedISO,
       section: post.categoryLabel,
@@ -108,7 +111,7 @@ export function buildBlogPostMetadata(post) {
     },
     twitter: {
       card: "summary_large_image",
-      title: post.title,
+      title: pageTitle.absolute,
       description: post.metaDescription,
       images: [imageUrl],
     },

@@ -1,10 +1,10 @@
 import { formatBlogPublishedDisplay, parseBlogCreatedAtToISO } from "@/lib/blogs/parseBlogDate";
 import { sanitizeBlogHtml } from "@/lib/blogs/sanitizeBlogHtml";
 
-import { absoluteCmsUrl, absoluteSiteUrl, getSiteUrl } from "@/lib/siteUrl";
+import { absoluteCmsUrl, absoluteSiteUrl, getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 const DEFAULT_AUTHOR = "Urgent Electrical Team";
 const DEFAULT_COLOR = "#D3231F";
-const FALLBACK_IMAGE = "/og-image.jpg";
+const FALLBACK_IMAGE = OG_IMAGE_PATH;
 
 function estimateReadMinutes(text) {
   const words = (text || "").replace(/<[^>]+>/g, " ").split(/\s+/).filter(Boolean).length;

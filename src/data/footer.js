@@ -7,6 +7,16 @@ export const FOOTER_COMPANY = [
   { label: "Company Policies", href: "/policies" },
 ];
 
+/** Always available in HTML (SSR / crawlers). Nav menu can replace these once loaded. */
+export const FOOTER_SERVICES = [
+  { label: "Emergency Electrician", href: "/services/emergency-response-247" },
+  { label: "EICR", href: "/services/electrical-installation-condition-report-eicr" },
+  { label: "PAT Testing", href: "/services/portable-appliance-testing-pat" },
+  { label: "Fault Finding", href: "/services/domestic-electrical-fault-investigation" },
+  { label: "Fuse Box Replacement", href: "/services/fuse-box-consumer-unit-replacement" },
+  { label: "All services", href: "/services" },
+];
+
 export const FOOTER_AREAS = [
   { label: "Nottingham", href: "/locations/nottingham" },
   { label: "Derby", href: "/locations/derby" },

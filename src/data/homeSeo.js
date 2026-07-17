@@ -1,12 +1,12 @@
 import { FAQ_ITEMS } from "./faqs";
-import { getSiteUrl } from "@/lib/siteUrl";
+import { getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 
 const SITE = getSiteUrl();
 
 /** Shorter FAQ set on homepage for faster load & focused schema */
 export const HOME_FAQ_ITEMS = FAQ_ITEMS.slice(0, 4);
 
-const HOME_TITLE = "Urgent Electrical Nottingham | Electricians Across the East Midlands";
+const HOME_TITLE = "Urgent Electrical Nottingham | East Midlands";
 
 export const HOME_METADATA = {
   metadataBase: new URL(SITE),
@@ -31,12 +31,12 @@ export const HOME_METADATA = {
     locale: "en_GB",
     url: SITE,
     siteName: "Urgent Electrical Services",
-    title: "Local Emergency Electrician in Nottingham | 24 Hours",
+    title: HOME_TITLE,
     description:
       "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: OG_IMAGE_PATH,
         width: 1200,
         height: 630,
         alt: "Urgent Electrical Services Nottingham",
@@ -45,7 +45,7 @@ export const HOME_METADATA = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Urgent Electrical Nottingham | 24/7 Emergency Electricians",
+    title: HOME_TITLE,
     description:
       "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
   },

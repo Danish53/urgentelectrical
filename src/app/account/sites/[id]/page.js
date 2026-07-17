@@ -1,7 +1,8 @@
 import SiteDetailPageClient from "@/components/account/SiteDetailPageClient";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 export const metadata = {
-  title: "Site Details | Urgent Electrical",
+  title: documentTitle("Site Details"),
   description: "View and update a saved service location.",
   robots: { index: false, follow: false },
 };

@@ -32,7 +32,7 @@
 import { Plus_Jakarta_Sans, Anton } from "next/font/google";
 import Script from "next/script";
 import AppProviders from "@/components/providers/AppProviders";
-import { getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
+import { getOgImageUrl, getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -57,7 +57,7 @@ const anton = Anton({
 export const metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Urgent Electrical Nottingham | Electricians Across the East Midlands",
+    default: "Urgent Electrical Nottingham | East Midlands",
     template: "%s | Urgent Electrical Services",
   },
   description:
@@ -78,12 +78,12 @@ export const metadata = {
     locale: "en_GB",
     url: getSiteUrl(),
     siteName: "Urgent Electrical Services",
-    title: "Local Emergency Electrician in Nottingham | 24 Hours",
+    title: "Urgent Electrical Nottingham | East Midlands",
     description:
       "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: OG_IMAGE_PATH,
         width: 1200,
         height: 630,
         alt: "Urgent Electrical Services Nottingham",
@@ -92,7 +92,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Urgent Electrical Nottingham | 24/7 Emergency Electricians",
+    title: "Urgent Electrical Nottingham | East Midlands",
     description:
       "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
     images: [getOgImageUrl()],
@@ -141,7 +141,7 @@ export default function RootLayout({ children }) {
                   "@type": "ElectricalContractor",
                   "@id": `${site}/#organization`,
                   name: "Urgent Electrical Services",
-                  image: `${site}/assets/urgent_electrical_logo.svg`,
+                  image: `${site}/logo.jpg`,
                   url: site,
                   telephone: "01157780622",
                   priceRange: "££",
@@ -192,9 +192,9 @@ export default function RootLayout({ children }) {
       >
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-gtag" strategy="afterInteractive">
+        <Script id="google-gtag" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

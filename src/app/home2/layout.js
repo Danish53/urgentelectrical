@@ -1,5 +1,7 @@
+import { documentTitle } from "@/lib/seo/documentTitle";
+
 export const metadata = {
-  title: "Homepage preview",
+  title: documentTitle("Homepage preview"),
   robots: { index: false, follow: false },
 };
 

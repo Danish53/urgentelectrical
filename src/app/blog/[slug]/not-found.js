@@ -2,10 +2,11 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import { CONTAINER } from "@/components/home1/constants";
+import { documentTitle } from "@/lib/seo/documentTitle";
 import "../../home1/home1.css";
 
 export const metadata = {
-  title: "Article not found",
+  title: documentTitle("Article not found"),
   robots: { index: false, follow: false },
 };
 

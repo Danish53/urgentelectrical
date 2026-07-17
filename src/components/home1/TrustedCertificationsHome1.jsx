@@ -57,7 +57,7 @@ export default function TrustedCertificationsHome1() {
   return (
     <section
       id="trusted"
-      className={`home1-section-surface ${SECTION_PY} overflow-x-clip scroll-mt-28`}
+      className={`home1-trusted-section ${SECTION_PY} overflow-x-clip scroll-mt-28`}
       aria-labelledby="home-trusted-heading"
     >
       <div className={CONTAINER}>

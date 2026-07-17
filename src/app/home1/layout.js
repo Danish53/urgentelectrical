@@ -1,5 +1,7 @@
+import { documentTitle } from "@/lib/seo/documentTitle";
+
 export const metadata = {
-  title: "Original Homepage",
+  title: documentTitle("Original Homepage"),
   description: "Original Urgent Electrical homepage layout (legacy). Main site uses the home1 theme at /.",
   robots: { index: false, follow: false },
 };

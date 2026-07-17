@@ -57,7 +57,7 @@ export function absoluteCmsUrl(path = "") {
   return absoluteUrl(path, getApiSiteOrigin());
 }
 
-export const OG_IMAGE_PATH = "/og-image.jpg";
+export const OG_IMAGE_PATH = "/featured/emergency-24.jpg";
 
 export function getOgImageUrl() {
   return absoluteSiteUrl(OG_IMAGE_PATH);

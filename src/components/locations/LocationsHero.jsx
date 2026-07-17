@@ -53,42 +53,44 @@ export default function LocationsHero() {
             variants={reduceMotion ? undefined : HERO_CONTAINER}
             initial={reduceMotion ? false : "hidden"}
             animate={reduceMotion ? undefined : "visible"}
-            className="min-w-0 flex flex-col items-center text-center max-w-3xl mx-auto"
+            className="min-w-0 flex flex-col items-center text-center w-full"
           >
-            <motion.h1
-              id="locations-hero-heading"
-              variants={reduceMotion ? undefined : HERO_TITLE}
-              className="text-white text-[26px] sm:text-[38px] lg:text-[46px] font-extrabold leading-[1.1] tracking-tight mb-4 sm:mb-5"
-            >
-              {LOCATIONS_HERO.title}{" "}
-              <span className="text-[#ff5a3c]">{LOCATIONS_HERO.titleAccent}</span>
-            </motion.h1>
+            <div className="w-full max-w-3xl mx-auto">
+              <motion.h1
+                id="locations-hero-heading"
+                variants={reduceMotion ? undefined : HERO_TITLE}
+                className="text-white text-[26px] sm:text-[38px] lg:text-[46px] font-extrabold leading-[1.1] tracking-tight mb-4 sm:mb-5"
+              >
+                {LOCATIONS_HERO.title}{" "}
+                <span className="text-[#ff5a3c]">{LOCATIONS_HERO.titleAccent}</span>
+              </motion.h1>
 
-            <motion.p
-              variants={reduceMotion ? undefined : HERO_ITEM}
-              className="text-white/80 text-[14px] sm:text-[16px] leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto"
-            >
-              {LOCATIONS_HERO.description}
-            </motion.p>
+              <motion.p
+                variants={reduceMotion ? undefined : HERO_ITEM}
+                className="text-white/80 text-[14px] sm:text-[16px] leading-relaxed mb-5 sm:mb-6 max-w-xl mx-auto"
+              >
+                {LOCATIONS_HERO.description}
+              </motion.p>
 
-            <motion.ul
-              variants={reduceMotion ? undefined : HERO_ITEM}
-              className="flex flex-wrap justify-center gap-2 list-none p-0 m-0 mb-6 sm:mb-8"
-            >
-              {LOCATIONS_HERO.highlights.map((h) => (
-                <li
-                  key={h}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/8 border border-white/12 text-[11px] sm:text-[12px] font-semibold text-white/90"
-                >
-                  <IconCheck className="w-3.5 h-3.5 text-[#4ADE80] shrink-0" />
-                  {h}
-                </li>
-              ))}
-            </motion.ul>
+              <motion.ul
+                variants={reduceMotion ? undefined : HERO_ITEM}
+                className="flex flex-wrap justify-center gap-2 list-none p-0 m-0 mb-6 sm:mb-8"
+              >
+                {LOCATIONS_HERO.highlights.map((h) => (
+                  <li
+                    key={h}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/8 border border-white/12 text-[11px] sm:text-[12px] font-semibold text-white/90"
+                  >
+                    <IconCheck className="w-3.5 h-3.5 text-[#4ADE80] shrink-0" />
+                    {h}
+                  </li>
+                ))}
+              </motion.ul>
+            </div>
 
             <motion.div
               variants={reduceMotion ? undefined : HERO_ITEM}
-              className="home1-locations-search-slim home1-locations-search-slim--in-hero w-full"
+              className="home1-locations-search-slim home1-locations-search-slim--in-hero home1-locations-search-slim--full w-full max-w-none"
             >
               <h2 className="home1-locations-search-slim__title">Find services in your area</h2>
               <p className="home1-locations-search-slim__subtitle">

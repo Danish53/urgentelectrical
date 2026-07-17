@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/siteUrl";
+import { documentTitle } from "@/lib/seo/documentTitle";
 
 const SITE = getSiteUrl();
 
@@ -57,8 +58,9 @@ export const CONTACT_ENQUIRY_TYPES = [
 ];
 
 export function buildContactMetadata() {
+  const pageTitle = documentTitle("Contact Us | Electricians in Nottingham");
   return {
-    title: "Contact Us | Electricians in Nottingham",
+    title: pageTitle,
     description:
       "Contact Urgent Electrical in Nottingham — 17 Regent Street NG1 5BQ. Call 0115 778 0622 or email info@urgentelectrical.services. NICEIC approved, 24/7.",
     keywords: [
@@ -73,13 +75,13 @@ export function buildContactMetadata() {
       locale: "en_GB",
       url: CONTACT_CANONICAL,
       siteName: "Urgent Electrical Services",
-      title: "Contact Urgent Electrical | Nottingham",
+      title: pageTitle.absolute,
       description:
         "Get in touch with our Nottingham office — phone, email, contact form, and directions to 17 Regent Street NG1 5BQ.",
     },
     twitter: {
       card: "summary",
-      title: "Contact Urgent Electrical Nottingham",
+      title: pageTitle.absolute,
       description:
         "Call 0115 778 0622 or use our contact form. 17 Regent Street, Nottingham NG1 5BQ.",
     },

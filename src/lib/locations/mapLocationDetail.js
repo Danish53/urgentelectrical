@@ -1,6 +1,7 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
 import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
+import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 const DEFAULT_BOOK_HREF = "/services";
 const DEFAULT_IMAGE = "/featured/emergency-24.jpg";
 
@@ -45,19 +46,76 @@ function stripHtml(html) {
  */
 function parseHeroTitle(mainTitle, name) {
   const trimmed = String(mainTitle ?? "").trim();
+  const accent = String(name ?? "").trim();
   if (!trimmed) {
-    return { title: "Emergency electrician in", titleAccent: name };
+    return { title: "Emergency electrician in", titleAccent: accent };
   }
 
-  const suffix = ` in ${name}`;
-  if (trimmed.toLowerCase().endsWith(suffix.toLowerCase())) {
-    return {
-      title: trimmed.slice(0, -suffix.length).trim() || "Emergency electrician in",
-      titleAccent: name,
-    };
+  const lower = trimmed.toLowerCase();
+  const accentLower = accent.toLowerCase();
+  const shortName = accent.split(",")[0].trim();
+  const shortLower = shortName.toLowerCase();
+
+  /**
+   * Split so H1 reads "{title} {accent}" without dropping the trailing "in"
+   * or duplicating the place name.
+   * @param {string} place
+   */
+  function splitTrailingPlace(place) {
+    const placeLower = place.toLowerCase();
+    if (!placeLower || !lower.endsWith(placeLower)) return null;
+    let before = trimmed.slice(0, -place.length).trimEnd();
+    // CMS sometimes leaves a duplicated short name: "... in Arnold Arnold, Nottingham"
+    if (shortLower && before.toLowerCase().endsWith(shortLower)) {
+      const stripped = before.slice(0, -shortName.length).trimEnd();
+      if (/\bin$/i.test(stripped)) before = stripped;
+    }
+    if (!before || !/\bin$/i.test(before)) return null;
+    return { title: before, titleAccent: accent || place };
   }
 
-  return { title: trimmed, titleAccent: name };
+  const fromFull = splitTrailingPlace(accent);
+  if (fromFull) return fromFull;
+
+  if (shortLower && shortLower !== accentLower) {
+    const fromShort = splitTrailingPlace(shortName);
+    if (fromShort) return fromShort;
+  }
+
+  // Incomplete CMS title such as "Emergency Electrician in"
+  if (/\bin$/i.test(trimmed)) {
+    return { title: trimmed, titleAccent: accent };
+  }
+
+  // Title already contains the place — do not append accent again.
+  if (
+    (accentLower && lower.includes(accentLower)) ||
+    (shortLower && lower.endsWith(shortLower))
+  ) {
+    return { title: trimmed, titleAccent: "" };
+  }
+
+  // e.g. main_title "Emergency Electrician" + area "Nottingham"
+  if (accent) {
+    return { title: `${trimmed} in`, titleAccent: accent };
+  }
+
+  return { title: trimmed, titleAccent: "" };
+}
+
+/**
+ * @param {string} text
+ * @param {number} [max]
+ */
+function truncateMetaDescription(text, max = 155) {
+  const normalized = String(text ?? "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+  if (normalized.length <= max) return normalized;
+
+  const cut = normalized.slice(0, max);
+  const lastSpace = cut.lastIndexOf(" ");
+  const base = (lastSpace > Math.floor(max * 0.6) ? cut.slice(0, lastSpace) : cut).trim();
+  return `${base.replace(/[.,;:]+$/, "")}…`;
 }
 
 /**
@@ -150,13 +208,16 @@ function titleFromSlug(slug) {
 }
 
 function buildServicesOffered() {
-  return TOP_SERVICE_SLUGS.map((slug) => ({
-    name: titleFromSlug(slug),
-    slug,
-    href: `/services/${slug}`,
-    priceIncVat: null,
-    tag: slug === "emergency-response-24-7" ? "Most Popular" : undefined,
-  }));
+  return TOP_SERVICE_SLUGS.map((slug) => {
+    const publicSlug = toPublicServiceSlug(slug);
+    return {
+      name: titleFromSlug(slug),
+      slug: publicSlug,
+      href: `/services/${publicSlug}`,
+      priceIncVat: null,
+      tag: slug === "emergency-response-24-7" ? "Most Popular" : undefined,
+    };
+  });
 }
 
 /**
@@ -193,7 +254,10 @@ export function mapLocationDetailFromApi(payload) {
   const city = /** @type {Record<string, unknown> | undefined} */ (root.city);
   const cityName = String(city?.name ?? fullName).trim();
   const regionLabel = cityName;
-  const fallback = buildLocationRecord(fullName);
+  // Prefer display name for fallbacks; use short place name when present so
+  // nearby areas resolve against the static region lists (e.g. "Arnold").
+  const fallbackName = name.split(",")[0].trim() || name;
+  const fallback = buildLocationRecord(fallbackName);
   const heroParts = parseHeroTitle(String(root.main_title ?? root.mainTitle ?? ""), name);
   const imagePath = getLocationImageUrl(
     typeof root.main_image === "string"
@@ -210,12 +274,43 @@ export function mapLocationDetailFromApi(payload) {
     fallback.commonJobs,
   );
   const faqs = parseFaqs(root.faqs, name, regionLabel, fallback.faqs);
-  const metaTitle = String(root.main_title ?? root.mainTitle ?? fallback.metaTitle).trim();
-  const descriptionText = stripHtml(root.description);
+
+  const seoTitle = String(root.seo_title ?? root.seoTitle ?? "").trim();
+  const seoDescription = stripHtml(
+    (typeof root.seo_description === "string" && root.seo_description) ||
+      (typeof root.seoDescription === "string" && root.seoDescription) ||
+      "",
+  );
+
+  const metaTitleRaw = String(root.main_title ?? root.mainTitle ?? "").trim();
+  const metaTitleFromHero = (() => {
+    if (!metaTitleRaw || metaTitleRaw.toLowerCase() === "null") return "";
+    const combined = heroParts.titleAccent
+      ? `${heroParts.title} ${heroParts.titleAccent}`
+      : heroParts.title;
+    const normalized = String(combined ?? "").replace(/\s+/g, " ").trim();
+    // Never publish incomplete titles like "Emergency Electrician in"
+    if (!normalized || /\bin$/i.test(normalized)) return "";
+    return normalized;
+  })();
+  const metaTitle =
+    (seoTitle && seoTitle.toLowerCase() !== "null" ? seoTitle : "") ||
+    metaTitleFromHero ||
+    fallback.metaTitle;
+
+  const shortMeta = stripHtml(
+    (typeof root.short_description === "string" && root.short_description) ||
+      (typeof root.shortDescription === "string" && root.shortDescription) ||
+      "",
+  );
+  const descriptionText = stripHtml(
+    typeof root.description === "string" ? root.description : "",
+  );
   const metaDescription =
-    descriptionText && descriptionText.toLowerCase() !== "null"
-      ? descriptionText
-      : fallback.metaDescription;
+    truncateMetaDescription(seoDescription) ||
+    truncateMetaDescription(shortMeta) ||
+    truncateMetaDescription(descriptionText) ||
+    fallback.metaDescription;
 
   return {
     slug,
@@ -239,6 +334,16 @@ export function mapLocationDetailFromApi(payload) {
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),
     faqs,
+    mapEmbed:
+      fallback.mapEmbed ||
+      `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
+    nearby: (fallback.nearby ?? []).filter((area) => {
+      if (!area?.slug || area.slug === slug) return false;
+      const shortName = name.split(",")[0].trim().toLowerCase();
+      const areaName = String(area.name ?? "").trim().toLowerCase();
+      if (areaName && (areaName === name.toLowerCase() || areaName === shortName)) return false;
+      return true;
+    }),
     bookHref: DEFAULT_BOOK_HREF,
     metaTitle,
     metaDescription,

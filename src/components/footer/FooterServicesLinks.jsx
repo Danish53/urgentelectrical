@@ -2,16 +2,20 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { FOOTER_SERVICES } from "@/data/footer";
 import { useNavMenu } from "@/hooks/useNavMenu";
 
+const LINK_CLASS =
+  "text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200";
+
 /**
- * Footer service links from navbar menu groups.
- * Shows group label → routes to first submenu item. Skips groups with no children.
+ * Footer service links — static FOOTER_SERVICES for SSR/raw HTML,
+ * replaced by navbar menu groups when the menu API has loaded.
  */
 export default function FooterServicesLinks() {
   const { navGroups, loading } = useNavMenu();
 
-  const links = useMemo(() => {
+  const navLinks = useMemo(() => {
     return navGroups
       .map((group) => {
         const items = Array.isArray(group.items) ? group.items : [];
@@ -29,38 +33,13 @@ export default function FooterServicesLinks() {
       .filter(Boolean);
   }, [navGroups]);
 
-  if (loading) {
-    return (
-      <ul className="space-y-2.5">
-        {[1, 2, 3].map((n) => (
-          <li key={n}>
-            <span className="inline-block h-4 w-24 rounded bg-white/10 animate-pulse" aria-hidden="true" />
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  if (!links.length) {
-    return (
-      <ul className="space-y-2.5">
-        <li>
-          <Link href="/services" className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200">
-            All services
-          </Link>
-        </li>
-      </ul>
-    );
-  }
+  const links = !loading && navLinks.length > 0 ? navLinks : FOOTER_SERVICES;
 
   return (
     <ul className="space-y-2.5">
       {links.map((link) => (
-        <li key={link.key}>
-          <Link
-            href={link.href}
-            className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200"
-          >
+        <li key={link.key || link.href}>
+          <Link href={link.href} className={LINK_CLASS}>
             {link.label}
           </Link>
         </li>

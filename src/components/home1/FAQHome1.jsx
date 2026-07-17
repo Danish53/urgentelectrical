@@ -37,6 +37,8 @@ export default function FAQHome1({ items = HOME_FAQ_ITEMS }) {
                     onClick={() => setOpenId((c) => (c === item.id ? null : item.id))}
                     className="home1-faq-trigger w-full flex items-center gap-4 text-left px-5 sm:px-6 py-5 font-bold text-[var(--home1-text)]"
                     aria-expanded={isOpen}
+                    aria-controls={`home1-faq-answer-${item.id}`}
+                    id={`home1-faq-question-${item.id}`}
                   >
                     <span
                       className="w-9 h-9 rounded-xl text-white text-sm font-black flex items-center justify-center shrink-0"
@@ -56,23 +58,27 @@ export default function FAQHome1({ items = HOME_FAQ_ITEMS }) {
                       {isOpen ? "−" : "+"}
                     </span>
                   </button>
-                  {isOpen && (
-                    <div className="px-5 sm:px-6 pb-6 pl-[4.5rem] border-t border-[var(--home1-border)] pt-4">
-                      <p className="text-[var(--home1-muted)] text-[14px] leading-[1.75]">
-                        {item.phone ? (
-                          <>
-                            {item.a.split("0115 778 0622")[0]}
-                            <a href={`tel:${item.phone}`} className="font-semibold hover:underline" style={{ color: "var(--home1-red)" }}>
-                              0115 778 0622
-                            </a>
-                            {item.a.split("0115 778 0622")[1]}
-                          </>
-                        ) : (
-                          item.a
-                        )}
-                      </p>
-                    </div>
-                  )}
+                  <div
+                    id={`home1-faq-answer-${item.id}`}
+                    role="region"
+                    aria-labelledby={`home1-faq-question-${item.id}`}
+                    hidden={!isOpen}
+                    className="px-5 sm:px-6 pb-6 pl-[4.5rem] border-t border-[var(--home1-border)] pt-4"
+                  >
+                    <p className="text-[var(--home1-muted)] text-[14px] leading-[1.75]">
+                      {item.phone ? (
+                        <>
+                          {item.a.split("0115 778 0622")[0]}
+                          <a href={`tel:${item.phone}`} className="font-semibold hover:underline" style={{ color: "var(--home1-red)" }}>
+                            0115 778 0622
+                          </a>
+                          {item.a.split("0115 778 0622")[1]}
+                        </>
+                      ) : (
+                        item.a
+                      )}
+                    </p>
+                  </div>
                 </div>
               );
             })}

@@ -1,6 +1,6 @@
 import { CHECKOUT_PATH, buildCheckoutHref } from "@/lib/checkoutHref";
 import { formatApiPrice, priceIncVatFromString, VAT_MULTIPLIER } from "@/lib/pricing";
-
+import { documentTitle } from "@/lib/seo/documentTitle";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 const SITE = getSiteUrl();
@@ -84,7 +84,7 @@ export function buildCheckoutLineItems(
 
 export function buildCheckoutMetadata() {
   return {
-    title: "Book your electrician | Checkout",
+    title: documentTitle("Book your electrician | Checkout"),
     description:
       "Complete your booking for NICEIC-approved electrical services in Nottingham and the East Midlands.",
     alternates: { canonical: CHECKOUT_CANONICAL },

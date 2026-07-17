@@ -19,15 +19,45 @@
  */
 
 /**
+ * Prefer human display title over slug-like `area_name` values.
+ * @param {Record<string, unknown>} row
+ * @param {string} slug
+ * @param {string} areaName
+ */
+function resolveAreaDisplayTitle(row, slug, areaName) {
+  const display =
+    (typeof row.area_display_name === "string" && row.area_display_name.trim()) ||
+    (typeof row.areaDisplayName === "string" && row.areaDisplayName.trim()) ||
+    "";
+  if (display) return display;
+
+  const looksLikeSlug =
+    Boolean(areaName) &&
+    (/^[a-z0-9]+(?:-[a-z0-9]+)+$/i.test(areaName) ||
+      areaName.toLowerCase() === slug.toLowerCase());
+
+  if (areaName && !looksLikeSlug) return areaName;
+
+  const raw = (areaName || slug).replace(/^electrician-/i, "").replace(/-/g, " ").trim();
+  if (!raw) return areaName || slug;
+  return raw.replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * @param {Record<string, unknown>} row
  * @returns {LocationListItem | null}
  */
 export function mapLocationListItem(row) {
-  const areaName = String(row.area_name ?? row.areaName ?? "").trim();
+  const areaNameRaw = String(row.area_name ?? row.areaName ?? "").trim();
   const slug = String(row.slug ?? "").trim();
-  if (!areaName || !slug) return null;
+  if ((!areaNameRaw && !slug) || !slug) return null;
 
-  const mainTitle = String(row.main_title ?? row.mainTitle ?? `Emergency Electrician in ${areaName}`).trim();
+  const areaName = resolveAreaDisplayTitle(row, slug, areaNameRaw);
+  if (!areaName) return null;
+
+  const mainTitle = String(
+    row.main_title ?? row.mainTitle ?? `Emergency Electrician in ${areaName}`,
+  ).trim();
 
   return {
     areaName,

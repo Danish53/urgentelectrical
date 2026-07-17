@@ -25,6 +25,10 @@ import {
   getDisplayPrice,
   getVatSuffix,
 } from "@/lib/pricing";
+import {
+  AVAILABILITY_OPEN,
+  getEngineerAvailability,
+} from "@/lib/engineerAvailability";
 
 function ServiceProductImage({ service, fit = "cover" }) {
   const [failed, setFailed] = useState(false);
@@ -72,10 +76,15 @@ function ServicePriceBar({ priceDisplay }) {
 
 const SLIM_FOOTER_TRUST = ["Fully insured", "NICEIC approved", "Secure booking", "365 days a year"];
 
-const SLIM_ASIDE_TRUST_BADGES = ["Fully insured", "NICEIC certified", "~45 min ETA", "UK-wide cover"];
+const SLIM_ASIDE_TRUST_BADGES = ["Fully insured", "NICEIC certified", "60–90 min ETA", "UK-wide cover"];
 
 function ServiceSlimPriceRibbon({ priceDisplay, incVat, isEmergency }) {
   const vatLabel = getVatSuffix(incVat);
+  const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
+
+  useEffect(() => {
+    setAvailability(getEngineerAvailability());
+  }, []);
 
   let startExc = priceDisplay.amount ?? priceDisplay.min;
   let endExc = priceDisplay.max;
@@ -96,6 +105,8 @@ function ServiceSlimPriceRibbon({ priceDisplay, incVat, isEmergency }) {
       ? `FROM ${startText} – ${endText} ${vatLabel}`
       : `${startText} ${vatLabel}`;
 
+  const showNightLimited = isEmergency && availability.limited;
+
   return (
     <div className="home1-service-slim-price-ribbon" role="status" aria-live="polite" aria-label={ariaLabel}>
       <div className="home1-service-slim-price-ribbon-main">
@@ -109,8 +120,18 @@ function ServiceSlimPriceRibbon({ priceDisplay, incVat, isEmergency }) {
         </div>
       </div>
       <div className="home1-service-slim-price-ribbon-meta">
-        <span className="home1-service-slim-eta-pill">{isEmergency ? "~45 min response" : "Same-day slots"}</span>
-        <span className="home1-service-slim-eta-pill">No callout fee</span>
+        {showNightLimited ? (
+          <span className="home1-service-slim-eta-pill home1-service-slim-eta-pill--limited">
+            {availability.heroText}
+          </span>
+        ) : (
+          <>
+            <span className="home1-service-slim-eta-pill">
+              {isEmergency ? "60–90 min response" : "Same-day slots"}
+            </span>
+            <span className="home1-service-slim-eta-pill">No callout fee</span>
+          </>
+        )}
       </div>
     </div>
   );

@@ -9,7 +9,16 @@ import LocationsIntro from "@/components/locations/LocationsIntro";
 import LocationsSearchMap from "@/components/locations/LocationsSearchMap";
 import LocationsAreasList from "@/components/locations/LocationsAreasList";
 
-export default function LocationsPageClient() {
+/**
+ * @param {{
+ *   initialLocations?: import("@/lib/locations/parseLocationsList").LocationListItem[],
+ *   initialPagination?: import("@/lib/locations/parseLocationsList").LocationsPagination | null,
+ * }} props
+ */
+export default function LocationsPageClient({
+  initialLocations = [],
+  initialPagination = null,
+}) {
   return (
     <div className="home1-page home1-locations-page w-full min-w-0">
       <Navbar />
@@ -17,7 +26,10 @@ export default function LocationsPageClient() {
         <LocationsHero />
         <LocationsIntro />
         <LocationsSearchMap />
-        <LocationsAreasList />
+        <LocationsAreasList
+          initialLocations={initialLocations}
+          initialPagination={initialPagination}
+        />
         <CTAHome1 />
       </main>
       <Footer />
