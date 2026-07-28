@@ -338,7 +338,7 @@ async function fetchOtherServicesPayload(page = 1, fetchOptions = {}) {
 }
 
 /**
- * GET /public/api/other-services?page={n}
+ * GET /api/other-services?page={n}
  * @param {number} [page]
  * @returns {Promise<OtherServicesListResult>}
  */

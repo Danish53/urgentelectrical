@@ -43,7 +43,7 @@ async function requestNavMenu() {
   return parseNavMenuResponse(payload);
 }
 
-/** GET /public/api/menu — deduped and cached for the browser session. */
+/** GET /api/menu — deduped and cached for the browser session. */
 export async function fetchNavMenu() {
   if (cachedNavMenu) return cachedNavMenu;
   if (navMenuInflight) return navMenuInflight;

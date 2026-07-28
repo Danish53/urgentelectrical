@@ -1,4 +1,4 @@
-import { LOCATIONS_API_PATH } from "@/constants/locationsApi";
+import { LOCATIONS_API_PATH, LOCATIONS_SEARCH_API_PATH } from "@/constants/locationsApi";
 import { ApiError } from "@/lib/api/errors";
 import { parseLocationsListPayload } from "@/lib/locations/parseLocationsList";
 import { apiRequest } from "@/lib/api/client";
@@ -23,6 +23,21 @@ export async function fetchLocationsPage(page = 1) {
   }
 
   return parsed;
+}
+
+/**
+ * GET /locations/search?query=
+ * @param {string} query
+ */
+export async function fetchLocationsSearch(query) {
+  const trimmed = String(query ?? "").trim();
+  if (!trimmed) {
+    return { locations: [], pagination: null };
+  }
+
+  const path = `${LOCATIONS_SEARCH_API_PATH}?query=${encodeURIComponent(trimmed)}`;
+  const payload = await apiRequest(path, { method: "GET" });
+  return parseLocationsListPayload(payload);
 }
 
 /**

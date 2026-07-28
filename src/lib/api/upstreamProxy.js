@@ -2,13 +2,13 @@ import { getApiBaseUrl, getApiSiteOrigin } from "@/lib/siteUrl";
 
 export { getApiBaseUrl };
 
-/** Site origin for `/public/api/*` routes (strips trailing `/api` from env base). */
+/** Site origin for `/api/*` routes (strips trailing `/api` from env base). */
 export function getPublicApiOrigin() {
   return getApiSiteOrigin();
 }
 
 /**
- * Server-side request to Laravel public API (`/public/api/...`).
+ * Server-side request to Laravel site `/api/...` routes (origin without trailing `/api`).
  * @param {string} method
  * @param {string} publicPath
  * @param {{ body?: Record<string, unknown>, authorization?: string | null }} [options]

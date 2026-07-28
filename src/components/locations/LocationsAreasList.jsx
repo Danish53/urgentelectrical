@@ -4,7 +4,8 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
-import { matchesLocationSearch } from "@/lib/locations/matchesLocationSearch";
+import { getApiErrorMessage } from "@/lib/api/errors";
+import { fetchLocationsSearch } from "@/services/locationsApiService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   selectLocationsError,
@@ -14,6 +15,8 @@ import {
 } from "@/store/selectors/locationsSelectors";
 import { fetchLocations, hydrateLocations } from "@/store/slices/locationsSlice";
 import { LocationAreaCard, LocationAreaCardSkeleton } from "@/components/locations/LocationAreaCard";
+
+const SEARCH_DEBOUNCE_MS = 350;
 
 function IconSearch({ className = "w-4 h-4" }) {
   return (
@@ -46,32 +49,38 @@ export default function LocationsAreasList({
   const dispatch = useAppDispatch();
   const searchId = useId();
   const hydratedRef = useRef(false);
+  const searchRequestId = useRef(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  /** @type {[import("@/lib/locations/parseLocationsList").LocationListItem[], Function]} */
+  const [searchResults, setSearchResults] = useState([]);
+  /** @type {["idle" | "loading" | "succeeded" | "failed", Function]} */
+  const [searchStatus, setSearchStatus] = useState("idle");
+  const [searchError, setSearchError] = useState("");
+
   const locations = useAppSelector(selectLocationsList);
   const pagination = useAppSelector(selectLocationsPagination);
   const status = useAppSelector(selectLocationsStatus);
   const error = useAppSelector(selectLocationsError);
 
   // Prefer Redux after hydrate; fall back to SSR props so crawlers see real <a> links.
-  const displayLocations = locations.length ? locations : initialLocations;
+  const browseLocations = locations.length ? locations : initialLocations;
   const displayPagination = pagination ?? initialPagination;
 
+  const isSearching = Boolean(debouncedQuery.trim());
   const initialLoading =
-    (status === "loading" || status === "idle") && displayLocations.length === 0;
+    !isSearching && (status === "loading" || status === "idle") && browseLocations.length === 0;
+  const searchLoading = isSearching && searchStatus === "loading";
   const currentPage = displayPagination?.currentPage ?? 1;
   const lastPage = displayPagination?.lastPage ?? 1;
 
-  const filteredLocations = useMemo(
-    () => displayLocations.filter((location) => matchesLocationSearch(location, searchQuery)),
-    [displayLocations, searchQuery]
-  );
+  const displayLocations = isSearching ? searchResults : browseLocations;
 
   const showSearchEmpty =
-    !initialLoading &&
-    status !== "failed" &&
-    displayLocations.length > 0 &&
-    searchQuery.trim() &&
-    filteredLocations.length === 0;
+    isSearching &&
+    !searchLoading &&
+    searchStatus === "succeeded" &&
+    searchResults.length === 0;
 
   const pageWindow = useMemo(() => buildPageWindow(currentPage, lastPage), [currentPage, lastPage]);
 
@@ -95,6 +104,44 @@ export default function LocationsAreasList({
     }
   }, [dispatch, initialLocations, initialPagination, status]);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedQuery(searchQuery.trim());
+    }, SEARCH_DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const query = debouncedQuery.trim();
+    if (!query) {
+      searchRequestId.current += 1;
+      setSearchResults([]);
+      setSearchStatus("idle");
+      setSearchError("");
+      return;
+    }
+
+    const requestId = ++searchRequestId.current;
+    setSearchStatus("loading");
+    setSearchError("");
+
+    fetchLocationsSearch(query)
+      .then((result) => {
+        if (requestId !== searchRequestId.current) return;
+        setSearchResults(result.locations);
+        setSearchStatus("succeeded");
+      })
+      .catch((err) => {
+        if (requestId !== searchRequestId.current) return;
+        setSearchResults([]);
+        setSearchStatus("failed");
+        setSearchError(getApiErrorMessage(err, "Could not search locations."));
+      });
+  }, [debouncedQuery]);
+
+  const showSearchBox =
+    !initialLoading && (status !== "failed" || browseLocations.length > 0 || isSearching);
+
   return (
     <section
       className="home1-locations-areas bg-white py-12 sm:py-16 lg:py-20"
@@ -108,7 +155,7 @@ export default function LocationsAreasList({
           We proudly serve the following areas
         </h2>
 
-        {!initialLoading && status !== "failed" && displayLocations.length > 0 ? (
+        {showSearchBox ? (
           <div className="home1-locations-areas-search-wrap">
             <label htmlFor={searchId} className="sr-only">
               Search areas
@@ -130,16 +177,40 @@ export default function LocationsAreasList({
 
         {showSearchEmpty ? (
           <p className="home1-locations-areas-search-empty" role="status">
-            No areas match &ldquo;{searchQuery.trim()}&rdquo; on this page.
-            {lastPage > 1 ? " Try another page or a different search." : " Try a different search."}
+            No areas match &ldquo;{debouncedQuery}&rdquo;. Try a different search.
           </p>
         ) : null}
 
-        {status === "failed" && displayLocations.length === 0 ? (
+        {isSearching && searchStatus === "failed" ? (
+          <ServicesLoadError
+            message={searchError}
+            onRetry={() => {
+              const q = debouncedQuery.trim();
+              if (!q) return;
+              setSearchStatus("loading");
+              setSearchError("");
+              const requestId = ++searchRequestId.current;
+              fetchLocationsSearch(q)
+                .then((result) => {
+                  if (requestId !== searchRequestId.current) return;
+                  setSearchResults(result.locations);
+                  setSearchStatus("succeeded");
+                })
+                .catch((err) => {
+                  if (requestId !== searchRequestId.current) return;
+                  setSearchResults([]);
+                  setSearchStatus("failed");
+                  setSearchError(getApiErrorMessage(err, "Could not search locations."));
+                });
+            }}
+          />
+        ) : null}
+
+        {status === "failed" && browseLocations.length === 0 && !isSearching ? (
           <ServicesLoadError message={error} onRetry={() => dispatch(fetchLocations({ page: 1 }))} />
         ) : null}
 
-        {initialLoading ? (
+        {initialLoading || searchLoading ? (
           <ul className="home1-locations-areas-grid list-none p-0 m-0" aria-busy="true" aria-label="Loading locations">
             {Array.from({ length: 10 }, (_, index) => (
               <LocationAreaCardSkeleton key={index} />
@@ -147,15 +218,15 @@ export default function LocationsAreasList({
           </ul>
         ) : null}
 
-        {filteredLocations.length > 0 ? (
+        {!initialLoading && !searchLoading && displayLocations.length > 0 ? (
           <ul className="home1-locations-areas-grid list-none p-0 m-0">
-            {filteredLocations.map((location) => (
+            {displayLocations.map((location) => (
               <LocationAreaCard key={location.slug} location={location} />
             ))}
           </ul>
         ) : null}
 
-        {lastPage > 1 && !initialLoading && status !== "failed" ? (
+        {!isSearching && lastPage > 1 && !initialLoading && status !== "failed" ? (
           <nav
             className="mt-8 sm:mt-10 flex flex-wrap items-center justify-center gap-2"
             aria-label="Location pages"
@@ -207,7 +278,11 @@ export default function LocationsAreasList({
           </nav>
         ) : null}
 
-        {!initialLoading && status !== "failed" && displayLocations.length === 0 ? (
+        {!initialLoading &&
+        !searchLoading &&
+        !isSearching &&
+        status !== "failed" &&
+        browseLocations.length === 0 ? (
           <p className="text-center text-[#64748b] py-8">No areas found.</p>
         ) : null}
       </div>

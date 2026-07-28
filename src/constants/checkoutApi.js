@@ -4,7 +4,7 @@ export const CHECKOUT_API = {
   checkPaymentStatus: "/orders/check-payment-status",
   createOrder: "/orders",
   applyCoupon: "/apply-coupon",
-  calculateDeliveryFee: "/public/api/calculate-delivery-fee",
+  calculateDeliveryFee: "/api/calculate-delivery-fee",
 };
 
 /** Same-origin Next.js proxies (browser → Laravel via server) */

@@ -25,7 +25,7 @@ export function getSiteUrl() {
 }
 
 /**
- * Laravel / CMS origin for `/public/api/*` routes and relative media paths.
+ * Laravel / CMS origin for `/api/*` routes and relative media paths.
  * Prefers API-derived origin so assets match the backend host.
  */
 export function getApiSiteOrigin() {
