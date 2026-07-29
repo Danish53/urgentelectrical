@@ -391,7 +391,7 @@ export function getPageDetailLayout(slug, page = null) {
     category: isApiPage ? "" : meta.category ?? "Service guide",
     image: isApiPage ? "" : meta.image ?? "/featured/pat.jpg",
     priceHint: isApiPage ? "" : meta.priceHint ?? "Fixed pricing — book online for details",
-    bookHref: `/services/${resolved || slug}`,
+    bookHref: "/services",
     trustPills: DEFAULT_TRUST_PILLS,
     process,
     symptoms,

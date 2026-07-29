@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useBookingOptions } from "@/hooks/useServices";
+import { useState } from "react";
+import { useSimpleServicesList } from "@/hooks/useServices";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
@@ -21,14 +21,8 @@ export default function QuoteFormHome1() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const { options, loading: servicesLoading } = useBookingOptions();
-  const [service, setService] = useState("");
-
-  useEffect(() => {
-    if (options.length && !service) {
-      setService(options[0].name);
-    }
-  }, [options, service]);
+  const { options, loading: servicesLoading } = useSimpleServicesList();
+  const [serviceSlug, setServiceSlug] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -39,11 +33,7 @@ export default function QuoteFormHome1() {
     setEmail("");
     setMessage("");
     setSubmitted(false);
-    if (options.length) {
-      setService(options[0].name);
-    } else {
-      setService("");
-    }
+    setServiceSlug("");
   }
 
   async function handleSubmit(event) {
@@ -62,11 +52,12 @@ export default function QuoteFormHome1() {
 
     setSubmitting(true);
     try {
+      const selectedService = options.find((option) => option.slug === serviceSlug);
       const payload = buildContactPayloadFromCallbackForm({
         name: trimmedName,
         phone: trimmedPhone,
         email: trimmedEmail,
-        service,
+        service: selectedService?.name ?? "",
         message: trimmedMessage,
       });
       const data = await submitContact(payload);
@@ -209,13 +200,16 @@ export default function QuoteFormHome1() {
                   <select
                     id="quote-service"
                     name="service"
-                    value={service}
-                    onChange={(e) => setService(e.target.value)}
+                    value={serviceSlug}
+                    onChange={(e) => setServiceSlug(e.target.value)}
                     disabled={!options.length || submitting}
                     className="home1-quote-input"
                   >
+                    <option value="" disabled>
+                      Select a Service
+                    </option>
                     {options.map((s) => (
-                      <option key={s.name} value={s.name}>
+                      <option key={s.slug} value={s.slug}>
                         {s.name}
                       </option>
                     ))}
