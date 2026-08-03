@@ -15,10 +15,12 @@ import SectionHeader from "@/components/home1/SectionHeader";
 import { SECTION_PY, SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { SERVICE_AREAS, getAreaLocationHref } from "@/data/areas";
+import { getAreaLocationHref } from "@/data/areas";
+import PageDetailFaq from "@/components/common/PageDetailFaq";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { getVariantById } from "@/lib/services/buildBookableServiceFromDetail";
+import { SERVICE_BOOKING_UNAVAILABLE_MESSAGE } from "@/lib/services/isServiceBookingActive";
 import {
   formatGbpDisplay,
   formatGbpFromExc,
@@ -259,23 +261,43 @@ function ServiceSelectedPrice({ priceExcVat, incVat, theme = "light", variantLab
   );
 }
 
-function ServiceBookingButtons({ onBook, bookHref, compact = false, variant = "default" }) {
+function ServiceBookingButtons({
+  onBook,
+  bookHref,
+  bookingActive = true,
+  compact = false,
+  variant = "default",
+}) {
+  const bookClass = `home1-service-product-btn home1-service-product-btn--book`;
+  const callClass = `home1-service-product-btn home1-service-product-btn--call`;
+  const canBook = bookingActive === true;
+
   return (
     <div
-      className={`home1-service-product-actions${compact ? " home1-service-product-actions--compact" : ""}${variant === "hero" ? " home1-service-product-actions--hero" : ""}${variant === "slim" ? " home1-service-product-actions--slim" : ""}`}
+      className={`home1-service-product-actions${compact ? " home1-service-product-actions--compact" : ""}${variant === "hero" ? " home1-service-product-actions--hero" : ""}${variant === "slim" ? " home1-service-product-actions--slim" : ""}${variant === "sidebar" ? " home1-service-product-actions--sidebar" : ""}`}
     >
-      {onBook ? (
-        <button type="button" onClick={onBook} className="home1-service-product-btn home1-service-product-btn--book">
+      {canBook && onBook ? (
+        <button type="button" onClick={onBook} className={bookClass}>
           <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
           Book Now
         </button>
-      ) : (
-        <Link href={bookHref} className="home1-service-product-btn home1-service-product-btn--book">
+      ) : canBook ? (
+        <Link href={bookHref || "/services"} className={bookClass}>
           <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
           Book Now
         </Link>
+      ) : (
+        <button
+          type="button"
+          disabled
+          className={`${bookClass} is-disabled`}
+          aria-disabled="true"
+        >
+          <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
+          Book Now
+        </button>
       )}
-      <a href={`tel:${FOOTER_PHONE_TEL}`} className="home1-service-product-btn home1-service-product-btn--call">
+      <a href={`tel:${FOOTER_PHONE_TEL}`} className={callClass}>
         <IconPhone className="w-5 h-5 shrink-0" aria-hidden="true" />
         Call Now
       </a>
@@ -296,6 +318,7 @@ function ServiceBookingBlock({
   showVariants = true,
   showButtons = true,
   variantsScrollable = false,
+  buttonsVariant = "default",
 }) {
   const { incVat } = useVatPreference();
   const variantOptions = variants ?? service.variants ?? [];
@@ -330,7 +353,21 @@ function ServiceBookingBlock({
           variantLabel={selectedVariant.label}
         />
       ) : null}
-      {showButtons && <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} />}
+      {showButtons ? (
+        <>
+          {service.bookingActive !== true ? (
+            <p className="home1-service-booking-unavailable" role="status">
+              {SERVICE_BOOKING_UNAVAILABLE_MESSAGE}
+            </p>
+          ) : null}
+          <ServiceBookingButtons
+            onBook={onBook}
+            bookHref={service.bookHref}
+            bookingActive={service.bookingActive === true}
+            variant={buttonsVariant}
+          />
+        </>
+      ) : null}
     </div>
   );
 }
@@ -341,23 +378,17 @@ function ServiceDetailSection({ id, number, title, subtitle, children, className
   return (
     <section
       id={id}
-      className={`home1-service-detail-section ${className}`.trim()}
+      className={`home1-page-detail-card ${className}`.trim()}
       aria-labelledby={headingId}
     >
-      <header className="home1-service-detail-section-head">
-        {number ? (
-          <span className="home1-service-detail-section-num" aria-hidden="true">
-            {number}
-          </span>
-        ) : null}
-        <div className="home1-service-detail-section-titles">
-          <h2 id={headingId} className="home1-service-detail-section-title">
-            {title}
-          </h2>
-          {subtitle ? <p className="home1-service-detail-section-subtitle">{subtitle}</p> : null}
+      <header className="home1-page-detail-card-head">
+        {number ? <span className="home1-page-detail-card-num">{number}</span> : null}
+        <div>
+          <h2 id={headingId}>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
         </div>
       </header>
-      <div className="home1-service-detail-section-body">{children}</div>
+      {children}
     </section>
   );
 }
@@ -370,9 +401,8 @@ function buildContentSections(service) {
       id: "about",
       title: "About this service",
       subtitle: "What we do and who this is for",
-      className: "home1-service-detail-about",
       render: () => (
-        <div className="home1-service-detail-prose">
+        <div className="home1-page-detail-prose">
           {service.longDescription.map((para) => (
             <p key={para.slice(0, 48)}>{para}</p>
           ))}
@@ -386,20 +416,15 @@ function buildContentSections(service) {
       id: "included",
       title: "What's included",
       subtitle: "Clear scope with no hidden extras",
-      className: "home1-service-detail-includes-section",
       render: () => (
-        <>
-          <ul className="home1-service-detail-includes">
-            {service.includes.map((item) => (
-              <li key={item} className="home1-service-detail-include-item">
-                <span className="home1-service-detail-include-icon" aria-hidden="true">
-                  <IconCheck className="w-3.5 h-3.5" />
-                </span>
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className="home1-page-detail-includes">
+          {service.includes.map((item) => (
+            <li key={item}>
+              <IconCheck className="home1-page-detail-include-icon" aria-hidden="true" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
       ),
     });
   }
@@ -410,11 +435,11 @@ function buildContentSections(service) {
       title: "Key benefits",
       subtitle: "Outcomes you can expect from this service",
       render: () => (
-        <ul className="home1-service-detail-list">
+        <ul className="home1-page-detail-feature-grid">
           {service.features.map((f) => (
             <li key={f}>
-              <IconCheck className="w-4 h-4 text-[var(--home1-red)] shrink-0 mt-0.5" aria-hidden="true" />
-              {f}
+              <IconCheck className="home1-page-detail-feature-icon" aria-hidden="true" />
+              <span>{f}</span>
             </li>
           ))}
         </ul>
@@ -422,34 +447,38 @@ function buildContentSections(service) {
     });
   }
 
-  items.push({
-    id: "areas",
-    title: "Areas we cover",
-    subtitle: "Nottingham, Nottinghamshire & the East Midlands",
-    render: () => (
-      <>
-        <ul className="home1-service-detail-areas list-none p-0 m-0">
-          {SERVICE_AREAS.map((area) => (
-            <li key={area}>
-              <Link href={getAreaLocationHref(area)} className="home1-service-detail-areas-item">
-                {area}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <Link href="/locations" className="home1-service-detail-areas-link">
-          View all locations →
-        </Link>
-      </>
-    ),
-  });
+  const areas = service.serviceAreas?.length ? service.serviceAreas : [];
+  if (areas.length) {
+    items.push({
+      id: "areas",
+      title: "Areas we cover",
+      subtitle: service.serviceAreasSubtitle || "Nottingham, Nottinghamshire & the East Midlands",
+      className: "home1-page-detail-card--areas",
+      render: () => (
+        <>
+          <ul className="home1-page-detail-areas">
+            {areas.map((area) => (
+              <li key={area}>
+                <Link href={getAreaLocationHref(area)} className="home1-page-detail-areas-item">
+                  {area}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <Link href="/locations" className="home1-page-detail-areas-link">
+            View all locations →
+          </Link>
+        </>
+      ),
+    });
+  }
 
   if ((service.faqs?.length ?? 0) > 0) {
     items.push({
       id: "faqs",
       title: "Frequently asked questions",
       subtitle: "Common questions before you book",
-      render: () => <ServiceFaq faqs={service.faqs} />,
+      render: () => <PageDetailFaq faqs={service.faqs} />,
     });
   }
 
@@ -502,9 +531,9 @@ function ServiceDetailJumpNav({ sections }) {
   }, [sections]);
 
   return (
-    <nav className="home1-service-detail-jump" aria-label="On this page">
-      <span className="home1-service-detail-jump-label">On this page</span>
-      <ul className="home1-service-detail-jump-list">
+    <nav className="home1-page-detail-jump" aria-label="On this page">
+      <span className="home1-page-detail-jump-label">On this page</span>
+      <ul>
         {sections.map((s) => (
           <li key={s.id}>
             <a
@@ -540,7 +569,12 @@ function ServiceDetailProduct({
     service.category === "emergency" ||
     service.name?.toLowerCase().includes("emergency") ||
     service.slug?.includes("emergency");
-  const dispatchNote = isEmergency ? "Immediate dispatch available" : "Book online — fixed pricing";
+  const dispatchNote =
+    service.bookingActive !== true
+      ? SERVICE_BOOKING_UNAVAILABLE_MESSAGE
+      : isEmergency
+        ? "Immediate dispatch available"
+        : "Book online — fixed pricing";
 
   return (
     <section className="home1-service-product home1-service-product--slim" aria-labelledby="service-detail-heading">
@@ -600,7 +634,17 @@ function ServiceDetailProduct({
                   </div>
                 )}
               </div>
-              <ServiceBookingButtons onBook={onBook} bookHref={service.bookHref} variant="slim" />
+              {service.bookingActive !== true ? (
+                <p className="home1-service-booking-unavailable" role="status">
+                  {SERVICE_BOOKING_UNAVAILABLE_MESSAGE}
+                </p>
+              ) : null}
+              <ServiceBookingButtons
+                onBook={onBook}
+                bookHref={service.bookHref}
+                bookingActive={service.bookingActive === true}
+                variant="slim"
+              />
             </div>
 
             <p className="home1-service-slim-foot-trust">
@@ -620,66 +664,42 @@ function ServiceDetailProduct({
 
 function PricingCard({ service, selectedVariant, selectedId, onSelectVariant, onBook, variantError }) {
   return (
-    <aside className="home1-service-detail-sidebar home1-service-detail-sidebar--sticky" aria-label="Book this service">
-      <div className="home1-service-sidebar-head">
-        <p className="home1-service-detail-sidebar-label">Quick book</p>
-        <h3 className="home1-service-sidebar-title">Book this service</h3>
-        {service.tag && <span className="home1-service-detail-sidebar-tag">{service.tag}</span>}
-      </div>
-
-      <div className="home1-service-sidebar-panel">
-        <ServiceBookingBlock
-          service={service}
-          variants={service.variants}
-          selectedId={selectedId}
-          onSelectVariant={onSelectVariant}
-          selectedVariant={selectedVariant}
-          onBook={onBook}
-          variantError={variantError}
-          idPrefix="sidebar"
-          theme="light"
-          showButtons
-        />
-      </div>
-
-      <p className="home1-service-sidebar-foot">Secure booking · Same-day slots where available</p>
-    </aside>
-  );
-}
-
-function ServiceFaq({ faqs }) {
-  const [openId, setOpenId] = useState(-1);
-  if (!faqs.length) return null;
-
-  return (
-    <div className="home1-service-detail-faq">
-      {faqs.map((item, i) => {
-        const isOpen = openId === i;
-        return (
-          <div key={item.q} data-open={isOpen} className="home1-faq-item home1-card overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setOpenId(isOpen ? -1 : i)}
-              className="home1-faq-trigger w-full flex items-center justify-between gap-4 p-5 text-left font-bold text-[15px] text-[var(--home1-text)]"
-              aria-expanded={isOpen}
-            >
-              <span className="pr-2">{item.q}</span>
-              <span
-                className={`text-[var(--home1-red)] text-xl shrink-0 transition-transform ${isOpen ? "rotate-45" : ""}`}
-                aria-hidden="true"
-              >
-                +
-              </span>
-            </button>
-            {isOpen && (
-              <p className="px-5 py-5 text-[14px] leading-relaxed text-[var(--home1-muted)] border-t border-[var(--home1-border)]">
-                {item.a}
-              </p>
-            )}
+    <aside
+      className="home1-page-detail-aside home1-page-detail-aside--sticky"
+      aria-label="Book this service"
+    >
+      <div className="home1-page-detail-aside-inner">
+        <div className="home1-page-detail-aside-card home1-page-detail-aside-card--primary home1-service-detail-book-card">
+          <p className="home1-page-detail-aside-label">Ready to book?</p>
+          <h2 className="home1-page-detail-aside-title">{service.name}</h2>
+          {service.tag ? (
+            <p className="home1-page-detail-aside-price">{service.tag}</p>
+          ) : null}
+          <p className="home1-page-detail-aside-note">
+            Secure booking · Same-day slots where available
+          </p>
+          <div className="home1-service-sidebar-panel">
+            <ServiceBookingBlock
+              service={service}
+              variants={service.variants}
+              selectedId={selectedId}
+              onSelectVariant={onSelectVariant}
+              selectedVariant={selectedVariant}
+              onBook={onBook}
+              variantError={variantError}
+              idPrefix="sidebar"
+              theme="light"
+              showButtons
+              buttonsVariant="sidebar"
+            />
           </div>
-        );
-      })}
-    </div>
+        </div>
+
+        <Link href="/services" className="home1-page-detail-aside-back">
+          ← Back to all services
+        </Link>
+      </div>
+    </aside>
   );
 }
 
@@ -701,6 +721,8 @@ export default function ServiceDetailClient({ service, related }) {
   }, []);
 
   const handleBook = useCallback(() => {
+    if (service.bookingActive !== true) return;
+
     if (hasVariants && !selectedId) {
       setVariantError("Please select a variant to continue with your booking.");
       return;
@@ -715,12 +737,20 @@ export default function ServiceDetailClient({ service, related }) {
         variantLabel: selectedVariant?.label,
       })
     );
-  }, [hasVariants, selectedId, selectedVariant, service.name, service.slug, router]);
+  }, [
+    hasVariants,
+    selectedId,
+    selectedVariant,
+    service.bookingActive,
+    service.name,
+    service.slug,
+    router,
+  ]);
 
   const contentSections = useMemo(() => buildContentSections(service), [service]);
 
   return (
-    <div className="home1-page home1-service-detail-page w-full min-w-0">
+    <div className="home1-page home1-service-detail-page home1-page-detail-rich w-full min-w-0">
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
         <ServiceDetailProduct
@@ -732,13 +762,12 @@ export default function ServiceDetailClient({ service, related }) {
           variantError={variantError}
         />
 
-        <section className="home1-service-detail-body p-0" aria-label="Service information">
-          <div className="home1-service-detail-body-bg" aria-hidden="true" />
-          <div className={SERVICE_DETAIL_CONTAINER}>
-            <ServiceDetailJumpNav sections={contentSections} />
+        <section className="home1-page-detail-body-section" aria-label="Service information">
+          <div className={`${SERVICE_DETAIL_CONTAINER} home1-page-detail-shell`}>
+            <div className="home1-page-detail-layout">
+              <div className="home1-page-detail-main">
+                <ServiceDetailJumpNav sections={contentSections} />
 
-            <div className="home1-service-detail-layout">
-              <div className="home1-service-detail-main min-w-0">
                 {contentSections.map((section) => (
                   <ServiceDetailSection
                     key={section.id}
@@ -753,16 +782,14 @@ export default function ServiceDetailClient({ service, related }) {
                 ))}
               </div>
 
-              <aside className="home1-service-detail-aside min-w-0" aria-label="Book this service">
-                <PricingCard
-                  service={service}
-                  selectedVariant={selectedVariant}
-                  selectedId={selectedId}
-                  onSelectVariant={handleSelectVariant}
-                  onBook={handleBook}
-                  variantError={variantError}
-                />
-              </aside>
+              <PricingCard
+                service={service}
+                selectedVariant={selectedVariant}
+                selectedId={selectedId}
+                onSelectVariant={handleSelectVariant}
+                onBook={handleBook}
+                variantError={variantError}
+              />
             </div>
           </div>
         </section>
@@ -778,7 +805,7 @@ export default function ServiceDetailClient({ service, related }) {
           </MotionSection>
         )}
 
-        <CTAHome1 bookHref={service.bookHref} />
+        <CTAHome1 bookHref={service.bookingActive !== true ? "/services" : service.bookHref} />
       </main>
       <Footer />
       <FloatingCTA />

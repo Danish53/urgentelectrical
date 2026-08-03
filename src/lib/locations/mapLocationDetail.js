@@ -1,5 +1,6 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
+import { stripHtmlFlat, toParagraphs } from "@/lib/content/toParagraphs";
 import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 const DEFAULT_BOOK_HREF = "/services";
@@ -30,14 +31,7 @@ export function getLocationImageUrl(raw) {
  * @param {string} html
  */
 function stripHtml(html) {
-  return String(html)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/\s+/g, " ")
-    .trim();
+  return stripHtmlFlat(html);
 }
 
 /**
@@ -125,18 +119,8 @@ function truncateMetaDescription(text, max = 155) {
  * @param {string[]} fallback
  */
 function parseParagraphs(value, name, regionLabel, fallback) {
-  if (!value) return fallback;
-
-  if (Array.isArray(value)) {
-    const items = value.map((item) => stripHtml(String(item ?? ""))).filter(Boolean);
-    if (items.length) return items;
-  }
-
-  const text = stripHtml(String(value));
-  if (!text) return fallback;
-
-  const parts = text.split(/\n+/).map((part) => part.trim()).filter(Boolean);
-  return parts.length ? parts : [text];
+  const parts = toParagraphs(value);
+  return parts.length ? parts : fallback;
 }
 
 /**
@@ -253,11 +237,16 @@ export function mapLocationDetailFromApi(payload) {
 
   const city = /** @type {Record<string, unknown> | undefined} */ (root.city);
   const cityName = String(city?.name ?? fullName).trim();
+  const citySlug = String(city?.slug ?? "").trim().toLowerCase();
   const regionLabel = cityName;
   // Prefer display name for fallbacks; use short place name when present so
   // nearby areas resolve against the static region lists (e.g. "Arnold").
   const fallbackName = name.split(",")[0].trim() || name;
   const fallback = buildLocationRecord(fallbackName);
+  const regionId =
+    citySlug && ["nottingham", "derby", "leicester", "lincoln"].includes(citySlug)
+      ? citySlug
+      : fallback.regionId;
   const heroParts = parseHeroTitle(String(root.main_title ?? root.mainTitle ?? ""), name);
   const imagePath = getLocationImageUrl(
     typeof root.main_image === "string"
@@ -315,8 +304,10 @@ export function mapLocationDetailFromApi(payload) {
   return {
     slug,
     name,
-    regionId: fallback.regionId,
+    regionId,
     regionLabel,
+    cityName,
+    citySlug: citySlug || undefined,
     canonicalUrl: absoluteSiteUrl(`/locations/${slug}`),
     image: imagePath.startsWith("http") ? imagePath : imagePath,
     imageAlt: `Electrician in ${name} — Urgent Electrical Services`,

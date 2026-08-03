@@ -8,7 +8,7 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import AppImage from "@/components/common/AppImage";
 import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { SERVICE_AREAS, getAreaLocationHref } from "@/data/areas";
+import { getAreaLocationHref } from "@/data/areas";
 import { IconCheck, IconPhone } from "@/components/home1/icons";
 import PageDetailFaq from "@/components/common/PageDetailFaq";
 
@@ -33,7 +33,7 @@ function buildPageSectionNumbers(layout) {
   if (layout.features.length) assign("benefits");
   if (layout.process.length) assign("process");
   if (layout.symptoms.length) assign("symptoms");
-  assign("areas");
+  if (layout.serviceAreas?.length) assign("areas");
   if (layout.faqs.length) assign("faqs");
 
   return numbers;
@@ -63,7 +63,7 @@ export default function OtherServiceDetailRich({
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
     layout.process.length ? { id: "process", label: "How it works" } : null,
     layout.symptoms.length ? { id: "symptoms", label: "Common signs" } : null,
-    { id: "areas", label: "Areas we cover" },
+    layout.serviceAreas?.length ? { id: "areas", label: "Areas we cover" } : null,
     layout.faqs.length ? { id: "faqs", label: "FAQs" } : null,
   ].filter(Boolean);
 
@@ -246,30 +246,35 @@ export default function OtherServiceDetailRich({
                   </section>
                 ) : null} */}
 
-                <section className="home1-page-detail-card home1-page-detail-card--areas" id="areas">
-                  <header className="home1-page-detail-card-head">
-                    <span className="home1-page-detail-card-num">{sectionNumbers.areas}</span>
-                    <div>
-                      <h2>Areas we cover</h2>
-                      <p>Nottingham, Nottinghamshire &amp; the East Midlands</p>
-                    </div>
-                  </header>
-                  <ul className="home1-page-detail-areas">
-                    {SERVICE_AREAS.map((area) => (
-                      <li key={area}>
-                        <Link
-                          href={getAreaLocationHref(area)}
-                          className="home1-page-detail-areas-item"
-                        >
-                          {area}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  <Link href="/locations" className="home1-page-detail-areas-link">
-                    View all locations →
-                  </Link>
-                </section>
+                {layout.serviceAreas?.length ? (
+                  <section className="home1-page-detail-card home1-page-detail-card--areas" id="areas">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.areas}</span>
+                      <div>
+                        <h2>Areas we cover</h2>
+                        <p>
+                          {layout.serviceAreasSubtitle ||
+                            "Nottingham, Nottinghamshire & the East Midlands"}
+                        </p>
+                      </div>
+                    </header>
+                    <ul className="home1-page-detail-areas">
+                      {layout.serviceAreas.map((area) => (
+                        <li key={area}>
+                          <Link
+                            href={getAreaLocationHref(area)}
+                            className="home1-page-detail-areas-item"
+                          >
+                            {area}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/locations" className="home1-page-detail-areas-link">
+                      View all locations →
+                    </Link>
+                  </section>
+                ) : null}
 
                 {layout.faqs.length ? (
                   <section className="home1-page-detail-card" id="faqs">

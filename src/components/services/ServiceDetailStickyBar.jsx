@@ -107,10 +107,22 @@ export default function ServiceDetailStickyBar({
             </p>
 
             <div className="home1-service-sticky-actions">
-              <Link href={service.bookHref} className="home1-service-sticky-btn home1-service-sticky-btn--book">
-                <IconCalendar className="w-4 h-4 shrink-0" aria-hidden="true" />
-                <span>Book Now</span>
-              </Link>
+              {service.bookingActive !== true ? (
+                <button
+                  type="button"
+                  disabled
+                  className="home1-service-sticky-btn home1-service-sticky-btn--book is-disabled"
+                  aria-disabled="true"
+                >
+                  <IconCalendar className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>Book Now</span>
+                </button>
+              ) : (
+                <Link href={service.bookHref} className="home1-service-sticky-btn home1-service-sticky-btn--book">
+                  <IconCalendar className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>Book Now</span>
+                </Link>
+              )}
               <a
                 href={`tel:${FOOTER_PHONE_TEL}`}
                 className="home1-service-sticky-btn home1-service-sticky-btn--call"

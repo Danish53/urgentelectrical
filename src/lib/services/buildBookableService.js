@@ -1,6 +1,8 @@
 import { buildCheckoutHref } from "@/lib/checkoutHref";
+import { resolveServiceAreasForPage } from "@/data/areas";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { serviceSlug } from "@/lib/slugs";
+import { isServiceBookingActive } from "@/lib/services/isServiceBookingActive";
 import {
   DETAIL_SLUG_ALIASES,
   getServiceLongDescription,
@@ -136,6 +138,21 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     SERVICE_DESCRIPTIONS[name] ||
     "Fixed-price electrical service — book online with NICEIC approved engineers.";
 
+  const coverage = resolveServiceAreasForPage({
+    serviceAreas: api.service_areas ?? api.serviceAreas,
+    areas: api.areas,
+    locations: api.locations,
+    location: api.location,
+    city: api.city,
+    region: api.region,
+    locationSlug: api.location_slug ?? api.locationSlug,
+    citySlug: api.city_slug ?? api.citySlug,
+    slug,
+    title: fullTitle,
+  });
+
+  const bookingActive = isServiceBookingActive(api.booking_status ?? api.bookingStatus);
+
   return {
     apiId: api.id,
     serviceCategoryId,
@@ -152,7 +169,8 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     color: meta.color,
     href: `/services/${slug}`,
     canonicalUrl: absoluteSiteUrl(`/services/${slug}`),
-    bookHref: buildCheckoutHref({ service: name }),
+    bookingActive,
+    bookHref: bookingActive ? buildCheckoutHref({ service: name }) : `/services/${slug}`,
     priceIncVat,
     variants,
     priceDisplay,
@@ -160,6 +178,9 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     features: extra.features ?? [],
     includes: extra.includes ?? [],
     faqs: extra.faqs ?? [],
+    serviceAreas: coverage.areas,
+    serviceAreasSubtitle: coverage.subtitle,
+    serviceAreasRegionId: coverage.regionId,
     metaTitle: extra.metaTitle ?? name,
     metaDescription: extra.metaDescription ?? description,
     keywords: extra.keywords ?? [],
@@ -191,5 +212,7 @@ export function toFeaturedCard(service) {
     image: service.image,
     tag: service.tag,
     href: service.href,
+    bookingActive: service.bookingActive === true,
+    bookHref: service.bookHref,
   };
 }

@@ -20,6 +20,7 @@ import {
   buildCheckoutLineItems,
   getDefaultCheckoutService,
 } from "@/data/checkoutPage";
+import { SERVICE_BOOKING_UNAVAILABLE_MESSAGE } from "@/lib/services/isServiceBookingActive";
 import { computeCheckoutSummaryTotals } from "@/lib/checkout/computeCheckoutSummaryTotals";
 import { useCheckoutSessionTimer } from "@/hooks/useCheckoutSessionTimer";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -141,7 +142,14 @@ export default function CheckoutPageClient() {
     useCheckoutServiceDetail(slug);
 
   const bookingList = useMemo(
-    () => bookable.map((s) => ({ name: s.name, price: s.price, priceIncVat: s.priceIncVat, slug: s.slug })),
+    () =>
+      bookable.map((s) => ({
+        name: s.name,
+        price: s.price,
+        priceIncVat: s.priceIncVat,
+        slug: s.slug,
+        bookingActive: s.bookingActive === true,
+      })),
     [bookable]
   );
 
@@ -154,6 +162,8 @@ export default function CheckoutPageClient() {
     }
     return getDefaultCheckoutService(bookingList);
   }, [searchParams, detailService, bookable, bookingList]);
+
+  const bookingUnavailable = Boolean(service) && service.bookingActive !== true;
 
   const useDynamicSchedule = Boolean(service?.apiId);
   const {
@@ -916,6 +926,24 @@ export default function CheckoutPageClient() {
             </div>
           ) : pageFailed ? (
             <ServicesLoadError message={servicesError} onRetry={() => dispatch(fetchServices())} />
+          ) : bookingUnavailable ? (
+            <div className="home1-checkout-flow" role="status">
+              <div className="home1-checkout-flow-inner">
+                <div className="home1-service-booking-unavailable" style={{ maxWidth: 560, margin: "2rem auto" }}>
+                  <p style={{ margin: 0, fontSize: 16 }}>{SERVICE_BOOKING_UNAVAILABLE_MESSAGE}</p>
+                  <p style={{ margin: "10px 0 0", fontWeight: 500, opacity: 0.9 }}>
+                    Please choose another service or call us to book.
+                  </p>
+                  <a
+                    href="/services"
+                    className="home1-btn-primary"
+                    style={{ display: "inline-flex", marginTop: 16 }}
+                  >
+                    Browse services
+                  </a>
+                </div>
+              </div>
+            </div>
           ) : (
             <>
               <div className="home1-checkout-flow">

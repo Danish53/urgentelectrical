@@ -3,6 +3,7 @@ import ServiceDetailClient from "@/components/services/ServiceDetailClient";
 import { buildServiceJsonLd, buildServiceMetadata } from "@/data/servicesPage";
 import { getServiceDetailBySlug } from "@/lib/services/getServices";
 import "../../home1/home1.css";
+import "../../pages/pages.css";
 
 export const dynamicParams = true;
 

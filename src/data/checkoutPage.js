@@ -29,7 +29,8 @@ export const TRAVEL_CHARGE_EXC = 0;
 
 export function getDefaultCheckoutService(services) {
   if (!services?.length) return null;
-  return services[0];
+  const active = services.find((s) => s.bookingActive === true);
+  return active ?? services[0];
 }
 
 export function findServiceByName(name, services) {

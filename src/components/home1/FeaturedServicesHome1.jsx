@@ -116,6 +116,7 @@ function FeaturedServicesSlider({ services, bookable }) {
                 <ServiceCardHome1
                   service={s}
                   detailHref={resolveHref(s, bookable)}
+                  bookableMatch={bookable.find((b) => b.name === s.name) ?? null}
                   imagePriority={i < slidesPerView}
                 />
               </li>
@@ -148,13 +149,15 @@ function resolveHref(featuredService, bookable) {
   return match?.href ?? "/services";
 }
 
-function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
+function ServiceCardHome1({ service, detailHref, imagePriority = false, bookableMatch = null }) {
   const [failed, setFailed] = useState(false);
   const { incVat } = useVatPreference();
   const priceExc = service.priceExcVat ?? service.price;
   const displayPrice = getDisplayPrice(priceExc, incVat);
   const vatLabel = getVatSuffix(incVat);
   const alt = `${service.name} — electrical service Nottingham`;
+  const canBook =
+    (bookableMatch ?? service)?.bookingActive === true;
 
   return (
     <article className="home1-card home1-card-shine home1-service-card h-full flex flex-col overflow-hidden group">
@@ -197,10 +200,22 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false }) {
           <Link href={detailHref} className="home1-service-btn home1-service-btn--ghost">
             Details
           </Link>
-          <Link href={detailHref} className="home1-service-btn home1-service-btn--primary">
-            Book now
-            <IconArrow className="w-4 h-4 shrink-0" />
-          </Link>
+          {canBook ? (
+            <Link href={detailHref} className="home1-service-btn home1-service-btn--primary">
+              Book now
+              <IconArrow className="w-4 h-4 shrink-0" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="home1-service-btn home1-service-btn--primary is-disabled"
+              aria-disabled="true"
+            >
+              Book now
+              <IconArrow className="w-4 h-4 shrink-0" />
+            </button>
+          )}
         </div>
       </div>
     </article>
@@ -276,7 +291,12 @@ export default function FeaturedServicesHome1({ compact = false }) {
             >
               {services.map((s, i) => (
                 <div key={s.id} className="shrink-0 px-2.5" style={{ width: `${slidePct}%` }}>
-                  <ServiceCardHome1 service={s} detailHref={resolveHref(s, bookable)} imagePriority={i === 0} />
+                  <ServiceCardHome1
+                    service={s}
+                    detailHref={resolveHref(s, bookable)}
+                    bookableMatch={bookable.find((b) => b.name === s.name) ?? null}
+                    imagePriority={i === 0}
+                  />
                 </div>
               ))}
             </div>

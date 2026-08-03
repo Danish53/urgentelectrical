@@ -52,6 +52,14 @@ import { SERVER_FETCH } from "@/lib/api/serverFetch";
  *   common_signs?: string[],
  *   how_it_work?: { topic?: string, description?: string, title?: string, text?: string }[],
  *   faqs?: { q: string, a: string }[],
+ *   service_areas?: unknown,
+ *   areas?: unknown,
+ *   locations?: unknown,
+ *   location?: unknown,
+ *   city?: unknown,
+ *   region?: unknown,
+ *   location_slug?: string,
+ *   city_slug?: string,
  *   source?: "other-services",
  * }} ApiInfoPageDetail
  */
@@ -172,6 +180,24 @@ export function normalizeOtherServiceDetailItem(data) {
     common_signs,
     how_it_work,
     faqs,
+    service_areas: data.service_areas ?? data.serviceAreas,
+    areas: data.areas,
+    locations: data.locations,
+    location: data.location,
+    city: data.city,
+    region: data.region,
+    location_slug:
+      typeof data.location_slug === "string"
+        ? data.location_slug
+        : typeof data.locationSlug === "string"
+          ? data.locationSlug
+          : undefined,
+    city_slug:
+      typeof data.city_slug === "string"
+        ? data.city_slug
+        : typeof data.citySlug === "string"
+          ? data.citySlug
+          : undefined,
     updated_at: typeof data.updated_at === "string" ? data.updated_at : undefined,
     source: "other-services",
   };

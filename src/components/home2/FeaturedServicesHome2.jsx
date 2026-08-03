@@ -98,12 +98,30 @@ export default function FeaturedServicesHome2() {
                         </Link>
                       </h3>
                       <p className="text-xl font-extrabold text-[var(--h2-red)]">£{s.priceIncVat}</p>
-                      <Link
-                        href={bookable.find((b) => b.name === s.name)?.bookHref ?? "/checkout"}
-                        className="home2-btn home2-btn--primary w-full mt-3 text-sm py-2.5"
-                      >
-                        Select
-                      </Link>
+                      {(() => {
+                        const match = bookable.find((b) => b.name === s.name);
+                        const canBook = (match ?? s)?.bookingActive === true;
+                        if (!canBook) {
+                          return (
+                            <button
+                              type="button"
+                              disabled
+                              className="home2-btn home2-btn--primary w-full mt-3 text-sm py-2.5 opacity-60 cursor-not-allowed"
+                              aria-disabled="true"
+                            >
+                              Select
+                            </button>
+                          );
+                        }
+                        return (
+                          <Link
+                            href={match?.bookHref ?? "/checkout"}
+                            className="home2-btn home2-btn--primary w-full mt-3 text-sm py-2.5"
+                          >
+                            Select
+                          </Link>
+                        );
+                      })()}
                     </div>
                   </article>
                 </div>

@@ -593,6 +593,17 @@
   transform: scale(0.98) translateY(0);
 }
 
+.home1-service-btn--primary:disabled,
+.home1-service-btn--primary.is-disabled {
+  background: #9ca3af;
+  color: #fff;
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+  box-shadow: none;
+}
+
 /* Emergency section â€” stats panel (right) */
 .home1-emergency-panel {
   position: relative;
@@ -1331,6 +1342,78 @@
 
 .home1-service-detail-page .home1-section-surface {
   background: #eef0f2;
+}
+
+.home1-service-detail-page.home1-page-detail-rich {
+  background: var(--home1-surface);
+}
+
+.home1-service-detail-page .home1-page-detail-card {
+  scroll-margin-top: calc(var(--site-header-height, 118px) + 1.25rem);
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-sidebar-panel {
+  margin-top: 0.75rem;
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-actions,
+.home1-service-product-actions--sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn,
+.home1-service-product-actions--sidebar .home1-service-product-btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--book,
+.home1-service-product-actions--sidebar .home1-service-product-btn--book {
+  color: #fff;
+  background: var(--home1-red);
+  border: 1px solid transparent;
+  box-shadow: 0 8px 24px rgba(211, 35, 31, 0.28);
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--book:hover,
+.home1-service-product-actions--sidebar .home1-service-product-btn--book:hover {
+  background: var(--home1-red-dark);
+  box-shadow: 0 10px 28px rgba(211, 35, 31, 0.38);
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--book:disabled,
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--book.is-disabled,
+.home1-service-product-actions--sidebar .home1-service-product-btn--book:disabled,
+.home1-service-product-actions--sidebar .home1-service-product-btn--book.is-disabled {
+  background: #9ca3af;
+  box-shadow: none;
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--call,
+.home1-service-product-actions--sidebar .home1-service-product-btn--call {
+  color: var(--home1-text);
+  background: #fff;
+  border: 2px solid var(--home1-border);
+}
+
+.home1-service-detail-page .home1-service-detail-book-card .home1-service-product-btn--call:hover,
+.home1-service-product-actions--sidebar .home1-service-product-btn--call:hover {
+  background: var(--home1-surface);
+  border-color: #cbd5e1;
+}
+
+.home1-service-detail-page .home1-page-detail-jump a.is-active {
+  border-color: rgba(211, 35, 31, 0.35);
+  color: var(--home1-red);
 }
 
 .home1-service-detail-page .home1-service-product {
@@ -3050,6 +3133,40 @@
   box-shadow: 0 12px 28px rgba(211, 35, 31, 0.38);
 }
 
+.home1-service-product-btn--book:disabled,
+.home1-service-product-btn--book.is-disabled {
+  color: #fff;
+  background: #9ca3af;
+  border-color: transparent;
+  box-shadow: none;
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+  transform: none;
+}
+
+.home1-service-product-btn--book:disabled:hover,
+.home1-service-product-btn--book.is-disabled:hover {
+  background: #9ca3af;
+  box-shadow: none;
+}
+
+.home1-service-booking-unavailable {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(185, 28, 28, 0.25);
+  background: rgba(254, 226, 226, 0.85);
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.home1-service-slim-book .home1-service-booking-unavailable {
+  margin-top: 4px;
+}
+
 .home1-service-product-btn--call {
   color: var(--home1-red);
   background: var(--home1-white);
@@ -3266,6 +3383,15 @@
 
 .home1-service-sticky-btn--book:hover {
   background: var(--home1-red-dark);
+}
+
+.home1-service-sticky-btn--book:disabled,
+.home1-service-sticky-btn--book.is-disabled {
+  background: #9ca3af;
+  box-shadow: none;
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.85;
 }
 
 .home1-service-sticky-btn--call {
@@ -6738,9 +6864,13 @@
   border-radius: 6px;
 }
 
-/* Location detail page */
+/* Location detail page — same surface + white cards as /pages detail */
 .home1-location-detail-page {
-  background: #fff;
+  background: var(--home1-surface);
+}
+
+.home1-location-detail-page.home1-page-detail-rich {
+  background: var(--home1-surface);
 }
 
 .home1-location-detail-back {
@@ -7304,6 +7434,20 @@
   border: 1px solid #e2e8f0;
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
   background: #f1f5f9;
+}
+
+.home1-location-detail-map-frame--in-card {
+  box-shadow: none;
+  border-radius: 12px;
+  margin-top: 0.25rem;
+}
+
+.home1-location-detail-page .home1-page-detail-body-section .home1-location-detail-services-grid {
+  margin-top: 0.25rem;
+}
+
+.home1-location-detail-page .home1-page-detail-card .home1-location-detail-service-card {
+  background: #f8fafc;
 }
 
 .home1-location-detail-map-frame iframe {

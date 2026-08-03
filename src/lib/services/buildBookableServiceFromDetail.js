@@ -1,7 +1,10 @@
 import { buildCheckoutHref } from "@/lib/checkoutHref";
+import { toParagraphs } from "@/lib/content/toParagraphs";
+import { resolveServiceAreasForPage } from "@/data/areas";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { slugify } from "@/lib/slugs";
 import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
+import { isServiceBookingActive } from "@/lib/services/isServiceBookingActive";
 import {
   getServiceLongDescription,
   resolveDetailExtra,
@@ -80,17 +83,7 @@ function parseApiStringList(value) {
  * @returns {string[]}
  */
 function parseLongDescriptionFromApi(longDescription) {
-  if (typeof longDescription !== "string") return [];
-
-  const text = longDescription.replace(/\r\n/g, "\n").trim();
-  if (!text) return [];
-
-  const paragraphs = text
-    .split(/\n{2,}/)
-    .map((block) => block.trim().replace(/\n+/g, " "))
-    .filter(Boolean);
-
-  return paragraphs.length ? paragraphs : [text.replace(/\n+/g, " ")];
+  return toParagraphs(longDescription);
 }
 
 /**
@@ -162,6 +155,20 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const apiIncludes = parseApiStringList(api.included_items);
   const apiBenefits = parseApiStringList(api.benefits);
   const apiFaqs = parseFaqsFromApi(api.faqs ?? api.faq);
+  const coverage = resolveServiceAreasForPage({
+    serviceAreas: api.service_areas ?? api.serviceAreas,
+    areas: api.areas,
+    locations: api.locations,
+    location: api.location,
+    city: api.city,
+    region: api.region,
+    locationSlug: api.location_slug ?? api.locationSlug,
+    citySlug: api.city_slug ?? api.citySlug,
+    slug,
+    title: fullTitle,
+  });
+
+  const bookingActive = isServiceBookingActive(api.booking_status ?? api.bookingStatus);
 
   return {
     apiId: api.id,
@@ -178,7 +185,10 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     color: meta.color,
     href: `/services/${slug}`,
     canonicalUrl: absoluteSiteUrl(`/services/${slug}`),
-    bookHref: buildCheckoutHref({ service: name }),
+    bookingActive,
+    bookHref: bookingActive
+      ? buildCheckoutHref({ service: name, slug })
+      : `/services/${slug}`,
     priceIncVat,
     variants,
     priceDisplay,
@@ -190,6 +200,9 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     features: apiBenefits.length ? apiBenefits : (extra.features ?? []),
     faqs: apiFaqs.length ? apiFaqs : (extra.faqs ?? []),
     schedules: Array.isArray(api.schedules) ? api.schedules : [],
+    serviceAreas: coverage.areas,
+    serviceAreasSubtitle: coverage.subtitle,
+    serviceAreasRegionId: coverage.regionId,
     metaTitle: extra.metaTitle ?? name,
     metaDescription: extra.metaDescription ?? description,
     keywords: extra.keywords ?? [],

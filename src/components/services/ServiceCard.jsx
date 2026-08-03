@@ -15,6 +15,7 @@ export default function ServiceCard({ service, imagePriority = false }) {
   const displayPrice = getDisplayPrice(priceExc, incVat);
   const vatLabel = getVatSuffix(incVat);
   const alt = `${service.name} — electrical service Nottingham`;
+  const canBook = service.bookingActive === true;
 
   return (
     <article
@@ -75,10 +76,22 @@ export default function ServiceCard({ service, imagePriority = false }) {
           <Link href={service.href} className="home1-service-btn home1-service-btn--ghost">
             Details
           </Link>
-          <Link href={service.href} className="home1-service-btn home1-service-btn--primary">
-            Book now
-            <IconArrow className="w-4 h-4 shrink-0" />
-          </Link>
+          {canBook ? (
+            <Link href={service.href} className="home1-service-btn home1-service-btn--primary">
+              Book now
+              <IconArrow className="w-4 h-4 shrink-0" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="home1-service-btn home1-service-btn--primary is-disabled"
+              aria-disabled="true"
+            >
+              Book now
+              <IconArrow className="w-4 h-4 shrink-0" />
+            </button>
+          )}
         </div>
       </div>
     </article>

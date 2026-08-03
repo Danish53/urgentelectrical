@@ -1,4 +1,6 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
+import { resolveServiceAreasForPage } from "@/data/areas";
+import { toParagraphs } from "@/lib/content/toParagraphs";
 import { serviceSlug } from "@/lib/slugs";
 import { resolveServiceDetailSlug } from "@/lib/services/resolveServiceDetailSlug";
 
@@ -283,11 +285,7 @@ function pickRelated(slug) {
 }
 
 function splitDescriptionParagraphs(text) {
-  if (!text || typeof text !== "string") return [];
-  return text
-    .split(/\r?\n\r?\n+/)
-    .map((part) => part.replace(/\r\n/g, " ").trim())
-    .filter(Boolean);
+  return toParagraphs(text);
 }
 
 /**
@@ -379,6 +377,19 @@ export function getPageDetailLayout(slug, page = null) {
       ? page.common_signs
       : meta.symptoms ?? DEFAULT_SYMPTOMS;
 
+  const coverage = resolveServiceAreasForPage({
+    serviceAreas: page?.service_areas ?? page?.serviceAreas,
+    areas: page?.areas,
+    locations: page?.locations,
+    location: page?.location,
+    city: page?.city,
+    region: page?.region,
+    locationSlug: page?.location_slug ?? page?.locationSlug,
+    citySlug: page?.city_slug ?? page?.citySlug,
+    slug: page?.slug || resolved || slug,
+    title,
+  });
+
   return {
     slug: page?.slug || resolved || slug,
     source: page?.source,
@@ -395,6 +406,8 @@ export function getPageDetailLayout(slug, page = null) {
     trustPills: DEFAULT_TRUST_PILLS,
     process,
     symptoms,
+    serviceAreas: coverage.areas,
+    serviceAreasSubtitle: coverage.subtitle,
     related: isApiPage ? [] : pickRelated(resolved || slug),
     keywords: isApiPage ? [] : extra?.keywords ?? [],
   };

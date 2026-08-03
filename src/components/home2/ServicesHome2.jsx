@@ -13,6 +13,7 @@ import AppImage from "@/components/common/AppImage";
 
 function ServiceSlideCard({ service }) {
   const price = service.priceIncVat ?? service.price;
+  const canBook = service.bookingActive === true;
 
   return (
     <article className={`home2-service-slide ${service.tag ? "relative" : ""}`}>
@@ -44,13 +45,25 @@ function ServiceSlideCard({ service }) {
         </h3>
         <p className="text-2xl font-extrabold text-[var(--h2-red)]">£{price}</p>
         <p className="text-xs text-[var(--h2-muted)] mb-4">Inc. VAT · Fixed price</p>
-        <Link
-          href={service.bookHref ?? "/checkout"}
-          className="home2-btn home2-btn--primary w-full mt-auto text-sm py-3"
-        >
-          Book now
-          <span aria-hidden="true">→</span>
-        </Link>
+        {canBook ? (
+          <Link
+            href={service.bookHref ?? "/checkout"}
+            className="home2-btn home2-btn--primary w-full mt-auto text-sm py-3"
+          >
+            Book now
+            <span aria-hidden="true">→</span>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="home2-btn home2-btn--primary w-full mt-auto text-sm py-3 opacity-60 cursor-not-allowed"
+            aria-disabled="true"
+          >
+            Book now
+            <span aria-hidden="true">→</span>
+          </button>
+        )}
       </div>
     </article>
   );

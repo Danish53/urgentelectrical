@@ -8,11 +8,34 @@ import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 import CTAHome1 from "@/components/home1/CTAHome1";
-import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
+import { CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import LocationRelatedAreas from "@/components/locations/LocationRelatedAreas";
 import PageDetailFaq from "@/components/common/PageDetailFaq";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+
+function formatSectionNumber(index) {
+  return String(index).padStart(2, "0");
+}
+
+function buildLocationSectionNumbers(location) {
+  /** @type {Record<string, string>} */
+  const numbers = {};
+  let index = 0;
+
+  const assign = (key) => {
+    index += 1;
+    numbers[key] = formatSectionNumber(index);
+  };
+
+  if (location.paragraphs?.length) assign("about");
+  if (location.commonJobs?.length) assign("jobs");
+  if (location.whyChoose?.length) assign("why");
+  if (location.faqs?.length) assign("faqs");
+  if (location.mapEmbed) assign("map");
+
+  return numbers;
+}
 
 function LocationHeroImage({ location }) {
   const [failed, setFailed] = useState(false);
@@ -40,11 +63,19 @@ function LocationHeroImage({ location }) {
 }
 
 export default function LocationDetailClient({ location }) {
+  const sectionNumbers = buildLocationSectionNumbers(location);
+  const jumpSections = [
+    location.paragraphs?.length ? { id: "about", label: "Overview" } : null,
+    location.commonJobs?.length ? { id: "jobs", label: "Common jobs" } : null,
+    location.whyChoose?.length ? { id: "why", label: "Why choose us" } : null,
+    location.faqs?.length ? { id: "faqs", label: "FAQs" } : null,
+    location.mapEmbed ? { id: "map", label: "Map" } : null,
+  ].filter(Boolean);
+
   return (
-    <div className="home1-page home1-location-detail-page w-full min-w-0">
+    <div className="home1-page home1-location-detail-page home1-page-detail-rich w-full min-w-0">
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
-        {/* Hero — no breadcrumb */}
         <section
           className="home1-location-detail-hero relative bg-black overflow-x-clip"
           style={{ paddingTop: "calc(var(--site-header-height, 88px) + 1.25rem)" }}
@@ -55,7 +86,7 @@ export default function LocationDetailClient({ location }) {
           <div className="home1-hero-orb home1-hero-orb--left" aria-hidden="true" />
           <div className="home1-hero-orb home1-hero-orb--right" aria-hidden="true" />
 
-          <div className={`${SERVICES_PAGE_CONTAINER} relative z-10 pb-10 sm:pb-14 lg:pb-16`}>
+          <div className={`${CONTAINER} relative z-10 pb-10 sm:pb-14 lg:pb-16`}>
             <Link href="/locations" className="home1-location-detail-back">
               <IconArrow className="w-4 h-4 rotate-180 shrink-0" aria-hidden="true" />
               All service areas
@@ -65,10 +96,7 @@ export default function LocationDetailClient({ location }) {
               <div className="home1-location-detail-hero-copy min-w-0">
                 <span className="home1-location-detail-eyebrow">{location.hero.eyebrow}</span>
 
-                <h1
-                  id="location-detail-heading"
-                  className="home1-location-detail-title"
-                >
+                <h1 id="location-detail-heading" className="home1-location-detail-title">
                   {location.hero.title}
                   {location.hero.titleAccent ? (
                     <>
@@ -91,7 +119,7 @@ export default function LocationDetailClient({ location }) {
 
                 <div className="home1-location-detail-hero-actions">
                   <Link
-                    href={location.bookHref}
+                    href="/services/emergency-response-247"
                     className="home1-location-detail-btn home1-location-detail-btn--primary"
                   >
                     <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
@@ -118,170 +146,214 @@ export default function LocationDetailClient({ location }) {
           </div>
         </section>
 
-        {/* Main content + sidebar */}
-        <section className="home1-location-detail-body" aria-labelledby="location-about-heading">
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <div className="home1-location-detail-layout">
-              <div className="home1-location-detail-main min-w-0">
-                <article id="about" className="home1-location-detail-block">
-                  <h2 id="location-about-heading" className="home1-location-detail-h2">
-                    Electricians in {location.name}
-                  </h2>
-                  <div className="home1-location-detail-prose">
-                    {location.paragraphs.map((para) => (
-                      <p key={para.slice(0, 40)}>{para}</p>
-                    ))}
-                  </div>
-                  {/* <p className="home1-location-detail-response">{location.responseNote}</p> */}
-                </article>
-
-                
-                {location.commonJobs.length > 0 ? (
-                <article id="jobs" className="home1-location-detail-block">
-                  <h2 className="home1-location-detail-h2">
-                    Common jobs we handle in {location.name}
-                  </h2>
-                  <ul className="home1-location-detail-why-grid list-none p-0 m-0">
-                    {location.commonJobs.map((job) => (
-                      <li key={job}>
-                        <span className="home1-location-detail-why-icon" aria-hidden="true">
-                          <IconCheck className="w-4 h-4" />
-                        </span>
-                        <span>{job}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
+        <section className="home1-page-detail-body-section" aria-labelledby="location-about-heading">
+          <div className={`${CONTAINER} home1-page-detail-shell`}>
+            <div className="home1-page-detail-layout">
+              <div className="home1-page-detail-main">
+                {jumpSections.length > 1 ? (
+                  <nav className="home1-page-detail-jump" aria-label="On this page">
+                    <span className="home1-page-detail-jump-label">On this page</span>
+                    <ul>
+                      {jumpSections.map((s) => (
+                        <li key={s.id}>
+                          <a href={`#${s.id}`}>{s.label}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
                 ) : null}
 
-                {location.whyChoose.length > 0 ? (
-                <article id="why" className="home1-location-detail-block">
-                  <h2 className="home1-location-detail-h2">Why choose Urgent Electrical</h2>
-                  <ul className="home1-location-detail-why-grid list-none p-0 m-0">
-                    {location.whyChoose.map((item) => (
-                      <li key={item}>
-                        <span className="home1-location-detail-why-icon" aria-hidden="true">
-                          <IconCheck className="w-4 h-4" />
-                        </span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </article>
+                {location.paragraphs?.length ? (
+                  <article className="home1-page-detail-card" id="about">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.about}</span>
+                      <div>
+                        <h2 id="location-about-heading">Electricians in {location.name}</h2>
+                        <p>Local coverage, response times, and what we handle</p>
+                      </div>
+                    </header>
+                    <div className="home1-page-detail-prose">
+                      {location.paragraphs.map((para) => (
+                        <p key={para.slice(0, 40)}>{para}</p>
+                      ))}
+                    </div>
+                  </article>
                 ) : null}
 
+                {location.commonJobs?.length ? (
+                  <section className="home1-page-detail-card" id="jobs">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.jobs}</span>
+                      <div>
+                        <h2>Common jobs we handle in {location.name}</h2>
+                        <p>Typical domestic and commercial work in this area</p>
+                      </div>
+                    </header>
+                    <ul className="home1-page-detail-feature-grid">
+                      {location.commonJobs.map((job) => (
+                        <li key={job}>
+                          <IconCheck className="home1-page-detail-feature-icon" aria-hidden="true" />
+                          <span>{job}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
 
-                {location.faqs.length > 0 ? (
-                <article id="faqs" className="home1-location-detail-block">
-                  <h2 className="home1-location-detail-h2">Frequently asked questions</h2>
-                  <p className="home1-location-detail-sub">
-                    Common questions about electrical work in {location.name}
-                  </p>
-                  <PageDetailFaq faqs={location.faqs} />
-                </article>
+                {location.whyChoose?.length ? (
+                  <section className="home1-page-detail-card" id="why">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.why}</span>
+                      <div>
+                        <h2>Why choose Urgent Electrical</h2>
+                        <p>What local customers rely on us for</p>
+                      </div>
+                    </header>
+                    <ul className="home1-page-detail-feature-grid">
+                      {location.whyChoose.map((item) => (
+                        <li key={item}>
+                          <IconCheck className="home1-page-detail-feature-icon" aria-hidden="true" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ) : null}
+
+                {location.faqs?.length ? (
+                  <section className="home1-page-detail-card" id="faqs">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.faqs}</span>
+                      <div>
+                        <h2>Frequently asked questions</h2>
+                        <p>Common questions about electrical work in {location.name}</p>
+                      </div>
+                    </header>
+                    <PageDetailFaq faqs={location.faqs} />
+                  </section>
+                ) : null}
+
+                {location.mapEmbed ? (
+                  <section className="home1-page-detail-card" id="map">
+                    <header className="home1-page-detail-card-head">
+                      <span className="home1-page-detail-card-num">{sectionNumbers.map}</span>
+                      <div>
+                        <h2>Find us in {location.name}</h2>
+                        <p>Coverage map for {location.name} and surrounding areas</p>
+                      </div>
+                    </header>
+                    <div className="home1-location-detail-map-frame home1-location-detail-map-frame--in-card">
+                      <iframe
+                        title={`Map of ${location.name}`}
+                        src={location.mapEmbed}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        allowFullScreen
+                      />
+                    </div>
+                  </section>
                 ) : null}
               </div>
 
-              <aside className="home1-location-detail-aside" aria-label="Book an electrician">
-                <div className="home1-location-detail-sidebar-card">
-                  <p className="home1-location-detail-sidebar-label">Fast booking</p>
-                  <h3 className="home1-location-detail-sidebar-title">
-                    Need an electrician in {location.name}?
-                  </h3>
-                  <p className="home1-location-detail-sidebar-text">
-                    Book fixed-price work online or call for 24/7 emergency assistance.
-                  </p>
-                  <div className="home1-location-detail-sidebar-actions">
-                    <Link
-                      href={location.bookHref}
-                      className="home1-location-detail-btn home1-location-detail-btn--primary home1-location-detail-btn--block"
-                    >
-                      <IconCalendar className="w-5 h-5 shrink-0" aria-hidden="true" />
-                      Book now
-                    </Link>
-                    <a
-                      href={`tel:${FOOTER_PHONE_TEL}`}
-                      className="home1-location-detail-btn home1-location-detail-btn--ghost home1-location-detail-btn--block"
-                    >
-                      <IconPhone className="w-5 h-5 shrink-0" aria-hidden="true" />
-                      Call {FOOTER_PHONE}
-                    </a>
+              <aside
+                className="home1-page-detail-aside home1-page-detail-aside--sticky"
+                aria-label="Book an electrician"
+              >
+                <div className="home1-page-detail-aside-inner">
+                  <div className="home1-page-detail-aside-card home1-page-detail-aside-card--primary">
+                    <p className="home1-page-detail-aside-label">Ready to book?</p>
+                    <h2 className="home1-page-detail-aside-title">
+                      Need an electrician in {location.name}?
+                    </h2>
+                    <p className="home1-page-detail-aside-note">
+                      Book fixed-price work online or call for 24/7 emergency assistance.
+                    </p>
+                    <div className="home1-page-detail-aside-actions">
+                      <Link
+                        href={location.bookHref}
+                        className="home1-page-detail-btn home1-page-detail-btn--primary"
+                      >
+                        Book online
+                      </Link>
+                      <a
+                        href={`tel:${FOOTER_PHONE_TEL}`}
+                        className="home1-page-detail-btn home1-page-detail-btn--call"
+                      >
+                        <IconPhone className="w-4 h-4 shrink-0" aria-hidden="true" />
+                        {FOOTER_PHONE}
+                      </a>
+                    </div>
                   </div>
-                  <ul className="home1-location-detail-sidebar-trust list-none p-0 m-0">
-                    {location.highlights.map((h) => (
-                      <li key={`side-${h}`}>
-                        <IconCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
+
+                  {location.highlights?.length ? (
+                    <div className="home1-page-detail-aside-card">
+                      <p className="home1-page-detail-aside-label">Why book with us</p>
+                      <ul className="home1-page-detail-aside-list">
+                        {location.highlights.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  {location.nearby?.length ? (
+                    <div className="home1-page-detail-aside-card">
+                      <p className="home1-page-detail-aside-label">Nearby areas</p>
+                      <ul className="home1-page-detail-related">
+                        {location.nearby.slice(0, 6).map((area) => (
+                          <li key={area.slug}>
+                            <Link href={area.href}>{area.name}</Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  <Link href="/locations" className="home1-page-detail-aside-back">
+                    ← Back to all areas
+                  </Link>
                 </div>
               </aside>
             </div>
           </div>
         </section>
 
-        {location.mapEmbed ? (
+        {location.services?.length ? (
           <section
-            id="map"
-            className="home1-location-detail-map"
-            aria-labelledby="location-map-heading"
+            className="home1-location-detail-services"
+            aria-labelledby="location-services-heading"
           >
-            <div className={SERVICES_PAGE_CONTAINER}>
-              <h2 id="location-map-heading" className="home1-location-detail-h2">
-                Find us in {location.name}
+            <div className={CONTAINER}>
+              <h2 id="location-services-heading" className="home1-location-detail-services-title">
+                {location.servicesIntro}
               </h2>
-              <p className="home1-location-detail-sub">
-                Coverage map for {location.name} and surrounding areas
-              </p>
-              <div className="home1-location-detail-map-frame">
-                <iframe
-                  title={`Map of ${location.name}`}
-                  src={location.mapEmbed}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  allowFullScreen
-                />
-              </div>
+              <ul className="home1-location-detail-services-grid list-none p-0 m-0">
+                {location.services.map((svc) => (
+                  <li key={svc.slug}>
+                    <Link href={svc.href} className="home1-location-detail-service-card">
+                      <span className="home1-location-detail-service-card-top">
+                        {svc.tag ? (
+                          <span className="home1-location-detail-service-tag">{svc.tag}</span>
+                        ) : null}
+                        {svc.priceIncVat ? (
+                          <span className="home1-location-detail-service-price">
+                            from <strong>£{svc.priceIncVat}</strong>
+                            <span className="sr-only"> including VAT</span>
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="home1-location-detail-service-name">{svc.name}</span>
+                      <span className="home1-location-detail-service-link">
+                        View service
+                        <IconArrow className="w-4 h-4 shrink-0" aria-hidden="true" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
         ) : null}
-
-        {/* Services in this area */}
-        <section
-          className="home1-location-detail-services"
-          aria-labelledby="location-services-heading"
-        >
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <h2 id="location-services-heading" className="home1-location-detail-services-title">
-              {location.servicesIntro}
-            </h2>
-            <ul className="home1-location-detail-services-grid list-none p-0 m-0">
-              {location.services.map((svc) => (
-                <li key={svc.slug}>
-                  <Link href={svc.href} className="home1-location-detail-service-card">
-                    <span className="home1-location-detail-service-card-top">
-                      {svc.tag ? (
-                        <span className="home1-location-detail-service-tag">{svc.tag}</span>
-                      ) : null}
-                      {svc.priceIncVat ? (
-                        <span className="home1-location-detail-service-price">
-                          from <strong>£{svc.priceIncVat}</strong>
-                          <span className="sr-only"> including VAT</span>
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="home1-location-detail-service-name">{svc.name}</span>
-                    <span className="home1-location-detail-service-link">
-                      View service
-                      <IconArrow className="w-4 h-4 shrink-0" aria-hidden="true" />
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
 
         <LocationRelatedAreas currentSlug={location.slug} areas={location.nearby} />
 
