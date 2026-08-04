@@ -43,7 +43,12 @@ const nextConfig = {
       },
       {
         source: "/locations/derby-city-centre",
-        destination: "/locations/derby",
+        destination: "/locations/electricians-derby",
+        permanent: true,
+      },
+      {
+        source: "/locations/derby",
+        destination: "/locations/electricians-derby",
         permanent: true,
       },
       {

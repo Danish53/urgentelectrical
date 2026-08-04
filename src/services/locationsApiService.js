@@ -70,8 +70,99 @@ function locationNamesMatch(a, b) {
   return Boolean(left && right && left === right);
 }
 
+const NEARBY_STOP_TOKENS = new Set([
+  "electrician",
+  "electricians",
+  "nottinghamshire",
+  "derbyshire",
+  "leicestershire",
+  "lincolnshire",
+  "nottingham",
+  "derby",
+  "leicester",
+  "lincoln",
+  "east",
+  "midlands",
+  "united",
+  "kingdom",
+  "england",
+  "the",
+  "and",
+  "near",
+  "city",
+  "centre",
+  "center",
+]);
+
 /**
- * Live CMS locations near the opened area (same city / region).
+ * Build local search seeds from area name + slug so nearby is place-specific
+ * (e.g. Alma / electrician-alma-selston-nottinghamshire → Selston).
+ * @param {{ slug?: string | null, name?: string | null, cityName?: string | null }} input
+ * @returns {string[]}
+ */
+export function buildNearbySearchSeeds(input) {
+  const slug = String(input.slug ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/^electrician-/, "");
+  const name = String(input.name ?? "").trim();
+  const cityName = String(input.cityName ?? "").trim();
+
+  const cityTokens = new Set(
+    normalizeLocationName(cityName)
+      .split(/\s+/)
+      .filter(Boolean)
+  );
+
+  /** @type {string[]} */
+  const seeds = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+
+  /**
+   * @param {string} value
+   */
+  function pushSeed(value) {
+    const trimmed = String(value ?? "").replace(/\s+/g, " ").trim();
+    if (!trimmed || trimmed.length < 3) return;
+    const key = normalizeLocationName(trimmed);
+    if (!key || seen.has(key)) return;
+    if (cityTokens.has(key) && key === normalizeLocationName(cityName)) return;
+    seen.add(key);
+    seeds.push(trimmed);
+  }
+
+  const slugTokens = slug
+    .split("-")
+    .map((t) => t.trim())
+    .filter((t) => t.length > 2 && !NEARBY_STOP_TOKENS.has(t) && !cityTokens.has(t));
+
+  // Parent locality often comes after the hamlet in CMS slugs (alma-selston-...).
+  if (slugTokens.length > 1) {
+    pushSeed(slugTokens.slice(1).join(" "));
+    for (let i = 1; i < slugTokens.length; i += 1) {
+      pushSeed(slugTokens[i]);
+    }
+  }
+
+  if (name) {
+    const shortName = name.split(",")[0].trim();
+    pushSeed(shortName);
+    const parts = shortName.split(/\s+/).filter(Boolean);
+    if (parts.length > 1) {
+      pushSeed(parts.slice(1).join(" "));
+    }
+  }
+
+  for (const token of slugTokens) {
+    pushSeed(token.replace(/\b\w/g, (c) => c.toUpperCase()));
+  }
+
+  return seeds;
+}
+
+/**
+ * Nearby areas for the opened location detail (locality-first, not city-wide related).
  * @param {{
  *   cityName?: string | null,
  *   citySlug?: string | null,
@@ -81,42 +172,69 @@ function locationNamesMatch(a, b) {
  * }} options
  * @returns {Promise<{ name: string, slug: string, href: string }[]>}
  */
-export async function fetchRelatedLocationsForCity(options) {
+export async function fetchNearbyLocationsForArea(options) {
   const currentSlug = String(options.currentSlug ?? "").trim();
   const currentName = String(options.currentName ?? "").trim();
   const limit = Math.max(1, Math.min(options.limit ?? 8, 16));
   const cityName = String(options.cityName ?? "").trim();
   const citySlug = String(options.citySlug ?? "").trim();
   const regionId = regionIdFromCity(citySlug, cityName);
+  const seeds = buildNearbySearchSeeds({
+    slug: currentSlug,
+    name: currentName,
+    cityName,
+  });
 
-  /** @type {Map<string, { name: string, slug: string, href: string }>} */
+  /** @type {Map<string, { name: string, slug: string, href: string, score: number }>} */
   const bySlug = new Map();
+  const seedKeys = seeds.map((s) => normalizeLocationName(s)).filter(Boolean);
 
   /**
    * @param {{ areaName?: string, name?: string, slug?: string, href?: string } | null | undefined} loc
+   * @param {number} baseScore
    */
-  function addLocation(loc) {
+  function addLocation(loc, baseScore = 0) {
     const slug = String(loc?.slug ?? "").trim();
-    if (!slug || slug === currentSlug || bySlug.has(slug)) return;
+    if (!slug || slug === currentSlug) return;
 
     const name = String(loc?.areaName ?? loc?.name ?? "").trim();
     if (!name) return;
     if (currentName && locationNamesMatch(name, currentName)) return;
 
+    const haystack = normalizeLocationName(`${name} ${slug}`);
+    let score = baseScore;
+    for (const seed of seedKeys) {
+      if (seed && haystack.includes(seed)) score += 10;
+    }
+
+    const existing = bySlug.get(slug);
+    if (existing && existing.score >= score) return;
+
     bySlug.set(slug, {
       name,
       slug,
       href: loc.href || `/locations/${slug}`,
+      score,
     });
   }
 
-  const cityQuery = cityName || citySlug;
-  if (cityQuery) {
+  for (const seed of seeds) {
     try {
-      const { locations } = await fetchLocationsSearch(cityQuery);
-      locations.forEach(addLocation);
+      const { locations } = await fetchLocationsSearch(seed);
+      locations.forEach((loc) => addLocation(loc, 20));
     } catch {
-      /* fall through to region fill */
+      /* try next seed */
+    }
+    if (bySlug.size >= limit) break;
+  }
+
+  // Soft fill from the same city only when locality search returned almost nothing.
+  if (bySlug.size < 3 && cityName) {
+    try {
+      const { locations } = await fetchLocationsSearch(cityName);
+      locations.forEach((loc) => addLocation(loc, 1));
+    } catch {
+      /* ignore */
     }
   }
 
@@ -124,7 +242,6 @@ export async function fetchRelatedLocationsForCity(options) {
     const candidates = (LOCATION_AREAS_BY_REGION[regionId] ?? []).filter(
       (areaName) => !currentName || !locationNamesMatch(areaName, currentName),
     );
-    // Only search enough candidates to fill remaining slots (avoid flooding SSR).
     const toSearch = candidates.slice(0, Math.max((limit - bySlug.size) * 2, limit));
 
     for (let i = 0; i < toSearch.length && bySlug.size < limit; i += 4) {
@@ -148,11 +265,19 @@ export async function fetchRelatedLocationsForCity(options) {
           }
         }),
       );
-      results.forEach(addLocation);
+      results.forEach((loc) => addLocation(loc, 0));
     }
   }
 
-  return Array.from(bySlug.values()).slice(0, limit);
+  return Array.from(bySlug.values())
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .slice(0, limit)
+    .map(({ name, slug, href }) => ({ name, slug, href }));
+}
+
+/** @deprecated Use fetchNearbyLocationsForArea */
+export async function fetchRelatedLocationsForCity(options) {
+  return fetchNearbyLocationsForArea(options);
 }
 
 /**

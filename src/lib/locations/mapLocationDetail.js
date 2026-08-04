@@ -1,12 +1,6 @@
 import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
 import { buildLocationRecord } from "@/data/locationDetails";
 import { stripHtmlFlat, toParagraphs } from "@/lib/content/toParagraphs";
-import {
-  buildLocationMapEmbed,
-  buildLocationMapQuery,
-  readLocationCoordinates,
-  resolveLocationMapPoint,
-} from "@/lib/locations/buildLocationMapEmbed";
 import { absoluteCmsUrl, absoluteSiteUrl } from "@/lib/siteUrl";
 import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 const DEFAULT_BOOK_HREF = "/services";
@@ -331,24 +325,9 @@ export function mapLocationDetailFromApi(payload) {
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),
     faqs,
-    mapEmbed: buildLocationMapEmbed({
-      name,
-      cityName,
-      slug,
-      ...(readLocationCoordinates(root) ?? {}),
-    }),
-    mapQuery: buildLocationMapQuery({ name, cityName, slug }),
-    mapPoint: (() => {
-      const point = resolveLocationMapPoint({
-        name,
-        cityName,
-        slug,
-        ...(readLocationCoordinates(root) ?? {}),
-      });
-      return point?.lat != null && point?.lng != null
-        ? { lat: point.lat, lng: point.lng }
-        : null;
-    })(),
+    mapEmbed:
+      fallback.mapEmbed ||
+      `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
     nearby: (fallback.nearby ?? []).filter((area) => {
       if (!area?.slug || area.slug === slug) return false;
       const shortName = name.split(",")[0].trim().toLowerCase();

@@ -29,6 +29,7 @@ export const FOOTER_BOOK_SERVICES_ONLINE = [
 
 export const FOOTER_AREAS = [
   { label: "Nottingham", href: "/locations/nottingham" },
+  { label: "Arnold", href: "/locations/electrician-arnold-nottingham" },
   { label: "Derby", href: "/locations/electricians-derby" },
   { label: "Leicester", href: "/locations/leicester" },
   { label: "Loughborough", href: "/locations/loughborough" },

@@ -20,10 +20,11 @@ export function guessLocationSlug(name) {
 /**
  * @param {string} pinName
  * @param {Array<{ areaName: string, slug: string }>} locations
+ * @returns {string} Live slug when matched; otherwise "" (do not invent 404 URLs)
  */
 export function resolveLocationSlugForPin(pinName, locations) {
   const normalizedPin = normalizeLocationName(pinName);
-  if (!normalizedPin) return guessLocationSlug(pinName);
+  if (!normalizedPin) return "";
 
   for (const location of locations) {
     const normalizedArea = normalizeLocationName(location.areaName);
@@ -39,5 +40,5 @@ export function resolveLocationSlugForPin(pinName, locations) {
     }
   }
 
-  return guessLocationSlug(pinName);
+  return "";
 }

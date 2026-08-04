@@ -12,6 +12,7 @@ import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { getBlogImageAlt, getBlogImageUrl } from "@/data/blogs";
 import AppImage from "@/components/common/AppImage";
+import NiceicCertificateBadge from "@/components/common/NiceicCertificateBadge";
 
 const SIDEBAR_TRUST = ["NICEIC approved", "Fixed pricing", "Same-day slots"];
 
@@ -133,6 +134,8 @@ function BlogSidebar({ post }) {
           {FOOTER_PHONE}
         </a>
       </div>
+
+      <NiceicCertificateBadge />
 
       <ul className="home1-blog-sidebar-trust">
         {SIDEBAR_TRUST.map((item) => (

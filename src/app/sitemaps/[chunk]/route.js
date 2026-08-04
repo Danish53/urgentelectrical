@@ -1,4 +1,3 @@
-import { ALL_LOCATIONS } from "@/data/locationDetails";
 import {
   LOCATION_API_PAGES_PER_SITEMAP,
   buildCoreSitemapEntries,
@@ -72,12 +71,15 @@ ${entries.map(urlEntryXml).join("\n")}
   }
 
   if (!entries.length && chunkId === 1) {
-    entries = ALL_LOCATIONS.map((loc) => ({
-      url: loc.canonicalUrl,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.8,
-    }));
+    // Do not emit static guessed location slugs — they 404 in CMS and inflate broken-link counts.
+    entries = [
+      {
+        url: `${site}/locations`,
+        lastModified: now,
+        changeFrequency: "monthly",
+        priority: 0.88,
+      },
+    ];
   }
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>

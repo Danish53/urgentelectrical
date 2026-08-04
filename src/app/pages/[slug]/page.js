@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { buildPageDetailMetadata, buildPageDetailJsonLd } from "@/data/pagesSeo";
+import { getPageDetailLayout } from "@/data/pageDetailMocks";
 import OtherServiceDetailClient from "@/components/pages/OtherServiceDetailClient";
 import { getServiceCategories } from "@/lib/services/getServices";
 import { getPageBySlug } from "@/lib/cms/serverLoads";
+import { resolveAreaLocationLinks } from "@/lib/locations/locationSlugIndex";
 import { fetchRelatedServiceLinks } from "@/services/relatedServicesApiService";
 import "../../home1/home1.css";
 import "../pages.css";
@@ -39,6 +41,16 @@ export default async function OtherServiceDetailPage({ params }) {
     relatedLinks = [];
   }
 
+  let resolvedServiceAreas = null;
+  try {
+    const layout = getPageDetailLayout(page?.slug || slug, page);
+    if (layout.serviceAreas?.length) {
+      resolvedServiceAreas = await resolveAreaLocationLinks(layout.serviceAreas);
+    }
+  } catch {
+    resolvedServiceAreas = null;
+  }
+
   const jsonLd = page?.slug ? buildPageDetailJsonLd(page) : null;
 
   return (
@@ -46,7 +58,11 @@ export default async function OtherServiceDetailPage({ params }) {
       {jsonLd ? (
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       ) : null}
-      <OtherServiceDetailClient page={page} relatedLinks={relatedLinks} />
+      <OtherServiceDetailClient
+        page={page}
+        relatedLinks={relatedLinks}
+        resolvedServiceAreas={resolvedServiceAreas}
+      />
     </>
   );
 }

@@ -50,7 +50,7 @@ export default function LocationsLeafletMap({ className = "" }) {
       return {
         ...pin,
         label,
-        href: `/locations/${slug}`,
+        href: slug ? `/locations/${slug}` : "/locations",
       };
     });
   }, [locations]);

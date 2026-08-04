@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import dynamic from "next/dynamic";
 import { shouldUnoptimizeImage } from "@/lib/images/imageSrc";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -13,12 +12,8 @@ import { CONTAINER } from "@/components/home1/constants";
 import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import LocationRelatedAreas from "@/components/locations/LocationRelatedAreas";
 import PageDetailFaq from "@/components/common/PageDetailFaq";
+import NiceicCertificateBadge from "@/components/common/NiceicCertificateBadge";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-
-const LocationDetailMap = dynamic(() => import("@/components/locations/LocationDetailMap"), {
-  ssr: false,
-  loading: () => <div className="home1-locations-map__loading" aria-hidden="true" />,
-});
 
 function formatSectionNumber(index) {
   return String(index).padStart(2, "0");
@@ -239,7 +234,7 @@ export default function LocationDetailClient({ location }) {
                   </section>
                 ) : null}
 
-                {location.mapEmbed || location.mapQuery || location.name ? (
+                {location.mapEmbed ? (
                   <section className="home1-page-detail-card" id="map">
                     <header className="home1-page-detail-card-head">
                       <span className="home1-page-detail-card-num">{sectionNumbers.map}</span>
@@ -249,14 +244,12 @@ export default function LocationDetailClient({ location }) {
                       </div>
                     </header>
                     <div className="home1-location-detail-map-frame home1-location-detail-map-frame--in-card">
-                      <LocationDetailMap
-                        name={location.name}
-                        cityName={location.cityName || location.regionLabel || ""}
-                        slug={location.slug}
-                        lat={location.mapPoint?.lat ?? null}
-                        lng={location.mapPoint?.lng ?? null}
-                        mapQuery={location.mapQuery || ""}
-                        mapEmbed={location.mapEmbed || ""}
+                      <iframe
+                        title={`Map of ${location.name}`}
+                        src={location.mapEmbed}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        allowFullScreen
                       />
                     </div>
                   </section>
@@ -292,6 +285,8 @@ export default function LocationDetailClient({ location }) {
                       </a>
                     </div>
                   </div>
+
+                  <NiceicCertificateBadge />
 
                   {location.highlights?.length ? (
                     <div className="home1-location-aside-trust">
@@ -369,7 +364,11 @@ export default function LocationDetailClient({ location }) {
           </section>
         ) : null}
 
-        <LocationRelatedAreas currentSlug={location.slug} areas={location.nearby} />
+        <LocationRelatedAreas
+          currentSlug={location.slug}
+          currentName={location.name}
+          areas={location.nearby}
+        />
 
         <CTAHome1 bookHref={location.bookHref} />
       </main>

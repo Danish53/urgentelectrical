@@ -1,6 +1,4 @@
 import { LOCATION_AREAS_BY_REGION, LOCATION_FILTERS } from "@/data/locationsPage";
-import { slugify } from "@/lib/slugs";
-import { guessLocationSlug } from "@/lib/locations/resolveLocationSlug";
 
 /**
  * Display labels for "Areas we cover" on service / other-service detail pages.
@@ -27,12 +25,19 @@ const DEFAULT_REGION_ID = "nottingham";
 /**
  * Static display name → CMS `/locations/{slug}`.
  * Use `null` when the portal has no published location row (avoid inventing a 404 slug).
+ * Never invent short slugs here — unknown names resolve to /locations via getAreaLocationHref.
  */
 export const AREA_LOCATION_SLUG_OVERRIDES = {
   "Nottingham City Centre": "nottingham",
-  "Derby City Centre": "derby",
+  Nottingham: "nottingham",
+  "Derby City Centre": "electricians-derby",
+  Derby: "electricians-derby",
   "Leicester City Centre": "leicester",
+  Leicester: "leicester",
   Arnold: "electrician-arnold-nottingham",
+  Loughborough: "loughborough",
+  "Newark-on-Trent": "newarkontrent",
+  Newark: "newarkontrent",
   "Long Eaton": null,
   Sandiacre: null,
   Spondon: null,
@@ -40,8 +45,11 @@ export const AREA_LOCATION_SLUG_OVERRIDES = {
 };
 
 /**
+ * Sync slug lookup — overrides only. Does not guess CMS slugs (guesses caused SEO 404s).
+ * For API-backed resolution use `lookupLocationSlug` / `resolveAreaLocationLinks`.
+ *
  * @param {string} areaName
- * @returns {string} CMS slug, or "" when no live location page exists
+ * @returns {string} CMS slug, or "" when no known live location page exists
  */
 export function getAreaLocationSlug(areaName) {
   const name = String(areaName ?? "").trim();
@@ -52,10 +60,7 @@ export function getAreaLocationSlug(areaName) {
     return typeof override === "string" && override.trim() ? override.trim() : "";
   }
 
-  const guessed = guessLocationSlug(name);
-  if (guessed) return guessed;
-
-  return slugify(name);
+  return "";
 }
 
 /**
@@ -65,6 +70,27 @@ export function getAreaLocationSlug(areaName) {
 export function getAreaLocationHref(areaName) {
   const slug = getAreaLocationSlug(areaName);
   return slug ? `/locations/${slug}` : "/locations";
+}
+
+/**
+ * Normalize area list items for UI (string or { name, href }).
+ * @param {unknown} area
+ * @returns {{ name: string, href: string } | null}
+ */
+export function normalizeAreaLink(area) {
+  if (typeof area === "string") {
+    const name = area.trim();
+    if (!name) return null;
+    return { name, href: getAreaLocationHref(name) };
+  }
+  if (area && typeof area === "object") {
+    const row = /** @type {Record<string, unknown>} */ (area);
+    const name = String(row.name ?? row.label ?? "").trim();
+    if (!name) return null;
+    const href = String(row.href ?? "").trim() || getAreaLocationHref(name);
+    return { name, href };
+  }
+  return null;
 }
 
 /**
@@ -126,12 +152,6 @@ function regionIdFromAreaName(name) {
 
 /**
  * Resolve which location/region a page is assigned to, then return its service areas.
- *
- * Priority:
- * 1. Explicit CMS area list (`service_areas` / `areas` / `locations`)
- * 2. CMS location / city / region fields
- * 3. Infer from slug / title (e.g. …-nottingham)
- * 4. Default Nottingham
  *
  * @param {{
  *   serviceAreas?: unknown,

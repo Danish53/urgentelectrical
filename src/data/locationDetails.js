@@ -7,7 +7,6 @@ import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 import { absoluteCmsUrl, absoluteSiteUrl, getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { documentTitle } from "@/lib/seo/documentTitle";
-import { buildLocationMapEmbed } from "@/lib/locations/buildLocationMapEmbed";
 
 const SITE = getSiteUrl();
 
@@ -123,6 +122,7 @@ function getNearby(name, regionId, limit = 8) {
       return lower !== String(name ?? "").toLowerCase() && lower !== shortName;
     })
     .map((areaName) => {
+      // Only known live CMS slugs — never invent short names that 404.
       const slug = getAreaLocationSlug(areaName);
       if (!slug) return null;
       return { name: areaName, slug, href: `/locations/${slug}` };
@@ -159,11 +159,7 @@ export function buildLocationRecord(name) {
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),
     faqs: buildFaqs(name, regionLabel),
-    mapEmbed: buildLocationMapEmbed({
-      name,
-      cityName: regionLabel,
-      slug,
-    }),
+    mapEmbed: `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
     nearby: getNearby(name, regionId),
     bookHref: "/services",
     metaTitle: `Electrician ${name} | 24/7 Emergency`,

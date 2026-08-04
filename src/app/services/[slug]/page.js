@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import ServiceDetailClient from "@/components/services/ServiceDetailClient";
 import { buildServiceJsonLd, buildServiceMetadata } from "@/data/servicesPage";
 import { getServiceDetailBySlug } from "@/lib/services/getServices";
+import { resolveAreaLocationLinks } from "@/lib/locations/locationSlugIndex";
 import "../../home1/home1.css";
 import "../../pages/pages.css";
 
@@ -20,6 +21,19 @@ export default async function ServiceDetailPage({ params }) {
   if (!detail) notFound();
 
   const { service, related } = detail;
+
+  if (Array.isArray(service.serviceAreas) && service.serviceAreas.length) {
+    try {
+      service.serviceAreas = await resolveAreaLocationLinks(
+        service.serviceAreas.map((area) =>
+          typeof area === "string" ? area : String(area?.name ?? "")
+        )
+      );
+    } catch {
+      /* keep original area names; hrefs fall back safely in UI */
+    }
+  }
+
   const jsonLd = buildServiceJsonLd(service);
 
   return (

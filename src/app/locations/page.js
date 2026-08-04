@@ -60,7 +60,6 @@ export default async function LocationsPage({ searchParams }) {
     initialLocations = result.locations;
     initialPagination = result.pagination;
 
-    // If page is past the end, fall back to last page so links stay valid.
     if (
       initialPagination &&
       requestedPage > initialPagination.lastPage &&

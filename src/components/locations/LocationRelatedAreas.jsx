@@ -4,31 +4,36 @@ import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 /**
  * @param {{
  *   currentSlug: string,
+ *   currentName?: string,
  *   areas?: { name: string, slug: string, href: string }[],
  * }} props
  */
-export default function LocationRelatedAreas({ currentSlug, areas = [] }) {
-  const relatedAreas = (areas ?? []).filter(
+export default function LocationRelatedAreas({ currentSlug, currentName = "", areas = [] }) {
+  const nearbyAreas = (areas ?? []).filter(
     (area) => area?.slug && area.slug !== currentSlug && area.name,
   );
 
-  if (!relatedAreas.length) return null;
+  if (!nearbyAreas.length) return null;
+
+  const heading = currentName.trim()
+    ? `Nearby areas around ${currentName.trim()}`
+    : "Nearby areas";
 
   return (
     <section
       className="home1-locations-areas bg-white py-12 sm:py-16 lg:py-20"
-      aria-labelledby="location-related-areas-heading"
+      aria-labelledby="location-nearby-areas-heading"
     >
       <div className={SERVICES_PAGE_CONTAINER}>
         <h2
-          id="location-related-areas-heading"
+          id="location-nearby-areas-heading"
           className="text-center text-[24px] sm:text-[30px] lg:text-[34px] font-extrabold tracking-tight text-[#111827] mb-8 sm:mb-10"
         >
-          We proudly serve the following areas
+          {heading}
         </h2>
 
         <ul className="home1-locations-areas-grid list-none p-0 m-0">
-          {relatedAreas.map((area) => (
+          {nearbyAreas.map((area) => (
             <li key={area.slug} className="home1-locations-area-item">
               <Link href={area.href} className="home1-locations-area-card">
                 <span className="home1-locations-area-icon" aria-hidden="true">

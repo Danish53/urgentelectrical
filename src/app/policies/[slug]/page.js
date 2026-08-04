@@ -9,6 +9,7 @@ import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { getApiErrorMessage } from "@/lib/api/errors";
 import { getPolicyBySlug } from "@/lib/cms/serverLoads";
 import { getPolicyImageUrl } from "@/services/policyApiService";
+import NiceicCertificateBadge from "@/components/common/NiceicCertificateBadge";
 import "../../home1/home1.css";
 import "../policies.css";
 
@@ -183,6 +184,8 @@ export default async function PolicyDetailPage({ params }) {
                           Call {FOOTER_PHONE}
                         </a>
                       </div>
+
+                      <NiceicCertificateBadge />
                     </aside>
                   </div>
                 ) : null}

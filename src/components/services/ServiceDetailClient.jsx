@@ -15,8 +15,9 @@ import SectionHeader from "@/components/home1/SectionHeader";
 import { SECTION_PY, SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
 import { IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { getAreaLocationHref } from "@/data/areas";
+import { normalizeAreaLink } from "@/data/areas";
 import PageDetailFaq from "@/components/common/PageDetailFaq";
+import NiceicCertificateBadge from "@/components/common/NiceicCertificateBadge";
 import { useVatPreference } from "@/components/providers/VatPreferenceProvider";
 import { buildCheckoutHref } from "@/lib/checkoutHref";
 import { getVariantById } from "@/lib/services/buildBookableServiceFromDetail";
@@ -447,7 +448,9 @@ function buildContentSections(service) {
     });
   }
 
-  const areas = service.serviceAreas?.length ? service.serviceAreas : [];
+  const areas = (service.serviceAreas?.length ? service.serviceAreas : [])
+    .map((area) => normalizeAreaLink(area))
+    .filter(Boolean);
   if (areas.length) {
     items.push({
       id: "areas",
@@ -458,9 +461,9 @@ function buildContentSections(service) {
         <>
           <ul className="home1-page-detail-areas">
             {areas.map((area) => (
-              <li key={area}>
-                <Link href={getAreaLocationHref(area)} className="home1-page-detail-areas-item">
-                  {area}
+              <li key={area.name}>
+                <Link href={area.href} className="home1-page-detail-areas-item">
+                  {area.name}
                 </Link>
               </li>
             ))}
@@ -694,6 +697,8 @@ function PricingCard({ service, selectedVariant, selectedId, onSelectVariant, on
             />
           </div>
         </div>
+
+        <NiceicCertificateBadge />
 
         <Link href="/services" className="home1-page-detail-aside-back">
           ← Back to all services

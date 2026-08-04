@@ -8,9 +8,10 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import AppImage from "@/components/common/AppImage";
 import { CONTAINER } from "@/components/home1/constants";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { getAreaLocationHref } from "@/data/areas";
+import { normalizeAreaLink } from "@/data/areas";
 import { IconCheck, IconPhone } from "@/components/home1/icons";
 import PageDetailFaq from "@/components/common/PageDetailFaq";
+import NiceicCertificateBadge from "@/components/common/NiceicCertificateBadge";
 
 function formatSectionNumber(index) {
   return String(index).padStart(2, "0");
@@ -259,13 +260,16 @@ export default function OtherServiceDetailRich({
                       </div>
                     </header>
                     <ul className="home1-page-detail-areas">
-                      {layout.serviceAreas.map((area) => (
-                        <li key={area}>
+                      {(layout.serviceAreas || [])
+                        .map((area) => normalizeAreaLink(area))
+                        .filter(Boolean)
+                        .map((area) => (
+                        <li key={area.name}>
                           <Link
-                            href={getAreaLocationHref(area)}
+                            href={area.href}
                             className="home1-page-detail-areas-item"
                           >
-                            {area}
+                            {area.name}
                           </Link>
                         </li>
                       ))}
@@ -314,6 +318,8 @@ export default function OtherServiceDetailRich({
                       </a>
                     </div>
                   </div>
+
+                  <NiceicCertificateBadge />
 
                   {layout.includes.length ? (
                     <div className="home1-page-detail-aside-card">
