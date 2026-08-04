@@ -16,8 +16,8 @@ export default function NiceicCertificateBadge({ className = "" }) {
       <Image
         src={NICEIC_CERTIFICATE_IMAGE}
         alt="NICEIC Certificate of Excellence awarded to Urgent Electrical Services Limited — celebrating over 10 years' certification"
-        width={640}
-        height={800}
+        width={927}
+        height={877}
         className="home1-niceic-cert-badge__img"
         sizes="(max-width: 1024px) 100vw, 280px"
       />

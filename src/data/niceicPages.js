@@ -3,7 +3,7 @@ import { getSiteUrl } from "@/lib/siteUrl";
 
 export const NICEIC_APPROVED_PATH = "/niceic-certificate-of-excellence";
 export const NICEIC_CERTIFICATE_PATH = "/niceic-certificate";
-export const NICEIC_CERTIFICATE_IMAGE = "/niceic-certificate-excellence.png";
+export const NICEIC_CERTIFICATE_IMAGE = "/niceic-certificate-of-excellence.png";
 
 export const NICEIC_APPROVED_CANONICAL = `${getSiteUrl()}${NICEIC_APPROVED_PATH}`;
 export const NICEIC_CERTIFICATE_CANONICAL = `${getSiteUrl()}${NICEIC_CERTIFICATE_PATH}`;
