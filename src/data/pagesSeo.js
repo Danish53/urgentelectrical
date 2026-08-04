@@ -1,6 +1,6 @@
 import { getSiteUrl, getOgImageUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import { getPageImageUrl } from "@/services/pagesApiService";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
 export function buildPagesListingMetadata() {
   const site = getSiteUrl();
@@ -9,9 +9,7 @@ export function buildPagesListingMetadata() {
   const description =
     "Browse specialist electrical guides and informative service pages from Urgent Electrical — expert help across Nottingham and the East Midlands.";
 
-  return {
-    title: documentTitle(title),
-    description,
+  return buildSeoMetadata(title, description, {
     keywords: [
       "electrical guides Nottingham",
       "electrician information East Midlands",
@@ -23,7 +21,6 @@ export function buildPagesListingMetadata() {
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title: documentTitle(title).absolute,
       description,
       images: [
         {
@@ -36,13 +33,12 @@ export function buildPagesListingMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title: documentTitle(title).absolute,
       description,
       images: [getOgImageUrl()],
     },
     alternates: { canonical },
     robots: { index: true, follow: true },
-  };
+  });
 }
 
 /**
@@ -53,22 +49,18 @@ export function buildPageDetailMetadata(page) {
   const slug = page.slug;
   const canonical = `${site}/pages/${slug}`;
   const rawTitle = page.seo_title?.trim() || page.title || "Electrical guide";
-  const pageTitle = documentTitle(rawTitle);
   const description =
     page.seo_description?.trim() ||
     page.description?.trim() ||
     `Learn about ${page.title} from NICEIC approved electricians at Urgent Electrical in Nottingham and the East Midlands.`;
   const imageUrl = getPageImageUrl(page) || getOgImageUrl();
 
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(rawTitle, description, {
     openGraph: {
       type: "article",
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       images: imageUrl
         ? [{ url: imageUrl, width: 1200, height: 630, alt: page.title }]
@@ -76,13 +68,12 @@ export function buildPageDetailMetadata(page) {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
       images: imageUrl ? [imageUrl] : [getOgImageUrl()],
     },
     alternates: { canonical },
     robots: { index: true, follow: true },
-  };
+  });
 }
 
 /**
@@ -103,8 +94,13 @@ export function buildPageDetailJsonLd(page) {
         "@type": "BreadcrumbList",
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Home", item: site },
-          { "@type": "ListItem", position: 2, name: "Other services", item: `${site}/pages` },
-          { "@type": "ListItem", position: 3, name: page.title, item: canonical },
+          { "@type": "ListItem", position: 2, name: "Guides", item: `${site}/pages` },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: page.seo_title?.trim() || page.title,
+            item: canonical,
+          },
         ],
       },
       {
@@ -114,7 +110,6 @@ export function buildPageDetailJsonLd(page) {
         name: page.seo_title?.trim() || page.title,
         description,
         isPartOf: { "@id": `${site}/#website` },
-        publisher: { "@id": `${site}/#organization` },
       },
     ],
   };

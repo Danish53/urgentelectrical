@@ -1,5 +1,5 @@
 import { getSiteUrl, OG_IMAGE_PATH, getOgImageUrl } from "@/lib/siteUrl";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
 const SITE = getSiteUrl();
 
@@ -54,11 +54,11 @@ export function getBlogImageUrl(post) {
 }
 
 export function buildBlogListingMetadata() {
-  const pageTitle = documentTitle("Blog & Electrical News | Nottingham");
-  return {
-    title: pageTitle,
-    description:
-      "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.",
+  const title = "Blog & Electrical News | Nottingham";
+  const description =
+    "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.";
+
+  return buildSeoMetadata(title, description, {
     keywords: [
       "electrical blog Nottingham",
       "electrician tips",
@@ -71,24 +71,21 @@ export function buildBlogListingMetadata() {
       locale: "en_GB",
       url: `${SITE}/blog`,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description:
         "Read guides on EICR, PAT testing, emergency electrics, fuse boards, and commercial compliance from local experts.",
       images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: "Urgent Electrical blog" }],
     },
     alternates: { canonical: `${SITE}/blog` },
-  };
+  });
 }
 
 export function buildBlogPostMetadata(post) {
   const imageUrl = getBlogImageUrl(post);
   const imageAlt = getBlogImageAlt(post);
-  const pageTitle = documentTitle(post.seoTitle || post.title);
+  const rawTitle = post.seoTitle || post.title;
   const description = post.metaDescription;
 
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(rawTitle, description, {
     keywords: [...post.keywords, "Urgent Electrical blog", "Nottingham electrician"],
     authors: [{ name: post.author }],
     openGraph: {
@@ -96,7 +93,6 @@ export function buildBlogPostMetadata(post) {
       locale: "en_GB",
       url: post.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       publishedTime: post.publishedISO,
       section: post.categoryLabel,
@@ -112,12 +108,11 @@ export function buildBlogPostMetadata(post) {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
       images: [imageUrl],
     },
     alternates: { canonical: post.canonicalUrl },
-  };
+  });
 }
 
 export const BLOG_LISTING_JSON_LD = buildBlogListingJsonLd([]);

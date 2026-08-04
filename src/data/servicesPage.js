@@ -1,7 +1,7 @@
 import { NAV_GROUPS } from "@/components/navData";
 import { serviceSlug } from "@/lib/slugs";
 import { formatApiPrice, priceIncVatFromString } from "@/lib/pricing";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
 import { getSiteUrl } from "@/lib/siteUrl";
 
@@ -22,11 +22,8 @@ export function getRelatedServices(service, list, limit = 3) {
 }
 
 export function buildServiceMetadata(service) {
-  const pageTitle = documentTitle(service.metaTitle);
   const description = service.metaDescription;
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(service.metaTitle, description, {
     keywords: [
       ...service.keywords,
       "NICEIC electrician Nottingham",
@@ -38,7 +35,6 @@ export function buildServiceMetadata(service) {
       locale: "en_GB",
       url: service.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -51,13 +47,12 @@ export function buildServiceMetadata(service) {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
     },
     alternates: {
       canonical: service.canonicalUrl,
     },
-  };
+  });
 }
 
 export function buildServiceJsonLd(service) {

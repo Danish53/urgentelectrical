@@ -1,5 +1,5 @@
 import { getSiteUrl } from "@/lib/siteUrl";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
 const SITE = getSiteUrl();
 
@@ -88,11 +88,11 @@ export const ABOUT_CORE_VALUES = {
 };
 
 export function buildAboutMetadata() {
-  const pageTitle = documentTitle("About Us | NICEIC Electricians Nottingham");
-  return {
-    title: pageTitle,
-    description:
-      "Learn about Urgent Electrical Services — founded in 2014, NICEIC approved, 24/7 emergency electricians serving Nottingham and the East Midlands with safety, reliability, and transparent pricing.",
+  const title = "About Us | NICEIC Electricians Nottingham";
+  const description =
+    "Learn about Urgent Electrical Services — founded in 2014, NICEIC approved, 24/7 emergency electricians serving Nottingham and the East Midlands with safety, reliability, and transparent pricing.";
+
+  return buildSeoMetadata(title, description, {
     keywords: [
       "about Urgent Electrical",
       "electrician Nottingham company",
@@ -105,7 +105,6 @@ export function buildAboutMetadata() {
       locale: "en_GB",
       url: ABOUT_CANONICAL,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description: ABOUT_HERO.description,
       images: [
         {
@@ -118,11 +117,10 @@ export function buildAboutMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description: ABOUT_HERO.description,
     },
     alternates: { canonical: ABOUT_CANONICAL },
-  };
+  });
 }
 
 export const ABOUT_JSON_LD = {

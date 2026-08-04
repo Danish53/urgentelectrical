@@ -1,6 +1,6 @@
 import { CHECKOUT_PATH, buildCheckoutHref } from "@/lib/checkoutHref";
 import { formatApiPrice, priceIncVatFromString, VAT_MULTIPLIER } from "@/lib/pricing";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { getSiteUrl } from "@/lib/siteUrl";
 
 const SITE = getSiteUrl();
@@ -84,11 +84,12 @@ export function buildCheckoutLineItems(
 }
 
 export function buildCheckoutMetadata() {
-  return {
-    title: documentTitle("Book your electrician | Checkout"),
-    description:
-      "Complete your booking for NICEIC-approved electrical services in Nottingham and the East Midlands.",
-    alternates: { canonical: CHECKOUT_CANONICAL },
-    robots: { index: false, follow: false },
-  };
+  return buildSeoMetadata(
+    "Book your electrician | Checkout",
+    "Complete your booking for NICEIC-approved electrical services in Nottingham and the East Midlands.",
+    {
+      alternates: { canonical: CHECKOUT_CANONICAL },
+      robots: { index: false, follow: false },
+    }
+  );
 }

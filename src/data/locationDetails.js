@@ -5,6 +5,7 @@ import { slugify } from "@/lib/slugs";
 import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 
 import { absoluteCmsUrl, absoluteSiteUrl, getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import { documentTitle } from "@/lib/seo/documentTitle";
 import { buildLocationMapEmbed } from "@/lib/locations/buildLocationMapEmbed";
 
@@ -233,18 +234,13 @@ export function buildLocationMetadata(location) {
       ? location.metaDescription
       : `NICEIC approved electricians in ${location.name}. Emergency 24/7, EICR, PAT testing, consumer units & more. Book online with Urgent Electrical.`;
 
-  const pageTitle = documentTitle(location.metaTitle);
-
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(location.metaTitle, description, {
     keywords: location.keywords,
     openGraph: {
       type: "website",
       locale: "en_GB",
       url: location.canonicalUrl,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -257,12 +253,11 @@ export function buildLocationMetadata(location) {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
       images: [imageUrl],
     },
     alternates: { canonical: location.canonicalUrl },
-  };
+  });
 }
 
 export function buildLocationJsonLd(location) {

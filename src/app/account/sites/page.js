@@ -1,11 +1,11 @@
 import SitesPageClient from "@/components/account/SitesPageClient";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
-export const metadata = {
-  title: documentTitle("My Sites"),
-  description: "Manage saved service locations for faster booking.",
-  robots: { index: false, follow: false },
-};
+export const metadata = buildSeoMetadata(
+  "My Sites",
+  "Manage saved service locations for faster booking.",
+  { robots: { index: false, follow: false } }
+);
 
 export default function AccountSitesPage() {
   return <SitesPageClient />;

@@ -32,6 +32,7 @@
 import { Plus_Jakarta_Sans, Anton } from "next/font/google";
 import Script from "next/script";
 import AppProviders from "@/components/providers/AppProviders";
+import { withMetaNameTitle } from "@/lib/seo/buildSeoMetadata";
 import { getOgImageUrl, getSiteUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import "./globals.css";
 
@@ -54,62 +55,65 @@ const anton = Anton({
   adjustFontFallback: true,
 });
 
-export const metadata = {
-  metadataBase: new URL(getSiteUrl()),
-  title: {
-    default: "Urgent Electrical Nottingham | East Midlands",
-    template: "%s | Urgent Electrical Services",
-  },
-  description:
-    "Emergency electricians in Nottingham and across the East Midlands. NICEIC approved. 24/7 response. No call-out fees. Fixed transparent pricing.",
-  keywords: [
-    "emergency electrician Nottingham",
-    "electrician Nottingham",
-    "NICEIC approved electrician",
-    "24 hour electrician Nottingham",
-    "EICR Nottingham",
-    "fuse box replacement Nottingham",
-    "electrical fault finding Nottingham",
-    "commercial electrician Nottingham",
-    "East Midlands electrician",
-  ],
-  openGraph: {
-    type: "website",
-    locale: "en_GB",
-    url: getSiteUrl(),
-    siteName: "Urgent Electrical Services",
-    title: "Urgent Electrical Nottingham | East Midlands",
+export const metadata = withMetaNameTitle(
+  {
+    metadataBase: new URL(getSiteUrl()),
+    title: {
+      default: "Urgent Electrical Nottingham | East Midlands",
+      template: "%s | Urgent Electrical Services",
+    },
     description:
-      "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
-    images: [
-      {
-        url: OG_IMAGE_PATH,
-        width: 1200,
-        height: 630,
-        alt: "Urgent Electrical Services Nottingham",
-      },
+      "Emergency electricians in Nottingham and across the East Midlands. NICEIC approved. 24/7 response. No call-out fees. Fixed transparent pricing.",
+    keywords: [
+      "emergency electrician Nottingham",
+      "electrician Nottingham",
+      "NICEIC approved electrician",
+      "24 hour electrician Nottingham",
+      "EICR Nottingham",
+      "fuse box replacement Nottingham",
+      "electrical fault finding Nottingham",
+      "commercial electrician Nottingham",
+      "East Midlands electrician",
     ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Urgent Electrical Nottingham | East Midlands",
-    description:
-      "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
-    images: [getOgImageUrl()],
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
+    openGraph: {
+      type: "website",
+      locale: "en_GB",
+      url: getSiteUrl(),
+      siteName: "Urgent Electrical Services",
+      title: "Urgent Electrical Nottingham | East Midlands",
+      description:
+        "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
+      images: [
+        {
+          url: OG_IMAGE_PATH,
+          width: 1200,
+          height: 630,
+          alt: "Urgent Electrical Services Nottingham",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "Urgent Electrical Nottingham | East Midlands",
+      description:
+        "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
+      images: [getOgImageUrl()],
+    },
+    robots: {
       index: true,
       follow: true,
-      "max-image-preview": "large",
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+      },
+    },
+    alternates: {
+      canonical: getSiteUrl(),
     },
   },
-  alternates: {
-    canonical: getSiteUrl(),
-  },
-};
+  "Urgent Electrical Nottingham | East Midlands"
+);
 
 /** Fresh CMS/API HTML on each request; SEO metadata and JSON-LD still server-rendered. */
 export const dynamic = "force-dynamic";

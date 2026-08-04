@@ -1,17 +1,15 @@
 import { getSiteUrl, getOgImageUrl, OG_IMAGE_PATH } from "@/lib/siteUrl";
 import { getPolicyImageUrl } from "@/services/policyApiService";
-import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 
 export function buildPoliciesListingMetadata() {
   const site = getSiteUrl();
   const canonical = `${site}/policies`;
-  const pageTitle = documentTitle("Policies | Privacy, Cookies & Terms");
+  const title = "Policies | Privacy, Cookies & Terms";
   const description =
     "Read Urgent Electrical privacy policy, cookie policy, terms of service, and company legal information for customers in Nottingham and the East Midlands.";
 
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(title, description, {
     keywords: [
       "Urgent Electrical privacy policy",
       "cookie policy electrician",
@@ -23,7 +21,6 @@ export function buildPoliciesListingMetadata() {
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       images: [
         {
@@ -36,13 +33,12 @@ export function buildPoliciesListingMetadata() {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
       images: [getOgImageUrl()],
     },
     alternates: { canonical },
     robots: { index: true, follow: true },
-  };
+  });
 }
 
 /**
@@ -51,21 +47,18 @@ export function buildPoliciesListingMetadata() {
 export function buildPolicyDetailMetadata(policy) {
   const site = getSiteUrl();
   const canonical = `${site}/policies/${policy.slug}`;
-  const pageTitle = documentTitle(policy.seo_title?.trim() || policy.title);
+  const rawTitle = policy.seo_title?.trim() || policy.title;
   const description =
     policy.seo_description?.trim() ||
     `Read the full ${policy.title} for Urgent Electrical Services — NICEIC approved electricians in Nottingham and the East Midlands.`;
   const imageUrl = getPolicyImageUrl(policy) || getOgImageUrl();
 
-  return {
-    title: pageTitle,
-    description,
+  return buildSeoMetadata(rawTitle, description, {
     openGraph: {
       type: "article",
       locale: "en_GB",
       url: canonical,
       siteName: "Urgent Electrical Services",
-      title: pageTitle.absolute,
       description,
       images: imageUrl
         ? [{ url: imageUrl, width: 1200, height: 630, alt: policy.title }]
@@ -73,13 +66,12 @@ export function buildPolicyDetailMetadata(policy) {
     },
     twitter: {
       card: "summary_large_image",
-      title: pageTitle.absolute,
       description,
       images: imageUrl ? [imageUrl] : [getOgImageUrl()],
     },
     alternates: { canonical },
     robots: { index: true, follow: true },
-  };
+  });
 }
 
 /**
