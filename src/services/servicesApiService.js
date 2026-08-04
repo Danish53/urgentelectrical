@@ -32,7 +32,7 @@ import { apiRequest } from "@/lib/api/client";
  */
 
 /**
- * Laravel-style: `{ data: [...], links?, meta? }`, legacy `{ status, data }`, or bare array.
+ * -style: `{ data: [...], links?, meta? }`, legacy `{ status, data }`, or bare array.
  * @param {unknown} payload
  * @returns {ServicesListResult | null}
  */
