@@ -28,8 +28,8 @@ export const metadata = buildSeoMetadata(
       images: [
         {
           url: NICEIC_CERTIFICATE_IMAGE,
-          width: 900,
-          height: 1125,
+          width: 927,
+          height: 877,
           alt: "NICEIC Certificate of Excellence",
         },
       ],
@@ -132,8 +132,8 @@ export default function NiceicCertificateOfExcellencePage() {
                   <Image
                     src={NICEIC_CERTIFICATE_IMAGE}
                     alt="NICEIC Certificate of Excellence awarded to Urgent Electrical Services Limited — celebrating over 10 years' certification"
-                    width={900}
-                    height={1125}
+                    width={927}
+                    height={877}
                     className="home1-niceic-certificate__img"
                     priority
                     sizes="(max-width: 768px) 92vw, 560px"
