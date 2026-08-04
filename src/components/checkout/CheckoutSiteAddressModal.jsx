@@ -19,14 +19,21 @@ export default function CheckoutSiteAddressModal({ open, onClose, onSelect }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [wasOpen, setWasOpen] = useState(false);
+
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setLoading(true);
+      setError("");
+      setSearchQuery("");
+    }
+  }
 
   useEffect(() => {
     if (!open) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError("");
-    setSearchQuery("");
 
     fetchAllSiteAddresses()
       .then((rows) => {
@@ -164,6 +171,7 @@ export default function CheckoutSiteAddressModal({ open, onClose, onSelect }) {
                     <button
                       type="button"
                       role="option"
+                      aria-selected="false"
                       className="home1-checkout-site-modal-item"
                       onClick={() => {
                         onSelect(site);

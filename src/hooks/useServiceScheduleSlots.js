@@ -14,17 +14,28 @@ export function useServiceScheduleSlots(serviceId, selectedDate) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!serviceId || !selectedDate) {
+  const dateKey = selectedDate
+    ? `${selectedDate.getFullYear()}-${selectedDate.getMonth()}-${selectedDate.getDate()}`
+    : "";
+  const requestKey = serviceId && dateKey ? `${serviceId}:${dateKey}` : "";
+  const [trackedRequestKey, setTrackedRequestKey] = useState(requestKey);
+
+  if (requestKey !== trackedRequestKey) {
+    setTrackedRequestKey(requestKey);
+    if (!requestKey) {
       setSlots([]);
       setLoading(false);
       setError(null);
-      return;
+    } else {
+      setLoading(true);
+      setError(null);
     }
+  }
+
+  useEffect(() => {
+    if (!serviceId || !selectedDate || !dateKey) return;
 
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
     fetchServiceSchedule(serviceId, selectedDate)
       .then((payload) => {
@@ -45,7 +56,7 @@ export function useServiceScheduleSlots(serviceId, selectedDate) {
     return () => {
       cancelled = true;
     };
-  }, [serviceId, selectedDate?.getFullYear(), selectedDate?.getMonth(), selectedDate?.getDate()]);
+  }, [serviceId, dateKey, selectedDate]);
 
   return { slots, loading, error };
 }

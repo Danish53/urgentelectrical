@@ -119,12 +119,21 @@ export function getLocationsForFilter(filterId) {
 
 export const LOCATIONS_INITIAL_VISIBLE = 24;
 
-export function buildLocationsMetadata() {
-  const pageTitle = documentTitle("Service Areas | Electricians Nottingham");
+export function buildLocationsMetadata(page = 1) {
+  const pageNum = Math.max(1, Number.parseInt(String(page), 10) || 1);
+  const pageTitle = documentTitle(
+    pageNum > 1
+      ? `Service Areas | Page ${pageNum} | Electricians Nottingham`
+      : "Service Areas | Electricians Nottingham"
+  );
+  const description =
+    pageNum > 1
+      ? `Urgent Electrical covers Nottingham, Derby, Leicester, Lincoln and the East Midlands — page ${pageNum}. Find your area, check postcode availability, and book NICEIC approved electricians 24/7.`
+      : "Urgent Electrical covers Nottingham, Derby, Leicester, Lincoln and the East Midlands. Find your area, check postcode availability, and book NICEIC approved electricians 24/7.";
+
   return {
     title: pageTitle,
-    description:
-      "Urgent Electrical covers Nottingham, Derby, Leicester, Lincoln and the East Midlands. Find your area, check postcode availability, and book NICEIC approved electricians 24/7.",
+    description,
     keywords: [
       "electrician Nottingham areas",
       "emergency electrician East Midlands",
@@ -138,7 +147,7 @@ export function buildLocationsMetadata() {
       url: LOCATIONS_CANONICAL,
       siteName: "Urgent Electrical Services",
       title: pageTitle.absolute,
-      description: LOCATIONS_HERO.description,
+      description,
       images: [
         {
           url: OG_IMAGE_PATH,
@@ -151,7 +160,7 @@ export function buildLocationsMetadata() {
     twitter: {
       card: "summary_large_image",
       title: pageTitle.absolute,
-      description: LOCATIONS_HERO.description,
+      description,
       images: [getOgImageUrl()],
     },
     alternates: { canonical: LOCATIONS_CANONICAL },

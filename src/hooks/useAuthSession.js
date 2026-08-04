@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { getAuthToken } from "@/lib/auth/tokenStorage";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { selectIsAuthenticated } from "@/store/selectors/authSelectors";
 import { hydrateAuthSession } from "@/store/slices/authSlice";
 
+const emptySubscribe = () => () => {};
+const getClientReady = () => true;
+const getServerReady = () => false;
+
 export function useAuthSession() {
   const dispatch = useAppDispatch();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const [ready, setReady] = useState(false);
+  const ready = useSyncExternalStore(emptySubscribe, getClientReady, getServerReady);
 
   useEffect(() => {
     dispatch(hydrateAuthSession());
-    setReady(true);
   }, [dispatch]);
 
   const isLoggedIn = ready && (isAuthenticated || Boolean(getAuthToken()));

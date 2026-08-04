@@ -7459,6 +7459,32 @@
   display: block;
 }
 
+.home1-location-detail-leaflet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: #f2efe9;
+}
+
+.home1-location-detail-map-fallback {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  text-align: center;
+  color: #64748b;
+  font-size: 0.875rem;
+  background: #f8fafc;
+}
+
+.home1-location-detail-map-frame .home1-locations-map__loading {
+  position: absolute;
+  inset: 0;
+}
+
 @media (min-width: 768px) {
   .home1-location-detail-map-frame {
     min-height: 420px;

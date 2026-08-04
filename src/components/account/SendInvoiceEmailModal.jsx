@@ -29,13 +29,16 @@ export default function SendInvoiceEmailModal({
   const emailId = useId();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const openToken = open ? String(order?.orderId ?? "open") : null;
+  const [syncedOpenToken, setSyncedOpenToken] = useState(null);
 
-  useEffect(() => {
-    if (open) {
+  if (openToken !== syncedOpenToken) {
+    setSyncedOpenToken(openToken);
+    if (openToken) {
       setEmail("");
       setError("");
     }
-  }, [open, order?.orderId]);
+  }
 
   useEffect(() => {
     if (!open) return;

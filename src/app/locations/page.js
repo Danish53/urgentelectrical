@@ -4,8 +4,6 @@ import { getSiteUrl } from "@/lib/siteUrl";
 import { fetchLocationsPage } from "@/services/locationsApiService";
 import "../home1/home1.css";
 
-const meta = buildLocationsMetadata();
-
 /**
  * @param {unknown} value
  * @param {number} fallback
@@ -26,6 +24,7 @@ export async function generateMetadata({ searchParams }) {
   const site = getSiteUrl();
   const canonical =
     page > 1 ? `${site}/locations?page=${page}` : `${site}/locations`;
+  const meta = buildLocationsMetadata(page);
 
   return {
     metadataBase: new URL(site),

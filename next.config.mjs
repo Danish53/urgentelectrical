@@ -37,6 +37,11 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/locations/newark-on-trent",
+        destination: "/locations/newarkontrent",
+        permanent: true,
+      },
+      {
         source: "/locations/derby-city-centre",
         destination: "/locations/derby",
         permanent: true,

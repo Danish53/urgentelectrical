@@ -8,7 +8,7 @@ import CTAHome1 from "@/components/home1/CTAHome1";
 import RelatedBlogsSlider from "@/components/blog/RelatedBlogsSlider";
 import SectionHeader from "@/components/home1/SectionHeader";
 import { SERVICE_DETAIL_CONTAINER } from "@/components/home1/constants";
-import { IconArrow, IconCalendar, IconCheck } from "@/components/home1/icons";
+import { IconArrow, IconCalendar, IconCheck, IconPhone } from "@/components/home1/icons";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { getBlogImageAlt, getBlogImageUrl } from "@/data/blogs";
 import AppImage from "@/components/common/AppImage";
@@ -125,8 +125,12 @@ function BlogSidebar({ post }) {
           <IconCalendar className="w-4 h-4" aria-hidden="true" />
           Book online
         </Link>
-        <a href={FOOTER_PHONE_TEL} className="home1-btn-outline home1-blog-sidebar-cta w-full justify-center">
-          Call {FOOTER_PHONE}
+        <a
+          href={`tel:${FOOTER_PHONE_TEL}`}
+          className="home1-btn-outline home1-blog-sidebar-cta w-full justify-center"
+        >
+          <IconPhone className="w-4 h-4 shrink-0" aria-hidden="true" />
+          {FOOTER_PHONE}
         </a>
       </div>
 

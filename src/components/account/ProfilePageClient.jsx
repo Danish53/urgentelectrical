@@ -30,18 +30,20 @@ export default function ProfilePageClient() {
 
   const [form, setForm] = useState(EMPTY_PROFILE_FORM);
   const loading = status === "loading" || status === "idle";
+  const [hydrateSource, setHydrateSource] = useState({ storedForm: null, authUser: null });
 
   useEffect(() => {
     dispatch(loadProfile());
   }, [dispatch]);
 
-  useEffect(() => {
+  if (storedForm !== hydrateSource.storedForm || authUser !== hydrateSource.authUser) {
+    setHydrateSource({ storedForm, authUser });
     if (storedForm) {
       setForm(storedForm);
-      return;
+    } else if (authUser) {
+      setForm(getProfileFromUser(authUser));
     }
-    if (authUser) setForm(getProfileFromUser(authUser));
-  }, [storedForm, authUser]);
+  }
 
   const initials = getProfileInitials(form.displayName);
 

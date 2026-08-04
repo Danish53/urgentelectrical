@@ -12,6 +12,8 @@ import { apiRequest } from "@/lib/api/client";
  * @property {string | null} description
  * @property {string | null} image
  * @property {string | null} [slug]
+ * @property {string | null | undefined} [seo_title]
+ * @property {string | null | undefined} [seo_description]
  */
 
 /**

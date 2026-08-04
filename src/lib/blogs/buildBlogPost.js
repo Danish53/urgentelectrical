@@ -43,6 +43,11 @@ export function buildBlogPostFromListItem(api, options = {}) {
   const displayName =
     typeof api.blog_display_name === "string" ? api.blog_display_name.trim() : "";
   const title = displayName || (typeof api.title === "string" ? api.title : "Article");
+  const seoTitle = typeof api.seo_title === "string" ? api.seo_title.trim() : "";
+  const seoDescription =
+    typeof api.seo_description === "string" && api.seo_description.trim()
+      ? api.seo_description.trim()
+      : "";
 
   return {
     slug,
@@ -59,11 +64,11 @@ export function buildBlogPostFromListItem(api, options = {}) {
     publishedDisplay: formatBlogPublishedDisplay(api.created_at, publishedISO),
     readMinutes: estimateReadMinutes(excerpt),
     author: DEFAULT_AUTHOR,
-    metaDescription: excerpt.slice(0, 160),
-    keywords: [],
+    metaDescription: (seoDescription || excerpt).slice(0, 160),
+    keywords: seoTitle ? [seoTitle] : [],
     featured: Boolean(options.featured),
     htmlContent: null,
-    seoTitle: null,
+    seoTitle: seoTitle || null,
   };
 }
 
@@ -115,7 +120,7 @@ export function buildBlogPostFromDetail(api, options = {}) {
     ),
     readMinutes: estimateReadMinutes(readSource),
     author: DEFAULT_AUTHOR,
-    metaDescription: (seoDescription || seoTitle || excerpt).slice(0, 160),
+    metaDescription: (seoDescription || excerpt).slice(0, 160),
     keywords: seoTitle ? [seoTitle] : [],
     featured: false,
     htmlContent: longHtml,

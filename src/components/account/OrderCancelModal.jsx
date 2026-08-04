@@ -26,13 +26,16 @@ export default function OrderCancelModal({
   const noteId = useId();
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
+  const openToken = open ? String(order?.id ?? "open") : null;
+  const [syncedOpenToken, setSyncedOpenToken] = useState(null);
 
-  useEffect(() => {
-    if (open) {
+  if (openToken !== syncedOpenToken) {
+    setSyncedOpenToken(openToken);
+    if (openToken) {
       setNote("");
       setError("");
     }
-  }, [open, order?.id]);
+  }
 
   useEffect(() => {
     if (!open) return;

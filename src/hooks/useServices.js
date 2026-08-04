@@ -34,11 +34,10 @@ export function useBookingOptions() {
 /** Lightweight service list (title + slug) for hero and location search dropdowns */
 export function useSimpleServicesList() {
   const [options, setOptions] = useState(/** @type {{ name: string, slug: string }[]} */ ([]));
-  const [status, setStatus] = useState(/** @type {"idle" | "loading" | "succeeded" | "failed"} */ ("idle"));
+  const [status, setStatus] = useState(/** @type {"idle" | "loading" | "succeeded" | "failed"} */ ("loading"));
 
   useEffect(() => {
     let cancelled = false;
-    setStatus("loading");
 
     fetchSimpleServicesList()
       .then((list) => {

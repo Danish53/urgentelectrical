@@ -14,8 +14,8 @@ export function useInView(ref, { threshold = 0.12, once = true, rootMargin = "0p
     if (!el) return;
 
     if (typeof IntersectionObserver === "undefined") {
-      setInView(true);
-      return;
+      const timer = window.setTimeout(() => setInView(true), 0);
+      return () => window.clearTimeout(timer);
     }
 
     const observer = new IntersectionObserver(

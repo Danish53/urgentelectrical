@@ -3,6 +3,7 @@
 import { CONTAINER } from "@/components/home1/constants";
 import Link from "next/link";
 import FooterServicesLinks from "@/components/footer/FooterServicesLinks";
+import FooterBookServicesOnline from "@/components/footer/FooterBookServicesOnline";
 import FooterLegalLinks from "@/components/footer/FooterLegalLinks";
 import SiteLogoImage from "@/components/common/SiteLogoImage";
 import { useWebsiteGeneralData } from "@/hooks/useWebsiteGeneralData";
@@ -54,14 +55,16 @@ function SocialIcon({ id }) {
 
 function FooterLinkList({ title, links }) {
   return (
-    <div>
-      <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4">{title}</h3>
+    <div className="min-w-0">
+      <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4 leading-snug">
+        {title}
+      </h3>
       <ul className="space-y-2.5">
         {links.map((link) => (
           <li key={link.label}>
             <Link
               href={link.href}
-              className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200"
+              className="text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200 break-words"
             >
               {link.label}
             </Link>
@@ -72,6 +75,14 @@ function FooterLinkList({ title, links }) {
   );
 }
 
+function FooterColumnHeading({ children }) {
+  return (
+    <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4 leading-snug">
+      {children}
+    </h3>
+  );
+}
+
 export default function Footer() {
   const { site } = useWebsiteGeneralData();
   const currentYear = new Date().getFullYear();
@@ -79,8 +90,8 @@ export default function Footer() {
   return (
     <footer className="border-t-[3px]" style={{ backgroundColor: BG, borderColor: RED }}>
       <div className={`${SECTION_CONTAINER} pt-12 sm:pt-14 pb-8 sm:pb-10`}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12 sm:mb-16">
-          <div className="sm:col-span-2 lg:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 xl:gap-10 mb-12 sm:mb-16">
+          <div className="lg:col-span-4 xl:col-span-3 min-w-0">
             <Link href="/" className="inline-block mb-5" aria-label={site.title}>
               <SiteLogoImage
                 src={site.logo}
@@ -95,7 +106,7 @@ export default function Footer() {
 
             <a
               href={`mailto:${site.email}`}
-              className="block text-[#b0b0b0] text-[14px] hover:text-white transition-colors mb-4"
+              className="block text-[#b0b0b0] text-[14px] hover:text-white transition-colors mb-4 break-all"
             >
               {site.email}
             </a>
@@ -138,15 +149,23 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
-            <h3 className="text-[#888888] text-[11px] font-bold uppercase tracking-[0.14em] mb-4">Services</h3>
-            <FooterServicesLinks />
+          <div className="lg:col-span-8 xl:col-span-9 min-w-0">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 sm:gap-x-8">
+              <div className="min-w-0">
+                <FooterColumnHeading>Services</FooterColumnHeading>
+                <FooterServicesLinks />
+              </div>
+              <div className="min-w-0">
+                <FooterColumnHeading>Book Services Online</FooterColumnHeading>
+                <FooterBookServicesOnline />
+              </div>
+              <FooterLinkList title="Company" links={FOOTER_COMPANY} />
+              <FooterLinkList title="Areas Served" links={FOOTER_AREAS} />
+            </div>
           </div>
-          <FooterLinkList title="Company" links={FOOTER_COMPANY} />
-          <FooterLinkList title="Areas Served" links={FOOTER_AREAS} />
         </div>
 
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pt-2 border-t border-[#222222]">
           <p className="text-[#666666] text-[11px] sm:text-xs leading-relaxed">
             © {currentYear} {site.title}. All Rights Reserved | Company No: 08956007 | VAT: 208 755 592
           </p>

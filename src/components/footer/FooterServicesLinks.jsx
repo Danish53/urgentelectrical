@@ -6,7 +6,7 @@ import { FOOTER_SERVICES } from "@/data/footer";
 import { useNavMenu } from "@/hooks/useNavMenu";
 
 const LINK_CLASS =
-  "text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200";
+  "text-[#b0b0b0] text-[14px] hover:text-white transition-colors duration-200 break-words";
 
 /**
  * Footer service links — static FOOTER_SERVICES for SSR/raw HTML,

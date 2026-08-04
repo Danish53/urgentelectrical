@@ -12,18 +12,24 @@ export function useCheckoutServiceDetail(slug) {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(Boolean(slug));
   const [failed, setFailed] = useState(false);
+  const [trackedSlug, setTrackedSlug] = useState(slug);
 
-  useEffect(() => {
+  if (slug !== trackedSlug) {
+    setTrackedSlug(slug);
     if (!slug) {
       setService(null);
       setLoading(false);
       setFailed(false);
-      return;
+    } else {
+      setLoading(true);
+      setFailed(false);
     }
+  }
+
+  useEffect(() => {
+    if (!slug) return;
 
     let cancelled = false;
-    setLoading(true);
-    setFailed(false);
 
     fetchServiceBySlug(slug)
       .then((api) => {

@@ -17,13 +17,23 @@ export const FOOTER_SERVICES = [
   { label: "All services", href: "/services" },
 ];
 
+/** Static service-detail links for the footer “Book Services Online” column. */
+export const FOOTER_BOOK_SERVICES_ONLINE = [
+  { label: "Emergency Electrician", href: "/services/emergency-response-247" },
+  { label: "EICR", href: "/services/electrical-installation-condition-report-eicr" },
+  { label: "PAT Testing", href: "/services/portable-appliance-testing-pat" },
+  { label: "Fault Finding", href: "/services/domestic-electrical-fault-investigation" },
+  { label: "Fuse Box Replacement", href: "/services/fuse-box-consumer-unit-replacement" },
+  { label: "All services", href: "/services" },
+];
+
 export const FOOTER_AREAS = [
   { label: "Nottingham", href: "/locations/nottingham" },
-  { label: "Derby", href: "/locations/derby" },
+  { label: "Derby", href: "/locations/electricians-derby" },
   { label: "Leicester", href: "/locations/leicester" },
   { label: "Loughborough", href: "/locations/loughborough" },
-  { label: "Newark-on-Trent", href: "/locations/newark-on-trent" },
-  { label: "East Midlands", href: "/locations/east-midlands" },
+  { label: "Newark-on-Trent", href: "/locations/newarkontrent" },
+  { label: "East Midlands", href: "/locations" },
 ];
 
 export const FOOTER_BADGES = ["NICEIC Approved", "Fully Insured", "Est. 2014"];

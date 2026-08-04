@@ -1,5 +1,6 @@
 ﻿import {
   buildBookableServicesFromApi,
+  resolveServiceDisplayName,
   resolveServiceSlugFromApi,
 } from "@/lib/services/buildBookableService";
 import { buildBookableServiceFromDetailApi } from "@/lib/services/buildBookableServiceFromDetail";
@@ -76,8 +77,7 @@ function resolveSlugForDetailRequest(requestedSlug, apiList) {
   const match = apiList.find((item) => {
     const apiSlug = resolveServiceSlugFromApi(item);
     const title = String(item.title ?? "").trim() || "Electrical service";
-    const displayName =
-      (typeof item.service_display_name === "string" && item.service_display_name.trim()) || title;
+    const displayName = resolveServiceDisplayName(item.service_display_name, title);
     const generatedFromTitle = serviceSlug(title);
     const generatedFromDisplay = serviceSlug(displayName);
     return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar.jsx";
 import Footer from "@/components/Footer.jsx";
@@ -99,7 +100,12 @@ export default function CheckoutPageClient() {
   const { secondsLeft, expired: sessionExpired } = useCheckoutSessionTimer(CHECKOUT_SESSION_SECONDS);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
-  const [details, setDetails] = useState(EMPTY_DETAILS);
+  const initialPostcode = searchParams.get("postcode") ?? "";
+  const [details, setDetails] = useState(() => ({
+    ...EMPTY_DETAILS,
+    postcode: initialPostcode ? initialPostcode.toUpperCase() : "",
+  }));
+  const [appliedPostcodeParam, setAppliedPostcodeParam] = useState(initialPostcode);
   const [stepError, setStepError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     billingPostcode: "",
@@ -119,6 +125,9 @@ export default function CheckoutPageClient() {
   const [siteSameChecking, setSiteSameChecking] = useState(false);
   const [coverageModalOpen, setCoverageModalOpen] = useState(false);
   const lastFetchedPostcodeRef = useRef("");
+  const [authDetailsKey, setAuthDetailsKey] = useState(null);
+  const [couponScopeKey, setCouponScopeKey] = useState("");
+  const [feeTravelKey, setFeeTravelKey] = useState("");
 
   const dispatch = useAppDispatch();
   const clientSecret = useAppSelector(selectClientSecret);
@@ -254,20 +263,57 @@ export default function CheckoutPageClient() {
 
   const paymentCouponSnapshotRef = useRef(null);
 
-  const initialPostcode = searchParams.get("postcode") ?? "";
   const travelPostcode = useMemo(() => {
     const fromDetails = String(resolveTravelChargePostcode(details) ?? "").trim().toUpperCase();
     if (fromDetails) return fromDetails;
     return String(initialPostcode ?? "").trim().toUpperCase();
-  }, [
-    details.siteSameAsBilling,
-    details.siteAddressId,
-    details.postcode,
-    details.sitePostcode,
-    initialPostcode,
-  ]);
+  }, [details, initialPostcode]);
   const pageLoading = servicesLoading || (Boolean(slug) && detailLoading);
   const pageFailed = servicesFailed || (Boolean(slug) && detailFailed && !service);
+
+  if (initialPostcode && initialPostcode !== appliedPostcodeParam) {
+    setAppliedPostcodeParam(initialPostcode);
+    setDetails((d) => ({ ...d, postcode: initialPostcode.toUpperCase() }));
+  }
+
+  const nextCouponScope = `${service?.apiId ?? ""}:${selectedVariant?.apiVariantId ?? selectedVariant?.id ?? ""}`;
+  if (nextCouponScope !== couponScopeKey) {
+    setCouponScopeKey(nextCouponScope);
+    setAppliedCoupon(null);
+  }
+
+  if (travelPostcode !== feeTravelKey) {
+    setFeeTravelKey(travelPostcode);
+    setDeliveryFeeFromApi(0);
+    setDeliveryFeeResolved(false);
+    setDeliveryFeeOutOfRange(false);
+    setDeliveryFeeError("");
+  }
+
+  if (service?.apiId && !selectedDate) {
+    setSelectedDate(getTodayStart());
+  }
+
+  const nextAuthKey =
+    isLoggedIn && authUser
+      ? String(authUser.id ?? authUser.email ?? authUser.mobile ?? "user")
+      : null;
+  if (nextAuthKey && nextAuthKey !== authDetailsKey) {
+    setAuthDetailsKey(nextAuthKey);
+    setDetails((current) => ({
+      ...current,
+      firstName: current.firstName || String(authUser.first_name ?? authUser.firstName ?? "").trim(),
+      lastName: current.lastName || String(authUser.last_name ?? authUser.lastName ?? "").trim(),
+      email: current.email || String(authUser.email ?? "").trim(),
+      phone:
+        current.phone ||
+        String(authUser.mobile ?? authUser.mobile_number ?? authUser.phone ?? "").trim(),
+    }));
+  }
+
+  useEffect(() => {
+    lastFetchedPostcodeRef.current = "";
+  }, [travelPostcode]);
 
   useEffect(() => {
     if (step !== 3) {
@@ -378,41 +424,6 @@ export default function CheckoutPageClient() {
       setDeliveryFeeLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (initialPostcode) {
-      setDetails((d) => ({ ...d, postcode: initialPostcode.toUpperCase() }));
-    }
-  }, [initialPostcode]);
-
-  useEffect(() => {
-    setAppliedCoupon(null);
-  }, [service?.apiId, selectedVariant?.apiVariantId, selectedVariant?.id]);
-
-  useEffect(() => {
-    const postcode = travelPostcode;
-    if (!postcode || postcode.length < 4) {
-      lastFetchedPostcodeRef.current = "";
-      setDeliveryFeeFromApi(0);
-      setDeliveryFeeResolved(false);
-      setDeliveryFeeOutOfRange(false);
-      setDeliveryFeeError("");
-      return;
-    }
-
-    if (lastFetchedPostcodeRef.current && lastFetchedPostcodeRef.current !== postcode) {
-      lastFetchedPostcodeRef.current = "";
-      setDeliveryFeeFromApi(0);
-      setDeliveryFeeResolved(false);
-      setDeliveryFeeOutOfRange(false);
-      setDeliveryFeeError("");
-    }
-  }, [travelPostcode]);
-
-  useEffect(() => {
-    if (!service?.apiId || selectedDate) return;
-    setSelectedDate(getTodayStart());
-  }, [service?.apiId, selectedDate]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -538,20 +549,6 @@ export default function CheckoutPageClient() {
       cancelled = true;
     };
   }, [searchParams, dispatch, stripePromise, finalizeBookingAfterPayment]);
-
-  useEffect(() => {
-    if (!isLoggedIn || !authUser) return;
-
-    setDetails((current) => ({
-      ...current,
-      firstName: current.firstName || String(authUser.first_name ?? authUser.firstName ?? "").trim(),
-      lastName: current.lastName || String(authUser.last_name ?? authUser.lastName ?? "").trim(),
-      email: current.email || String(authUser.email ?? "").trim(),
-      phone:
-        current.phone ||
-        String(authUser.mobile ?? authUser.mobile_number ?? authUser.phone ?? "").trim(),
-    }));
-  }, [isLoggedIn, authUser]);
 
   function handleDetailsChange(next) {
     const prevTravelPostcode = String(resolveTravelChargePostcode(details) ?? "")
@@ -934,13 +931,13 @@ export default function CheckoutPageClient() {
                   <p style={{ margin: "10px 0 0", fontWeight: 500, opacity: 0.9 }}>
                     Please choose another service or call us to book.
                   </p>
-                  <a
+                  <Link
                     href="/services"
                     className="home1-btn-primary"
                     style={{ display: "inline-flex", marginTop: 16 }}
                   >
                     Browse services
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

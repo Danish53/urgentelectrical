@@ -1025,6 +1025,16 @@
   margin-bottom: 0.35rem;
 }
 
+.home1-location-aside-trust {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.home1-location-aside-trust .home1-blog-sidebar-trust {
+  margin: 0;
+}
+
 .home1-page-detail-related {
   margin: 0.55rem 0 0;
   padding: 0;

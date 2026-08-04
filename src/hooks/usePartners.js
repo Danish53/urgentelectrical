@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getFallbackPartners } from "@/lib/partners/mapPartner";
 import { fetchPartners } from "@/services/partnersApiService";
 
 export function usePartners() {
-  const fallback = getFallbackPartners();
+  const fallback = useMemo(() => getFallbackPartners(), []);
   const [partners, setPartners] = useState(fallback);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ export function usePartners() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [fallback]);
 
   return { partners, loading };
 }

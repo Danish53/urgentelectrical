@@ -32,12 +32,24 @@ export default function ServicesCatalog() {
     );
   }, [active, bookable, searchQuery]);
 
+  const hashCategoryId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const hash = window.location.hash.slice(1);
+    if (!hash) return null;
+    return categoryFilters.find((c) => c.id === hash)?.id ?? null;
+  }, [categoryFilters]);
+
+  if (hashCategoryId && active !== hashCategoryId) {
+    setActive(hashCategoryId);
+  }
+
   useEffect(() => {
     const hash = typeof window !== "undefined" ? window.location.hash.slice(1) : "";
     if (!hash) return;
     const matchCat = categoryFilters.find((c) => c.id === hash);
-    if (matchCat) setActive(matchCat.id);
-    else document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!matchCat) {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }, [categoryFilters]);
 
   const searchActive = Boolean(normalizeSearchQuery(searchQuery));

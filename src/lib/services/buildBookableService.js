@@ -13,6 +13,17 @@ export { DETAIL_SLUG_ALIASES };
 
 import { absoluteSiteUrl } from "@/lib/siteUrl";
 
+/**
+ * Prefer CMS display name when it has real text; ignore placeholders like ".".
+ * @param {unknown} value
+ * @param {string} fallback
+ */
+export function resolveServiceDisplayName(value, fallback) {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw || !/[A-Za-z0-9]/.test(raw)) return fallback;
+  return raw;
+}
+
 /** @deprecated Prefer API category labels via categoryMap */
 export const CATEGORY_LABELS = {
   domestic: "Domestic",
@@ -113,8 +124,7 @@ export function resolveServiceSlugFromApi(api) {
  */
 export function buildBookableServiceFromApi(api, categoryMap = {}) {
   const fullTitle = api.title?.trim() || "Electrical service";
-  const displayName =
-    (typeof api.service_display_name === "string" && api.service_display_name.trim()) || fullTitle;
+  const displayName = resolveServiceDisplayName(api.service_display_name, fullTitle);
   const name = displayName;
   const price = String(api.price ?? "0");
   const slug = resolveServiceSlugFromApi({ slug: api.slug, title: fullTitle });
@@ -153,6 +163,9 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
 
   const bookingActive = isServiceBookingActive(api.booking_status ?? api.bookingStatus);
 
+  const seoTitle = String(api.seo_title ?? api.seoTitle ?? "").trim();
+  const seoDescription = String(api.seo_description ?? api.seoDescription ?? "").trim();
+
   return {
     apiId: api.id,
     serviceCategoryId,
@@ -181,8 +194,8 @@ export function buildBookableServiceFromApi(api, categoryMap = {}) {
     serviceAreas: coverage.areas,
     serviceAreasSubtitle: coverage.subtitle,
     serviceAreasRegionId: coverage.regionId,
-    metaTitle: extra.metaTitle ?? name,
-    metaDescription: extra.metaDescription ?? description,
+    metaTitle: seoTitle || extra.metaTitle || name,
+    metaDescription: seoDescription || extra.metaDescription || description,
     keywords: extra.keywords ?? [],
   };
 }

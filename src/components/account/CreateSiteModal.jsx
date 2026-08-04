@@ -67,6 +67,19 @@ export default function CreateSiteModal({
   const [addressOptions, setAddressOptions] = useState([]);
   const [addressPicked, setAddressPicked] = useState(false);
   const isEdit = mode === "edit";
+  const [formSyncKey, setFormSyncKey] = useState(null);
+  const nextFormSyncKey = open ? initialForm ?? EMPTY_SITE_FORM : null;
+
+  if (open && nextFormSyncKey !== formSyncKey) {
+    setFormSyncKey(nextFormSyncKey);
+    setForm(initialForm ?? EMPTY_SITE_FORM);
+    setLookupError("");
+    setLookupSuggestions([]);
+    setAddressOptions([]);
+    setAddressPicked(false);
+  } else if (!open && formSyncKey !== null) {
+    setFormSyncKey(null);
+  }
 
   function resetLookup() {
     setLookupError("");
@@ -74,13 +87,6 @@ export default function CreateSiteModal({
     setAddressOptions([]);
     setAddressPicked(false);
   }
-
-  useEffect(() => {
-    if (open) {
-      setForm(initialForm ?? EMPTY_SITE_FORM);
-      resetLookup();
-    }
-  }, [open, initialForm]);
 
   useEffect(() => {
     if (!open) return;

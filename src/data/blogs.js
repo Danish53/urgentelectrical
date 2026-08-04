@@ -83,11 +83,12 @@ export function buildBlogListingMetadata() {
 export function buildBlogPostMetadata(post) {
   const imageUrl = getBlogImageUrl(post);
   const imageAlt = getBlogImageAlt(post);
-  const pageTitle = documentTitle(post.title);
+  const pageTitle = documentTitle(post.seoTitle || post.title);
+  const description = post.metaDescription;
 
   return {
     title: pageTitle,
-    description: post.metaDescription,
+    description,
     keywords: [...post.keywords, "Urgent Electrical blog", "Nottingham electrician"],
     authors: [{ name: post.author }],
     openGraph: {
@@ -96,7 +97,7 @@ export function buildBlogPostMetadata(post) {
       url: post.canonicalUrl,
       siteName: "Urgent Electrical Services",
       title: pageTitle.absolute,
-      description: post.metaDescription,
+      description,
       publishedTime: post.publishedISO,
       section: post.categoryLabel,
       tags: post.keywords,
@@ -112,7 +113,7 @@ export function buildBlogPostMetadata(post) {
     twitter: {
       card: "summary_large_image",
       title: pageTitle.absolute,
-      description: post.metaDescription,
+      description,
       images: [imageUrl],
     },
     alternates: { canonical: post.canonicalUrl },

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { EASE_SMOOTH } from "@/lib/motion";
 import { mapCookieContent } from "@/lib/cookie/mapCookieContent";
@@ -9,6 +9,9 @@ import { fetchCookieSession } from "@/services/cookieApiService";
 import "./cookie-consent.css";
 
 const CONSENT_STORAGE_KEY = "ue-cookie-consent";
+const emptySubscribe = () => () => {};
+const getClientMounted = () => true;
+const getServerMounted = () => false;
 
 const DEFAULT_PREFERENCES = {
   functional: false,
@@ -85,15 +88,13 @@ function CookieToggle({ checked, disabled = false, onChange, label }) {
 export default function CookieConsentBanner() {
   const [visible, setVisible] = useState(false);
   const [customizeOpen, setCustomizeOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientMounted, getServerMounted);
   const [content, setContent] = useState(() => mapCookieContent({}));
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [expandedCategory, setExpandedCategory] = useState(null);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => {
-    setMounted(true);
-
     fetchCookieSession()
       .then((data) => setContent(mapCookieContent(data)))
       .catch(() => setContent(mapCookieContent({})));

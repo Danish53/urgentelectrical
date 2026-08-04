@@ -6,6 +6,7 @@ import { toPublicServiceSlug } from "@/lib/services/resolveServiceDetailSlug";
 
 import { absoluteCmsUrl, absoluteSiteUrl, getOgImageUrl, getSiteUrl } from "@/lib/siteUrl";
 import { documentTitle } from "@/lib/seo/documentTitle";
+import { buildLocationMapEmbed } from "@/lib/locations/buildLocationMapEmbed";
 
 const SITE = getSiteUrl();
 
@@ -157,7 +158,11 @@ export function buildLocationRecord(name) {
     servicesIntro: `Electrical services available in ${name}`,
     services: buildServicesOffered(),
     faqs: buildFaqs(name, regionLabel),
-    mapEmbed: `https://maps.google.com/maps?q=${encodeURIComponent(`${name}, UK`)}&hl=en&z=12&ie=UTF8&iwloc=&output=embed`,
+    mapEmbed: buildLocationMapEmbed({
+      name,
+      cityName: regionLabel,
+      slug,
+    }),
     nearby: getNearby(name, regionId),
     bookHref: "/services",
     metaTitle: `Electrician ${name} | 24/7 Emergency`,

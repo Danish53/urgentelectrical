@@ -3,7 +3,7 @@ import { toParagraphs } from "@/lib/content/toParagraphs";
 import { resolveServiceAreasForPage } from "@/data/areas";
 import { buildRangePriceDisplay, formatPriceAmount, priceIncVatFromString } from "@/lib/pricing";
 import { slugify } from "@/lib/slugs";
-import { resolveServiceSlugFromApi } from "@/lib/services/buildBookableService";
+import { resolveServiceSlugFromApi, resolveServiceDisplayName } from "@/lib/services/buildBookableService";
 import { isServiceBookingActive } from "@/lib/services/isServiceBookingActive";
 import {
   getServiceLongDescription,
@@ -131,8 +131,7 @@ function parseFaqsFromApi(value) {
  */
 export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
   const fullTitle = String(api.title ?? "").trim() || "Electrical service";
-  const displayName =
-    (typeof api.service_display_name === "string" && api.service_display_name.trim()) || fullTitle;
+  const displayName = resolveServiceDisplayName(api.service_display_name, fullTitle);
   const name = displayName;
   const slug = resolveServiceSlugFromApi({ slug: api.slug, title: fullTitle });
   const price = String(api.price ?? "0");
@@ -170,6 +169,9 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
 
   const bookingActive = isServiceBookingActive(api.booking_status ?? api.bookingStatus);
 
+  const seoTitle = String(api.seo_title ?? api.seoTitle ?? "").trim();
+  const seoDescription = String(api.seo_description ?? api.seoDescription ?? "").trim();
+
   return {
     apiId: api.id,
     serviceCategoryId,
@@ -203,8 +205,8 @@ export function buildBookableServiceFromDetailApi(api, categoryMap = {}) {
     serviceAreas: coverage.areas,
     serviceAreasSubtitle: coverage.subtitle,
     serviceAreasRegionId: coverage.regionId,
-    metaTitle: extra.metaTitle ?? name,
-    metaDescription: extra.metaDescription ?? description,
+    metaTitle: seoTitle || extra.metaTitle || name,
+    metaDescription: seoDescription || extra.metaDescription || description,
     keywords: extra.keywords ?? [],
     tag: isEmergency ? "Most Popular" : undefined,
   };

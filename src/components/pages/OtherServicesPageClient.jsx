@@ -110,38 +110,43 @@ export default function OtherServicesPageClient({
     }
   }, []);
 
+  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
+
+  if (!searchActive && (searchPool !== null || searchError !== null || searchLoading)) {
+    setSearchPool(null);
+    setSearchError(null);
+    setSearchLoading(false);
+  }
+
   useEffect(() => {
-    if (!normalizeSearchQuery(searchQuery)) {
-      setSearchPool(null);
-      setSearchError(null);
-      setSearchLoading(false);
-      return;
-    }
+    if (!normalizeSearchQuery(searchQuery)) return;
 
     let cancelled = false;
-    setSearchLoading(true);
-    setSearchError(null);
+    const startId = window.setTimeout(() => {
+      if (cancelled) return;
+      setSearchLoading(true);
+      setSearchError(null);
 
-    fetchAllOtherServices()
-      .then((result) => {
-        if (cancelled) return;
-        setSearchPool(result.pages);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setSearchPool([]);
-        setSearchError(getApiErrorMessage(err, "Could not search services."));
-      })
-      .finally(() => {
-        if (!cancelled) setSearchLoading(false);
-      });
+      fetchAllOtherServices()
+        .then((result) => {
+          if (cancelled) return;
+          setSearchPool(result.pages);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setSearchPool([]);
+          setSearchError(getApiErrorMessage(err, "Could not search services."));
+        })
+        .finally(() => {
+          if (!cancelled) setSearchLoading(false);
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(startId);
     };
   }, [searchQuery, searchRetryKey]);
-
-  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
 
   const filteredPages = useMemo(() => {
     if (!searchActive || !searchPool) return [];

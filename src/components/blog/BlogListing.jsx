@@ -91,38 +91,43 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
     [categoryLabelFor]
   );
 
+  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
+
+  if (!searchActive && (searchPool !== null || searchError !== null || searchLoading)) {
+    setSearchPool(null);
+    setSearchError(null);
+    setSearchLoading(false);
+  }
+
   useEffect(() => {
-    if (!normalizeSearchQuery(searchQuery)) {
-      setSearchPool(null);
-      setSearchError(null);
-      setSearchLoading(false);
-      return;
-    }
+    if (!normalizeSearchQuery(searchQuery)) return;
 
     let cancelled = false;
-    setSearchLoading(true);
-    setSearchError(null);
+    const startId = window.setTimeout(() => {
+      if (cancelled) return;
+      setSearchLoading(true);
+      setSearchError(null);
 
-    fetchAllBlogs({ category: active === "all" ? "" : active })
-      .then((result) => {
-        if (cancelled) return;
-        setSearchPool(mapBlogItems(result.blogs, active));
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setSearchPool([]);
-        setSearchError(getApiErrorMessage(err, "Could not search articles."));
-      })
-      .finally(() => {
-        if (!cancelled) setSearchLoading(false);
-      });
+      fetchAllBlogs({ category: active === "all" ? "" : active })
+        .then((result) => {
+          if (cancelled) return;
+          setSearchPool(mapBlogItems(result.blogs, active));
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          setSearchPool([]);
+          setSearchError(getApiErrorMessage(err, "Could not search articles."));
+        })
+        .finally(() => {
+          if (!cancelled) setSearchLoading(false);
+        });
+    }, 0);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(startId);
     };
   }, [active, mapBlogItems, searchQuery, searchRetryKey]);
-
-  const searchActive = Boolean(normalizeSearchQuery(searchQuery));
 
   const filteredSearchPosts = useMemo(() => {
     if (!searchActive || !searchPool) return [];

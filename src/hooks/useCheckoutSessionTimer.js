@@ -35,23 +35,17 @@ export function useCheckoutSessionTimer(totalSeconds) {
 
     sessionStorage.setItem(ON_PAGE_KEY, "1");
 
-    if (expiresAt <= Date.now()) {
-      setSecondsLeft(0);
-      setReady(true);
-      return () => {
-        sessionStorage.setItem(ON_PAGE_KEY, "0");
-      };
-    }
-
     const tick = () => {
       const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
       setSecondsLeft(left);
       setReady(true);
     };
 
-    tick();
+    // Defer first tick so setState is not synchronous inside the effect body.
+    const startId = window.setTimeout(tick, 0);
     const id = window.setInterval(tick, 1000);
     return () => {
+      window.clearTimeout(startId);
       window.clearInterval(id);
       sessionStorage.setItem(ON_PAGE_KEY, "0");
     };
