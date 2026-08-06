@@ -152,15 +152,15 @@ export default function Footer() {
           <div className="lg:col-span-8 xl:col-span-9 min-w-0">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-10 sm:gap-x-8">
               <div className="min-w-0">
-                <FooterColumnHeading>Services</FooterColumnHeading>
-                <FooterServicesLinks />
-              </div>
-              <div className="min-w-0">
                 <FooterColumnHeading>Book Services Online</FooterColumnHeading>
                 <FooterBookServicesOnline />
               </div>
-              <FooterLinkList title="Company" links={FOOTER_COMPANY} />
+              <div className="min-w-0">
+                <FooterColumnHeading>Services</FooterColumnHeading>
+                <FooterServicesLinks />
+              </div>
               <FooterLinkList title="Areas Served" links={FOOTER_AREAS} />
+              <FooterLinkList title="Company" links={FOOTER_COMPANY} />
             </div>
           </div>
         </div>

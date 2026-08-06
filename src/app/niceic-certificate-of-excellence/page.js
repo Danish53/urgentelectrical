@@ -1,22 +1,46 @@
 import Link from "next/link";
-import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FloatingCTA from "@/components/FloatingCTA";
-import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
+import { IconPhone } from "@/components/home1/icons";
+import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
 import {
   NICEIC_APPROVED_CANONICAL,
   NICEIC_APPROVED_PATH,
   NICEIC_CERTIFICATE_IMAGE,
-  NICEIC_CERTIFICATE_PAGE,
-  NICEIC_DECADE,
+  NICEIC_CERTIFICATE_IMAGE_HEIGHT,
+  NICEIC_CERTIFICATE_IMAGE_VERSION,
+  NICEIC_CERTIFICATE_IMAGE_WIDTH,
+  NICEIC_PAGE,
 } from "@/data/niceicPages";
 import "../home1/home1.css";
+import "./niceic-page.css";
+
+const PAGE_LEAD = `${NICEIC_PAGE.leadBefore}${NICEIC_PAGE.leadStrong}`;
+
+const NICEIC_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "ElectricalContractor",
+  name: "Urgent Electrical Services Limited",
+  areaServed: ["Nottingham", "East Midlands"],
+  foundingDate: "2014",
+  hasCredential: {
+    "@type": "EducationalOccupationalCredential",
+    credentialCategory: "certification",
+    name: "NICEIC Certificate of Excellence — 10 Years' Certification",
+    dateCreated: "2024",
+    recognizedBy: {
+      "@type": "Organization",
+      name: "NICEIC / Certsure LLP",
+    },
+  },
+  slogan: "12 years NICEIC certified. 5,000+ jobs completed since 2014.",
+};
 
 export const metadata = buildSeoMetadata(
-  "NICEIC Certificate of Excellence | 10 Years Certified",
-  NICEIC_DECADE.lead,
+  "12 Years NICEIC Certified — Urgent Electrical Services",
+  PAGE_LEAD,
   {
     alternates: { canonical: NICEIC_APPROVED_PATH },
     openGraph: {
@@ -24,12 +48,12 @@ export const metadata = buildSeoMetadata(
       locale: "en_GB",
       url: NICEIC_APPROVED_CANONICAL,
       siteName: "Urgent Electrical Services",
-      description: NICEIC_DECADE.lead,
+      description: PAGE_LEAD,
       images: [
         {
           url: NICEIC_CERTIFICATE_IMAGE,
-          width: 927,
-          height: 877,
+          width: NICEIC_CERTIFICATE_IMAGE_WIDTH,
+          height: NICEIC_CERTIFICATE_IMAGE_HEIGHT,
           alt: "NICEIC Certificate of Excellence",
         },
       ],
@@ -41,117 +65,117 @@ export default function NiceicCertificateOfExcellencePage() {
   return (
     <div className="home1-page w-full min-w-0">
       <Navbar />
-      <main id="main-content" className="w-full min-w-0 home1-niceic-page">
-        <section
-          className="home1-niceic-decade"
-          style={{ paddingTop: "calc(var(--site-header-height, 88px) + 3rem)" }}
-          aria-labelledby="niceic-decade-heading"
-        >
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <div className="home1-niceic-decade__shell">
-              <div className="home1-niceic-decade__hero">
-                <p className="home1-niceic-decade__badge">{NICEIC_DECADE.eyebrow}</p>
+      <main
+        id="main-content"
+        className="niceic-cert w-full min-w-0"
+      >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(NICEIC_JSON_LD) }}
+        />
 
-                <div className="home1-niceic-decade__year-wrap" aria-hidden="true">
-                  <div className="home1-niceic-decade__year-box">
-                    <span className="home1-niceic-decade__year">{NICEIC_DECADE.years}</span>
-                  </div>
-                  <span className="home1-niceic-decade__year-pill">{NICEIC_DECADE.yearsLabel}</span>
+        <section className="niceic-cert__section" aria-labelledby="niceic-heading">
+          <div className="niceic-cert__wrap">
+            <p className="niceic-cert__eyebrow">
+              <span className="niceic-cert__dot" aria-hidden="true" />
+              {NICEIC_PAGE.eyebrow}
+            </p>
+
+            <h1 id="niceic-heading" className="niceic-cert__heading">
+              <span className="niceic-cert__heading-line">{NICEIC_PAGE.titleLead}</span>
+              <span className="niceic-cert__heading-line niceic-cert__heading-line--muted">
+                {NICEIC_PAGE.titleRest}
+              </span>
+            </h1>
+
+            <p className="niceic-cert__lede">
+              {NICEIC_PAGE.leadBefore}
+              <strong>{NICEIC_PAGE.leadStrong}</strong>
+            </p>
+
+            <div className="niceic-cert__grid">
+              <div>
+                <ul className="niceic-cert__readouts">
+                  {NICEIC_PAGE.stats.map((stat) => (
+                    <li
+                      key={stat.id}
+                      className={`niceic-cert__readout${stat.bar ? " niceic-cert__readout--featured" : ""}`}
+                    >
+                      <span className="niceic-cert__label">{stat.label}</span>
+                      <span className="niceic-cert__value">
+                        {stat.value}
+                        {stat.suffix ? (
+                          <span className="niceic-cert__unit">{stat.suffix}</span>
+                        ) : null}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="niceic-cert__cta">
+                  <Link href="/services" className="niceic-cert__btn niceic-cert__btn--primary">
+                    {NICEIC_PAGE.bookLabel}
+                  </Link>
+                  <a
+                    href={`tel:${FOOTER_PHONE_TEL}`}
+                    className="niceic-cert__btn niceic-cert__btn--ghost"
+                  >
+                    <IconPhone className="niceic-cert__btn-icon" aria-hidden="true" />
+                    {FOOTER_PHONE}
+                  </a>
                 </div>
-
-                <h1 id="niceic-decade-heading" className="home1-niceic-decade__title">
-                  {NICEIC_DECADE.title}
-                </h1>
-                <p className="home1-niceic-decade__lead">{NICEIC_DECADE.lead}</p>
-
-                <dl className="home1-niceic-decade__meta">
-                  <div className="home1-niceic-decade__meta-item">
-                    <dt>{NICEIC_DECADE.webLabel}</dt>
-                    <dd>
-                      <a href={NICEIC_DECADE.webHref} target="_blank" rel="noopener noreferrer">
-                        {NICEIC_DECADE.webValue}
-                      </a>
-                    </dd>
-                  </div>
-                  <div className="home1-niceic-decade__meta-item">
-                    <dt>{NICEIC_DECADE.basedLabel}</dt>
-                    <dd>{NICEIC_DECADE.basedValue}</dd>
-                  </div>
-                </dl>
               </div>
+
+              <aside className="niceic-cert__case" id="certificate" aria-label="Certificate of Excellence">
+                <div className="niceic-cert__case-inner">
+                  <div className="niceic-cert__case-top">
+                    <span className="niceic-cert__tag">{NICEIC_PAGE.milestone}</span>
+                    <span className="niceic-cert__status">
+                      <span className="niceic-cert__dot" aria-hidden="true" />
+                      {NICEIC_PAGE.verified}
+                    </span>
+                  </div>
+
+                  <div className="niceic-cert__frame">
+                    <span className="niceic-cert__terminal niceic-cert__terminal--tl" aria-hidden="true" />
+                    <span className="niceic-cert__terminal niceic-cert__terminal--tr" aria-hidden="true" />
+                    <span className="niceic-cert__terminal niceic-cert__terminal--bl" aria-hidden="true" />
+                    <span className="niceic-cert__terminal niceic-cert__terminal--br" aria-hidden="true" />
+                    {/* eslint-disable-next-line @next/next/no-img-element -- bypass Next image cache so latest certificate always shows */}
+                    <img
+                      src={`${NICEIC_CERTIFICATE_IMAGE}?v=${NICEIC_CERTIFICATE_IMAGE_VERSION}`}
+                      alt="NICEIC Certificate of Excellence awarded to Urgent Electrical Services Limited, celebrating over 10 years as a NICEIC Approved Contractor in Nottingham"
+                      width={NICEIC_CERTIFICATE_IMAGE_WIDTH}
+                      height={NICEIC_CERTIFICATE_IMAGE_HEIGHT}
+                      className="niceic-cert__frame-img"
+                      decoding="async"
+                    />
+                  </div>
+
+                  <div className="niceic-cert__caption">
+                    <div>
+                      <p className="niceic-cert__name">{NICEIC_PAGE.companyName}</p>
+                      <p className="niceic-cert__sub">{NICEIC_PAGE.companyMeta}</p>
+                    </div>
+                    <span className="niceic-cert__badge">{NICEIC_PAGE.jobsBadge}</span>
+                  </div>
+                </div>
+              </aside>
             </div>
-          </div>
-        </section>
 
-        <section
-          className="home1-niceic-banner"
-          aria-labelledby="niceic-guarantees-heading"
-        >
-          <h2 id="niceic-guarantees-heading" className="home1-niceic-banner__title">
-            {NICEIC_DECADE.guaranteesHeading}
-          </h2>
-        </section>
-
-        <section className="home1-niceic-guarantees" aria-label="NICEIC guarantees">
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <ul className="home1-niceic-decade__grid">
-              {NICEIC_DECADE.guarantees.map((item, index) => (
-                <li key={item.id} className="home1-niceic-decade__card">
-                  <span className="home1-niceic-decade__card-num" aria-hidden="true">
-                    {String(index + 1).padStart(2, "0")}
+            <ul className="niceic-cert__bottom" aria-label="What NICEIC approval means">
+              {NICEIC_PAGE.features.map((item) => (
+                <li key={item.id} className="niceic-cert__check">
+                  <span className="niceic-cert__ico" aria-hidden="true">
+                    ✓
                   </span>
-                  <h3>{item.title}</h3>
-                  <p>{item.text}</p>
+                  <span className="niceic-cert__txt">
+                    <strong>{item.title}</strong>
+                    {item.text}
+                  </span>
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
-
-        <section
-          className="home1-niceic-certificate"
-          id="certificate"
-          aria-labelledby="niceic-certificate-heading"
-        >
-          <div className={SERVICES_PAGE_CONTAINER}>
-            <div className="home1-niceic-certificate__shell">
-              <header className="home1-niceic-certificate__header">
-                <p className="home1-niceic-certificate__eyebrow">{NICEIC_CERTIFICATE_PAGE.eyebrow}</p>
-                <h2 id="niceic-certificate-heading" className="home1-niceic-certificate__title">
-                  <span className="home1-niceic-certificate__title-prefix">
-                    {NICEIC_CERTIFICATE_PAGE.titlePrefix}
-                  </span>
-                  <span className="home1-niceic-certificate__title-name">
-                    {NICEIC_CERTIFICATE_PAGE.title}
-                  </span>
-                </h2>
-              </header>
-
-              <div className="home1-niceic-certificate__stage">
-                <figure className="home1-niceic-certificate__frame">
-                  <Image
-                    src={NICEIC_CERTIFICATE_IMAGE}
-                    alt="NICEIC Certificate of Excellence awarded to Urgent Electrical Services Limited — celebrating over 10 years' certification"
-                    width={927}
-                    height={877}
-                    className="home1-niceic-certificate__img"
-                    priority
-                    sizes="(max-width: 768px) 92vw, 560px"
-                  />
-                </figure>
-              </div>
-
-              <p className="home1-niceic-certificate__footer">{NICEIC_CERTIFICATE_PAGE.footer}</p>
-
-              <div className="home1-niceic-certificate__actions">
-                <Link href="/services" className="home1-btn-primary">
-                  {NICEIC_CERTIFICATE_PAGE.bookLabel}
-                </Link>
-                <Link href="/contact-us" className="home1-btn-outline">
-                  Contact us
-                </Link>
-              </div>
-            </div>
           </div>
         </section>
       </main>

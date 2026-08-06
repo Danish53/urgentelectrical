@@ -1,6 +1,11 @@
 import Link from "next/link";
-import Image from "next/image";
-import { NICEIC_APPROVED_PATH, NICEIC_CERTIFICATE_IMAGE } from "@/data/niceicPages";
+import {
+  NICEIC_APPROVED_PATH,
+  NICEIC_CERTIFICATE_IMAGE,
+  NICEIC_CERTIFICATE_IMAGE_HEIGHT,
+  NICEIC_CERTIFICATE_IMAGE_VERSION,
+  NICEIC_CERTIFICATE_IMAGE_WIDTH,
+} from "@/data/niceicPages";
 
 /**
  * Clickable NICEIC Certificate of Excellence — opens the accreditation page.
@@ -13,13 +18,15 @@ export default function NiceicCertificateBadge({ className = "" }) {
       className={`home1-niceic-cert-badge ${className}`.trim()}
       aria-label="View NICEIC Certificate of Excellence"
     >
-      <Image
-        src={NICEIC_CERTIFICATE_IMAGE}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={`${NICEIC_CERTIFICATE_IMAGE}?v=${NICEIC_CERTIFICATE_IMAGE_VERSION}`}
         alt="NICEIC Certificate of Excellence awarded to Urgent Electrical Services Limited — celebrating over 10 years' certification"
-        width={927}
-        height={877}
+        width={NICEIC_CERTIFICATE_IMAGE_WIDTH}
+        height={NICEIC_CERTIFICATE_IMAGE_HEIGHT}
         className="home1-niceic-cert-badge__img"
-        sizes="(max-width: 1024px) 100vw, 280px"
+        decoding="async"
+        loading="lazy"
       />
     </Link>
   );

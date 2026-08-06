@@ -59,7 +59,7 @@ export const metadata = withMetaNameTitle(
   {
     metadataBase: new URL(getSiteUrl()),
     title: {
-      default: "Urgent Electrical Nottingham | East Midlands",
+      default: "Urgent Electrical | Electrician Nottingham & East Midlands",
       template: "%s | Urgent Electrical Services",
     },
     description:
@@ -80,7 +80,7 @@ export const metadata = withMetaNameTitle(
       locale: "en_GB",
       url: getSiteUrl(),
       siteName: "Urgent Electrical Services",
-      title: "Urgent Electrical Nottingham | East Midlands",
+      title: "Urgent Electrical | Electrician Nottingham & East Midlands",
       description:
         "Looking for an electrician in Nottingham? Urgent Electrical Services offers residential, commercial & industrial work, emergency call-outs.",
       images: [
@@ -94,7 +94,7 @@ export const metadata = withMetaNameTitle(
     },
     twitter: {
       card: "summary_large_image",
-      title: "Urgent Electrical Nottingham | East Midlands",
+      title: "Urgent Electrical | Electrician Nottingham & East Midlands",
       description:
         "NICEIC approved emergency electricians in Nottingham. 60-90 min response. No call-out fees. Book online now.",
       images: [getOgImageUrl()],
@@ -112,7 +112,7 @@ export const metadata = withMetaNameTitle(
       canonical: getSiteUrl(),
     },
   },
-  "Urgent Electrical Nottingham | East Midlands"
+  "Urgent Electrical | Electrician Nottingham & East Midlands"
 );
 
 /** Fresh CMS/API HTML on each request; SEO metadata and JSON-LD still server-rendered. */

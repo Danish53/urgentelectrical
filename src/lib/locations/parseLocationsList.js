@@ -4,6 +4,8 @@
  *   slug: string,
  *   mainTitle: string,
  *   href: string,
+ *   lat: number | null,
+ *   lng: number | null,
  * }} LocationListItem
  */
 
@@ -44,6 +46,47 @@ function resolveAreaDisplayTitle(row, slug, areaName) {
 }
 
 /**
+ * @param {unknown} value
+ * @returns {number | null}
+ */
+function toCoord(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim()) {
+    const n = Number.parseFloat(value.replace(/,/g, "."));
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
+ * @param {Record<string, unknown>} row
+ * @returns {{ lat: number, lng: number } | null}
+ */
+function readListCoordinates(row) {
+  const nested =
+    row.coordinates && typeof row.coordinates === "object" && !Array.isArray(row.coordinates)
+      ? /** @type {Record<string, unknown>} */ (row.coordinates)
+      : null;
+
+  const lat = toCoord(
+    row.latitude ?? row.lat ?? row.map_lat ?? nested?.latitude ?? nested?.lat
+  );
+  const lng = toCoord(
+    row.longitude ??
+      row.lng ??
+      row.lon ??
+      row.map_lng ??
+      nested?.longitude ??
+      nested?.lng ??
+      nested?.lon
+  );
+
+  if (lat == null || lng == null) return null;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+  return { lat, lng };
+}
+
+/**
  * @param {Record<string, unknown>} row
  * @returns {LocationListItem | null}
  */
@@ -59,11 +102,15 @@ export function mapLocationListItem(row) {
     row.main_title ?? row.mainTitle ?? `Emergency Electrician in ${areaName}`,
   ).trim();
 
+  const coords = readListCoordinates(row);
+
   return {
     areaName,
     slug,
     mainTitle,
     href: `/locations/${slug}`,
+    lat: coords?.lat ?? null,
+    lng: coords?.lng ?? null,
   };
 }
 

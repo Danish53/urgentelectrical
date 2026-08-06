@@ -8,6 +8,7 @@ import { VatPreferenceProvider } from "@/components/providers/VatPreferenceProvi
 import CookieConsentBanner from "@/components/common/CookieConsentBanner";
 import CopyProtection from "@/components/common/CopyProtection";
 import CookieSessionHydrator from "@/components/providers/CookieSessionHydrator";
+import PageVisitTracker from "@/components/providers/PageVisitTracker";
 import ReduxProvider from "@/store/provider";
 
 export default function AppProviders({ children }) {
@@ -18,6 +19,7 @@ export default function AppProviders({ children }) {
         <CookieSessionHydrator />
         <ServicesHydrator />
         <WebsiteGeneralDataHydrator />
+        <PageVisitTracker />
         <CopyProtection />
         {children}
         <CookieConsentBanner />

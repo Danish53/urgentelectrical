@@ -7,7 +7,7 @@ const SITE = getSiteUrl();
 /** Shorter FAQ set on homepage for faster load & focused schema */
 export const HOME_FAQ_ITEMS = FAQ_ITEMS.slice(0, 4);
 
-const HOME_TITLE = "Urgent Electrical Nottingham | East Midlands";
+const HOME_TITLE = "Urgent Electrical | Electrician Nottingham & East Midlands";
 const HOME_DESCRIPTION =
   "Emergency electricians in Nottingham and across the East Midlands. NICEIC approved. 24/7 response. No call-out fees. Fixed transparent pricing.";
 

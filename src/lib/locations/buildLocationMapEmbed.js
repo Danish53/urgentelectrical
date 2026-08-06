@@ -1,4 +1,4 @@
-import { LOCATION_MAP_PINS } from "@/data/locationCoordinates";
+import { NEARBY_SETTLEMENT_PINS } from "@/data/locationCoordinates";
 import { normalizeLocationName } from "@/lib/locations/resolveLocationSlug";
 
 /**
@@ -51,10 +51,11 @@ export function readLocationCoordinates(root) {
 function findKnownPin(name) {
   const normalized = normalizeLocationName(name);
   if (!normalized) return null;
+  const lookup = normalized.startsWith("attenboro") ? "attenborough" : normalized;
 
-  for (const pin of LOCATION_MAP_PINS) {
+  for (const pin of NEARBY_SETTLEMENT_PINS) {
     const pinName = normalizeLocationName(pin.name.replace(/\s+City\s+Centre$/i, ""));
-    if (pinName === normalized) return { lat: pin.lat, lng: pin.lng };
+    if (pinName === lookup) return { lat: pin.lat, lng: pin.lng };
   }
   return null;
 }

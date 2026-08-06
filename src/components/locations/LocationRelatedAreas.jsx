@@ -5,12 +5,12 @@ import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
  * @param {{
  *   currentSlug: string,
  *   currentName?: string,
- *   areas?: { name: string, slug: string, href: string }[],
+ *   areas?: { name: string, slug: string, href: string, hasCmsPage?: boolean }[],
  * }} props
  */
 export default function LocationRelatedAreas({ currentSlug, currentName = "", areas = [] }) {
   const nearbyAreas = (areas ?? []).filter(
-    (area) => area?.slug && area.slug !== currentSlug && area.name,
+    (area) => area?.name && area.slug !== currentSlug,
   );
 
   if (!nearbyAreas.length) return null;
@@ -33,21 +33,26 @@ export default function LocationRelatedAreas({ currentSlug, currentName = "", ar
         </h2>
 
         <ul className="home1-locations-areas-grid list-none p-0 m-0">
-          {nearbyAreas.map((area) => (
-            <li key={area.slug} className="home1-locations-area-item">
-              <Link href={area.href} className="home1-locations-area-card">
-                <span className="home1-locations-area-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
-                  </svg>
-                </span>
-                <span className="home1-locations-area-body">
-                  <span className="home1-locations-area-name">{area.name}</span>
-                  <span className="home1-locations-area-cta">View local electricians →</span>
-                </span>
-              </Link>
-            </li>
-          ))}
+          {nearbyAreas.map((area) => {
+            const hasPage = area.hasCmsPage !== false && Boolean(area.href?.startsWith("/locations/"));
+            return (
+              <li key={area.slug || area.name} className="home1-locations-area-item">
+                <Link href={area.href || "/locations"} className="home1-locations-area-card">
+                  <span className="home1-locations-area-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
+                    </svg>
+                  </span>
+                  <span className="home1-locations-area-body">
+                    <span className="home1-locations-area-name">{area.name}</span>
+                    <span className="home1-locations-area-cta">
+                      {hasPage ? "View local electricians →" : "See all service areas →"}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </div>
     </section>
