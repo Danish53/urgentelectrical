@@ -700,6 +700,33 @@ function PricingCard({ service, selectedVariant, selectedId, onSelectVariant, on
 
         <NiceicCertificateBadge />
 
+        <div className="home1-location-aside-trust">
+          <p className="home1-page-detail-aside-label">Why book with us</p>
+          <ul className="home1-blog-sidebar-trust">
+            <li>
+              <IconCheck
+                className="w-3.5 h-3.5 shrink-0 text-[var(--home1-red)]"
+                aria-hidden="true"
+              />
+              24/7 emergencies
+            </li>
+            <li>
+              <IconCheck
+                className="w-3.5 h-3.5 shrink-0 text-[var(--home1-red)]"
+                aria-hidden="true"
+              />
+              NICEIC approved
+            </li>
+            <li>
+              <IconCheck
+                className="w-3.5 h-3.5 shrink-0 text-[var(--home1-red)]"
+                aria-hidden="true"
+              />
+              Fixed online pricing
+            </li>
+          </ul>
+        </div>
+
         <Link href="/services" className="home1-page-detail-aside-back">
           ← Back to all services
         </Link>

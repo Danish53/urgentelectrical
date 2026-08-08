@@ -20,6 +20,7 @@ export async function googleGeocodeAddress(address, apiKey) {
   if (!q || !apiKey) return null;
 
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(q)}&region=uk&key=${encodeURIComponent(apiKey)}`;
+  // Cache geocode 7 days — same address should not re-bill often.
   const res = await fetch(url, { next: { revalidate: 604800 } });
   if (!res.ok) return null;
 
@@ -62,7 +63,6 @@ function ingestPlaceResults(byKey, results, origin) {
     if (!name || !Number.isFinite(plat) || !Number.isFinite(plng)) continue;
 
     const types = Array.isArray(row?.types) ? row.types.map(String) : [];
-    // Only real area types — never cafes/hotels from loose text search.
     if (!types.some((t) => AREA_TYPES.has(t))) continue;
 
     const key = name.toLowerCase();
@@ -82,7 +82,7 @@ function ingestPlaceResults(byKey, results, origin) {
 }
 
 /**
- * Nearby localities/suburbs via Google Places Nearby Search.
+ * Nearby localities via Google Places — **one** Nearby Search request (bill control).
  * @param {{ lat: number, lng: number, apiKey: string, limit?: number }} input
  * @returns {Promise<{ name: string, placeId: string, lat: number, lng: number, km: number }[]>}
  */
@@ -90,33 +90,31 @@ export async function googleNearbyLocalities(input) {
   const apiKey = String(input.apiKey ?? "").trim();
   const lat = Number(input.lat);
   const lng = Number(input.lng);
-  const limit = Math.max(1, Math.min(input.limit ?? 8, 16));
+  const limit = Math.max(1, Math.min(input.limit ?? 9, 16));
   if (!apiKey || !Number.isFinite(lat) || !Number.isFinite(lng)) return [];
 
   const origin = { lat, lng };
   /** @type {Map<string, { name: string, placeId: string, lat: number, lng: number, km: number }>} */
   const byKey = new Map();
 
-  const nearbyTypes = ["locality", "sublocality", "neighborhood", "postal_town"];
-  for (const type of nearbyTypes) {
-    const url =
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
-      `?location=${lat},${lng}` +
-      `&radius=15000` +
-      `&type=${encodeURIComponent(type)}` +
-      `&key=${encodeURIComponent(apiKey)}`;
+  // Single billed Places call (was up to 4). Sublocality best for UK suburbs.
+  const url =
+    `https://maps.googleapis.com/maps/api/place/nearbysearch/json` +
+    `?location=${lat},${lng}` +
+    `&radius=15000` +
+    `&type=sublocality` +
+    `&key=${encodeURIComponent(apiKey)}`;
 
-    try {
-      const res = await fetch(url, { next: { revalidate: 86400 } });
-      if (!res.ok) continue;
+  try {
+    const res = await fetch(url, { next: { revalidate: 604800 } });
+    if (res.ok) {
       const data = await res.json();
-      if (data?.status !== "OK" && data?.status !== "ZERO_RESULTS") continue;
-      ingestPlaceResults(byKey, Array.isArray(data?.results) ? data.results : [], origin);
-    } catch {
-      /* try next type */
+      if (data?.status === "OK" || data?.status === "ZERO_RESULTS") {
+        ingestPlaceResults(byKey, Array.isArray(data?.results) ? data.results : [], origin);
+      }
     }
-
-    if (byKey.size >= limit * 2) break;
+  } catch {
+    /* pins / OSM fill upstream */
   }
 
   return Array.from(byKey.values())

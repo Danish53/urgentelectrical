@@ -309,7 +309,7 @@ export default function LocationDetailClient({ location }) {
                     <div className="home1-page-detail-aside-card">
                       <p className="home1-page-detail-aside-label">Nearby areas</p>
                       <ul className="home1-page-detail-related">
-                        {location.nearby.slice(0, 8).map((area) => (
+                        {location.nearby.slice(0, 9).map((area) => (
                           <li key={area.slug || area.name}>
                             <Link href={area.href || "/locations"}>{area.name}</Link>
                           </li>

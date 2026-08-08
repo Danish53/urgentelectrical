@@ -56,7 +56,7 @@ async function computeAccurateNearby(input) {
   const currentSlug = String(input.currentSlug ?? "").trim();
   const currentName = String(input.currentName ?? "").trim();
   const cityName = String(input.cityName ?? "").trim();
-  const limit = Math.max(1, Math.min(input.limit ?? 8, 12));
+  const limit = Math.max(1, Math.min(input.limit ?? 9, 12));
   const shortName = shortAreaName(currentName) || currentName;
   const currentKey = normalizeLocationName(shortName);
 
@@ -79,11 +79,7 @@ async function computeAccurateNearby(input) {
     origin = { lat: input.lat, lng: input.lng };
   }
 
-  if (!origin && apiKey) {
-    const g = await googleGeocodeAddress(mapQuery, apiKey);
-    if (g) origin = { lat: g.lat, lng: g.lng };
-  }
-
+  // Prefer free pin / CMS resolution before billed Google Geocoding.
   if (!origin) {
     origin = await resolveOpenedLocationCoords({
       name: shortName,
@@ -95,7 +91,12 @@ async function computeAccurateNearby(input) {
     });
   }
 
-  if (!origin && !apiKey) {
+  if (!origin && apiKey) {
+    const g = await googleGeocodeAddress(mapQuery, apiKey);
+    if (g) origin = { lat: g.lat, lng: g.lng };
+  }
+
+  if (!origin) {
     origin = await geocodeLocationLabel({
       name: shortName,
       cityName,
@@ -105,18 +106,28 @@ async function computeAccurateNearby(input) {
 
   if (!origin) return [];
 
+  // 1) Free accurate pins first (most East Midlands pages need no Places bill).
   /** @type {{ name: string, placeId: string, lat: number, lng: number, km: number }[]} */
-  let places = [];
+  let places = nearbyFromKnownPins({
+    lat: origin.lat,
+    lng: origin.lng,
+    excludeName: shortName,
+    limit: limit + 10,
+    maxKm: 16,
+  });
 
-  if (apiKey) {
-    places = await googleNearbyLocalities({
+  // 2) Google Places only if pins are short — max 1 Nearby Search per page.
+  if (apiKey && places.length < limit) {
+    const googlePlaces = await googleNearbyLocalities({
       lat: origin.lat,
       lng: origin.lng,
       apiKey,
-      limit: limit + 6,
+      limit: limit + 4,
     });
+    places = mergePlaces(places, googlePlaces);
   }
 
+  // 3) Free OSM fill if still short.
   if (places.length < limit) {
     try {
       const osm = await Promise.race([
@@ -130,21 +141,9 @@ async function computeAccurateNearby(input) {
       ]);
       places = mergePlaces(places, Array.isArray(osm) ? osm : []);
     } catch {
-      /* pins fill below */
+      /* keep whatever we have */
     }
   }
-
-  // Local pins: accurate distances for East Midlands settlements (CMS list not required).
-  places = mergePlaces(
-    places,
-    nearbyFromKnownPins({
-      lat: origin.lat,
-      lng: origin.lng,
-      excludeName: shortName,
-      limit: limit + 10,
-      maxKm: 16,
-    })
-  );
 
   places = places
     .filter((p) => {
@@ -187,8 +186,8 @@ async function computeAccurateNearby(input) {
 }
 
 /**
- * Accurate nearby areas for a location detail page (Google Places when keyed, else OSM + local pins).
- * Results are real geographic neighbours — not limited to the CMS areas list.
+ * Nearby areas for location detail — map distance, 9 closest.
+ * Bill control: pins first; Google Places at most once; long cache.
  *
  * @param {{
  *   currentSlug: string,
@@ -204,7 +203,7 @@ export async function fetchAccurateNearbyAreas(options) {
   const currentSlug = String(options.currentSlug ?? "").trim();
   const currentName = String(options.currentName ?? "").trim();
   const cityName = String(options.cityName ?? "").trim();
-  const limit = Math.max(1, Math.min(options.limit ?? 8, 12));
+  const limit = Math.max(1, Math.min(options.limit ?? 9, 12));
   const lat =
     typeof options.lat === "number" && Number.isFinite(options.lat) ? options.lat : null;
   const lng =
@@ -225,11 +224,9 @@ export async function fetchAccurateNearbyAreas(options) {
 
   const latKey = lat != null ? lat.toFixed(3) : "x";
   const lngKey = lng != null ? lng.toFixed(3) : "x";
-  const cached = unstable_cache(run, ["accurate-nearby-v3", currentSlug, String(limit), latKey, lngKey], {
-    revalidate: 3600,
+  const cached = unstable_cache(run, ["accurate-nearby-v4", currentSlug, String(limit), latKey, lngKey], {
+    revalidate: 604800, // 7 days — avoid re-billing the same area
   });
 
-  const result = await cached();
-  if (!result.length) return run();
-  return result;
+  return cached();
 }

@@ -42,7 +42,7 @@ export async function fetchLocationsSearch(query) {
 
 /**
  * Nearby areas for the opened location — accurate geographic neighbours.
- * Prefer Google Places when GOOGLE_MAPS_API_KEY is set; otherwise OpenStreetMap.
+ * Pins first; Google Places at most once when needed; OSM fill.
  *
  * @param {{
  *   cityName?: string | null,

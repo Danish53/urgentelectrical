@@ -47,7 +47,7 @@ export default async function LocationDetailPage({ params }) {
       cityName: city?.name || location.cityName || location.regionLabel,
       currentSlug: location.slug,
       currentName: location.name,
-      limit: 8,
+      limit: 9,
       lat: coords?.lat ?? null,
       lng: coords?.lng ?? null,
       apiData:
