@@ -1,5 +1,5 @@
-import { MENU_API } from "@/constants/menuApi";
-import { getSiteOrigin, parseNavMenuResponse } from "@/lib/menu/mapNavMenu";
+import { parseNavMenuResponse } from "@/lib/menu/mapNavMenu";
+import { getApiBaseUrl } from "@/lib/siteUrl";
 
 /** @type {ReturnType<typeof parseNavMenuResponse> | null} */
 let cachedNavMenu = null;
@@ -13,7 +13,11 @@ export function getCachedNavMenu() {
 }
 
 async function requestNavMenu() {
-  const url = `${getSiteOrigin()}${MENU_API.list}`;
+  const base = getApiBaseUrl();
+  if (!base) {
+    throw new Error("Unable to reach the menu API.");
+  }
+  const url = `${base}/menu`;
   let response;
 
   try {

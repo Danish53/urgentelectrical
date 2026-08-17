@@ -132,6 +132,12 @@ export async function buildCoreSitemapEntries() {
     { url: `${site}/policies`, lastModified: now, changeFrequency: "monthly", priority: 0.65 },
     { url: `${site}/contact-us`, lastModified: now, changeFrequency: "monthly", priority: 0.88 },
     { url: `${site}/about-us`, lastModified: now, changeFrequency: "monthly", priority: 0.88 },
+    {
+      url: `${site}/niceic-certificate-of-excellence`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
     ...bookable.map((s) => ({
       url: s.canonicalUrl,
       lastModified: now,

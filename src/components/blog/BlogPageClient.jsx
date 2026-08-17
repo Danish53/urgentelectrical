@@ -8,16 +8,25 @@ import BlogHero from "@/components/blog/BlogHero";
 import BlogListing from "@/components/blog/BlogListing";
 import NewsletterHome1 from "@/components/home1/NewsletterHome1";
 
-export default function BlogPageClient({ categories, initialPosts, initialMeta }) {
+export default function BlogPageClient({
+  categories,
+  initialPosts,
+  initialMeta,
+  initialPage = 1,
+  initialCategory = "all",
+}) {
   return (
     <div className="home1-page w-full min-w-0">
       <Navbar />
       <main className="w-full min-w-0">
         <BlogHero />
         <BlogListing
+          key={`${initialCategory}-${initialPage}`}
           categories={categories}
           initialPosts={initialPosts}
           initialMeta={initialMeta}
+          initialPage={initialPage}
+          initialCategory={initialCategory}
         />
         {/* <MotionSection variant="fade-in">
           <NewsletterHome1 />

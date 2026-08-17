@@ -28,7 +28,7 @@ export const getBlogCategories = cache(async function getBlogCategories() {
  * @param {string} categorySlug
  * @param {Array<{ id: string, slug: string, label: string }>} categories
  */
-function mapListWithCategory(blogs, categorySlug, categories) {
+function mapListWithCategory(blogs, categorySlug, categories, page = 1) {
   const categoryLabel =
     categorySlug === "all"
       ? "Article"
@@ -38,7 +38,7 @@ function mapListWithCategory(blogs, categorySlug, categories) {
     buildBlogPostFromListItem(item, {
       categorySlug: categorySlug === "all" ? "all" : categorySlug,
       categoryLabel,
-      featured: categorySlug === "all" && index === 0,
+      featured: categorySlug === "all" && page === 1 && index === 0,
     })
   );
 }
@@ -51,8 +51,11 @@ export async function getBlogPostsPage(options = {}) {
   const category = options.category ?? "all";
   const categories = options.categories ?? (await getBlogCategories());
 
-  const { blogs, meta, links } = await fetchBlogsPage({ page, category });
-  const posts = mapListWithCategory(blogs, category, categories);
+  const { blogs, meta, links } = await fetchBlogsPage({
+    page,
+    category: category === "all" ? "" : category,
+  });
+  const posts = mapListWithCategory(blogs, category, categories, page);
 
   return { posts, meta, links, categories };
 }

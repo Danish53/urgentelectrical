@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SERVICES_PAGE_CONTAINER } from "@/components/home1/constants";
 import SectionHeader from "@/components/home1/SectionHeader";
 import ListSearchBar from "@/components/common/ListSearchBar";
 import ServicesLoadError from "@/components/services/ServicesLoadError";
+import { blogListingHref } from "@/lib/blogs/blogListingUrl";
 import { buildBlogPostFromListItem } from "@/lib/blogs/buildBlogPost";
 import { matchesListSearch, normalizeSearchQuery } from "@/lib/listSearch";
 import { fetchAllBlogs, fetchBlogsPage } from "@/services/blogApiService";
@@ -31,9 +33,16 @@ function SubmitSpinner() {
   );
 }
 
-export default function BlogListing({ categories, initialPosts, initialMeta }) {
-  const [active, setActive] = useState("all");
-  const [page, setPage] = useState(1);
+export default function BlogListing({
+  categories,
+  initialPosts,
+  initialMeta,
+  initialPage = 1,
+  initialCategory = "all",
+}) {
+  const router = useRouter();
+  const active = initialCategory;
+  const page = initialPage;
   const [posts, setPosts] = useState(initialPosts ?? []);
   const [meta, setMeta] = useState(initialMeta ?? null);
   const [loading, setLoading] = useState(false);
@@ -136,19 +145,8 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
 
   function handleCategoryChange(catId) {
     if (catId === active) return;
-    setActive(catId);
-    setPage(1);
     setSearchQuery("");
-    loadPage(catId, 1);
-  }
-
-  function handlePageChange(nextPage) {
-    if (nextPage === page || nextPage < 1) return;
-    const last = meta?.last_page ?? 1;
-    if (nextPage > last) return;
-    setPage(nextPage);
-    loadPage(active, nextPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    router.push(blogListingHref({ category: catId, page: 1 }));
   }
 
   const featured = !searchActive && active === "all" && page === 1 ? posts.find((p) => p.featured) : null;
@@ -269,7 +267,7 @@ export default function BlogListing({ categories, initialPosts, initialMeta }) {
             currentPage={currentPage}
             lastPage={lastPage}
             loading={loading}
-            onPageChange={handlePageChange}
+            hrefForPage={(nextPage) => blogListingHref({ category: active, page: nextPage })}
             className="mt-10 sm:mt-12"
           />
         ) : null}

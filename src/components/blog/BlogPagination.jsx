@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 function buildPageNumbers(current, last) {
   if (last <= 7) {
     return Array.from({ length: last }, (_, i) => i + 1);
@@ -21,11 +23,43 @@ function buildPageNumbers(current, last) {
   return result;
 }
 
+function PaginationControl({
+  href,
+  disabled,
+  onClick,
+  className,
+  ariaLabel,
+  ariaCurrent,
+  children,
+}) {
+  if (href && !disabled) {
+    return (
+      <Link href={href} className={className} aria-label={ariaLabel} aria-current={ariaCurrent}>
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={className}
+      aria-label={ariaLabel}
+      aria-current={ariaCurrent}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function BlogPagination({
   currentPage,
   lastPage,
   loading,
   onPageChange,
+  hrefForPage,
   ariaLabel = "Pagination",
   className = "",
 }) {
@@ -38,15 +72,15 @@ export default function BlogPagination({
       className={`flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 ${className}`.trim()}
       aria-label={ariaLabel}
     >
-      <button
-        type="button"
+      <PaginationControl
+        href={hrefForPage?.(currentPage - 1)}
         disabled={currentPage <= 1 || loading}
-        onClick={() => onPageChange(currentPage - 1)}
+        onClick={() => onPageChange?.(currentPage - 1)}
         className="home1-blog-pagination-btn home1-blog-pagination-btn--nav"
-        aria-label="Previous page"
+        ariaLabel="Previous page"
       >
         ← Prev
-      </button>
+      </PaginationControl>
 
       <div className="flex flex-wrap items-center justify-center gap-1">
         {pages.map((item, index) =>
@@ -55,32 +89,32 @@ export default function BlogPagination({
               …
             </span>
           ) : (
-            <button
+            <PaginationControl
               key={item}
-              type="button"
+              href={hrefForPage?.(item)}
               disabled={loading}
-              onClick={() => onPageChange(item)}
-              aria-label={`Page ${item}`}
-              aria-current={item === currentPage ? "page" : undefined}
+              onClick={() => onPageChange?.(item)}
+              ariaLabel={`Page ${item}`}
+              ariaCurrent={item === currentPage ? "page" : undefined}
               className={`home1-blog-pagination-btn home1-blog-pagination-btn--num${
                 item === currentPage ? " is-active" : ""
               }`}
             >
               {item}
-            </button>
+            </PaginationControl>
           )
         )}
       </div>
 
-      <button
-        type="button"
+      <PaginationControl
+        href={hrefForPage?.(currentPage + 1)}
         disabled={currentPage >= lastPage || loading}
-        onClick={() => onPageChange(currentPage + 1)}
+        onClick={() => onPageChange?.(currentPage + 1)}
         className="home1-blog-pagination-btn home1-blog-pagination-btn--nav"
-        aria-label="Next page"
+        ariaLabel="Next page"
       >
         Next →
-      </button>
+      </PaginationControl>
     </nav>
   );
 }
