@@ -8,12 +8,53 @@
   --ue-cookie-panel: #ffffff;
 }
 
+@keyframes ue-cookie-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ue-cookie-slide-up {
+  from { transform: translate3d(0, 110%, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes ue-cookie-dialog-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.ue-cookie-animate-fade {
+  animation: ue-cookie-fade-in 0.25s ease both;
+}
+
+.ue-cookie-animate-slide-up {
+  animation: ue-cookie-slide-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ue-cookie-animate-dialog {
+  animation: ue-cookie-dialog-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .ue-cookie-consent__backdrop {
   position: fixed;
   inset: 0;
   z-index: 119;
   background: rgba(15, 23, 42, 0.28);
   pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ue-cookie-animate-fade,
+  .ue-cookie-animate-slide-up,
+  .ue-cookie-animate-dialog {
+    animation: none;
+  }
 }
 
 .ue-cookie-consent__backdrop--blur {

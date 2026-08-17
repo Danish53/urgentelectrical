@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { EASE_SMOOTH } from "@/lib/motion";
 import { mapCookieContent } from "@/lib/cookie/mapCookieContent";
 import { fetchCookieSession } from "@/services/cookieApiService";
 import "./cookie-consent.css";
@@ -92,23 +90,28 @@ export default function CookieConsentBanner() {
   const [content, setContent] = useState(() => mapCookieContent({}));
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
   const [expandedCategory, setExpandedCategory] = useState(null);
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     fetchCookieSession()
       .then((data) => setContent(mapCookieContent(data)))
       .catch(() => setContent(mapCookieContent({})));
 
+    let shouldShow = false;
     try {
       const saved = window.localStorage.getItem(CONSENT_STORAGE_KEY);
       if (!saved) {
-        const timer = window.setTimeout(() => setVisible(true), 900);
-        return () => window.clearTimeout(timer);
+        shouldShow = true;
       }
     } catch {
-      const timer = window.setTimeout(() => setVisible(true), 900);
+      shouldShow = true;
+    }
+
+    if (shouldShow) {
+      const timer = window.setTimeout(() => setVisible(true), 0);
       return () => window.clearTimeout(timer);
     }
+
+    return undefined;
   }, []);
 
   useEffect(() => {
@@ -177,38 +180,21 @@ export default function CookieConsentBanner() {
 
   return (
     <>
-      <AnimatePresence>
-        {visible ? (
-          <motion.div
-            className={`ue-cookie-consent__backdrop${customizeOpen ? " ue-cookie-consent__backdrop--blur" : ""}`}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: EASE_SMOOTH }}
-            aria-hidden="true"
-          />
-        ) : null}
-      </AnimatePresence>
+      {visible ? (
+        <div
+          className={`ue-cookie-consent__backdrop ue-cookie-animate-fade${customizeOpen ? " ue-cookie-consent__backdrop--blur" : ""}`}
+          aria-hidden="true"
+        />
+      ) : null}
 
-      <AnimatePresence>
-        {visible && !customizeOpen ? (
-          <motion.div
-            className="ue-cookie-consent"
+      {visible && !customizeOpen ? (
+          <div
+            className="ue-cookie-consent ue-cookie-animate-fade"
             role="dialog"
             aria-live="polite"
             aria-label="Cookie consent"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: EASE_SMOOTH }}
           >
-            <motion.div
-              className="ue-cookie-consent__panel"
-              initial={reduceMotion ? false : { y: "110%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "110%" }}
-              transition={{ duration: 0.55, ease: EASE_SMOOTH }}
-            >
+            <div className="ue-cookie-consent__panel ue-cookie-animate-slide-up">
               <div className="ue-cookie-consent__card">
                 <span className="ue-cookie-consent__badge" aria-hidden="true">
                   <CookieIcon />
@@ -248,30 +234,18 @@ export default function CookieConsentBanner() {
                   </button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         ) : null}
-      </AnimatePresence>
 
-      <AnimatePresence>
-        {visible && customizeOpen ? (
-          <motion.div
-            className="ue-cookie-preferences"
+      {visible && customizeOpen ? (
+          <div
+            className="ue-cookie-preferences ue-cookie-animate-fade"
             role="dialog"
             aria-modal="true"
             aria-label={content.modalTitle}
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.25, ease: EASE_SMOOTH }}
           >
-            <motion.div
-              className="ue-cookie-preferences__dialog"
-              initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.35, ease: EASE_SMOOTH }}
-            >
+            <div className="ue-cookie-preferences__dialog ue-cookie-animate-dialog">
               <div className="ue-cookie-preferences__header">
                 <p className="ue-cookie-preferences__brand">{content.siteName}</p>
                 <button
@@ -361,10 +335,9 @@ export default function CookieConsentBanner() {
               </div>
 
               <p className="ue-cookie-preferences__powered">Powered by {content.siteName}</p>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         ) : null}
-      </AnimatePresence>
     </>
   );
 }
