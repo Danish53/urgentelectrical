@@ -152,6 +152,7 @@ function NavTopUtilityBar({ incVat, onVatToggle, showDesktopExtras = true, shell
                 type="button"
                 role="switch"
                 aria-checked={incVat}
+                aria-label="Include VAT"
                 onClick={onVatToggle}
                 className={`relative inline-flex shrink-0 w-8 h-[15px] rounded-full transition-colors duration-200 ${incVat ? "bg-[#1a1a1a]" : "bg-[#c4c4c4]"}`}
               >
