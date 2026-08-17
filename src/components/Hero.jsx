@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
 import { useSimpleServicesList } from "@/hooks/useServices";
 import { useServicePostcodeLookup } from "@/hooks/useServicePostcodeLookup";
 import FormFieldSkeleton from "@/components/skeletons/FormFieldSkeleton";
 import ServicePostcodeResultModal from "@/components/shared/ServicePostcodeResultModal";
 import ButtonSpinner from "@/components/ui/ButtonSpinner";
 import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
-import { EASE_SMOOTH, HERO_CONTAINER, HERO_FORM, HERO_ITEM, HERO_TITLE } from "@/lib/motion";
 import { AVAILABILITY_OPEN, getEngineerAvailability } from "@/lib/engineerAvailability";
 
 const MARQUEE_ITEMS = [
@@ -90,15 +88,13 @@ function HeroMarquee() {
       <div className="hero-marquee-track flex items-center gap-3 w-max flex-nowrap">
         <MarqueeStrip id="a" />
         <MarqueeStrip id="b" />
-        <MarqueeStrip id="c" />
-        <MarqueeStrip id="d" />
       </div>
     </div>
   );
 }
 
-export default function Hero() {
-  const { options, loading: servicesLoading } = useSimpleServicesList();
+export default function Hero({ initialServices = [] }) {
+  const { options, loading: servicesLoading } = useSimpleServicesList(initialServices);
   const { lookup, submitting, modalOpen, modalVariant, modalMessage, closeModal, bookService } =
     useServicePostcodeLookup("home");
   const [serviceSlug, setServiceSlug] = useState("");
@@ -106,8 +102,6 @@ export default function Hero() {
   const [serviceRequiredOpen, setServiceRequiredOpen] = useState(false);
   const [postcodeRequiredOpen, setPostcodeRequiredOpen] = useState(false);
   const [availability, setAvailability] = useState(AVAILABILITY_OPEN);
-  const reduceMotion = useReducedMotion();
-
   useEffect(() => {
     setAvailability(getEngineerAvailability());
   }, []);
@@ -131,67 +125,44 @@ export default function Hero() {
       className="relative bg-black overflow-hidden pt-[118px] lg:pt-[122px]"
       aria-labelledby="hero-heading"
     >
-      <motion.div
+      <div
         className="hero-grid-bg absolute inset-0 pointer-events-none"
         aria-hidden="true"
-        initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.2, ease: EASE_SMOOTH }}
       />
-      <motion.div
+      <div
         className="hero-top-glow absolute inset-0 pointer-events-none"
         aria-hidden="true"
-        initial={reduceMotion ? false : { opacity: 0, scale: 1.08 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.4, ease: EASE_SMOOTH }}
       />
-      <motion.div
+      <div
         className="hero-bottom-glow absolute inset-0 pointer-events-none"
         aria-hidden="true"
-        initial={reduceMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1.4, delay: 0.2, ease: EASE_SMOOTH }}
       />
 
-      <motion.div
+      <div
         className="relative z-10 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 text-center pt-10 sm:pt-12 pb-10"
-        variants={reduceMotion ? undefined : HERO_CONTAINER}
-        initial={reduceMotion ? false : "hidden"}
-        animate={reduceMotion ? undefined : "visible"}
       >
         {!availability.limited ? (
-          <motion.div
-            variants={reduceMotion ? undefined : HERO_ITEM}
-            id="availabilityBadge"
-            className="home1-hero-availability"
-          >
+          <div id="availabilityBadge" className="home1-hero-availability">
             <span className="home1-hero-availability-dot" aria-hidden="true" />
             <span id="availabilityText" className="home1-hero-availability-text">
               {availability.heroText}
             </span>
-          </motion.div>
+          </div>
         ) : null}
 
-        <motion.h1
+        <h1
           id="hero-heading"
-          variants={reduceMotion ? undefined : HERO_TITLE}
           className="font-sans text-[28px] sm:text-[40px] lg:text-[48px] text-white leading-[1.1] tracking-tight mb-5"
           style={{ fontWeight: 800 }}
         >
           Book a trusted electrician online <span className="text-[#ff5a3c]">in minutes</span>
-        </motion.h1>
+        </h1>
 
-        <motion.p
-          variants={reduceMotion ? undefined : HERO_ITEM}
-          className="font-sans text-white text-[14px] sm:text-[15px] lg:text-[15px] font-normal leading-normal mb-7"
-        >
+        <p className="font-sans text-white text-[14px] sm:text-[15px] lg:text-[15px] font-normal leading-normal mb-7">
           No call-out fees. Fixed transparent pricing. NICEIC approved engineers across Nottingham &amp; East Midlands.
-        </motion.p>
+        </p>
 
-        <motion.p
-          variants={reduceMotion ? undefined : HERO_ITEM}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-[#F59E0B]/40 bg-[#F59E0B]/5 mb-8"
-        >
+        <p className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-[#F59E0B]/40 bg-[#F59E0B]/5 mb-8">
           <svg className="w-4 h-4 text-[#F59E0B] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" strokeLinecap="round" />
@@ -199,11 +170,10 @@ export default function Hero() {
           <span className="text-[#F59E0B] text-[13px] font-medium">
             Confirmed instantly — slots filling fast today
           </span>
-        </motion.p>
+        </p>
 
-        <motion.form
+        <form
           id="book"
-          variants={reduceMotion ? undefined : HERO_FORM}
           className="w-full max-w-[920px] mx-auto text-left bg-[#0a0a0a]/95 border border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm"
           aria-label="Book an electrician online"
           onSubmit={handleBookSubmit}
@@ -298,15 +268,12 @@ export default function Hero() {
               </a>
             </div>
           </fieldset>
-        </motion.form>
-      </motion.div>
+        </form>
+      </div>
 
-      <motion.aside
+      <aside
         className="relative z-10 pb-12 sm:pb-14"
         aria-label="Trust highlights"
-        initial={reduceMotion ? false : { opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1, duration: 0.9, ease: EASE_SMOOTH }}
       >
         <HeroMarquee />
 
@@ -319,7 +286,7 @@ export default function Hero() {
             <strong className="text-[#E31E24] font-bold">Nottingham &amp; East Midlands</strong>
           </p>
         </footer>
-      </motion.aside>
+      </aside>
 
       <ServicePostcodeResultModal
         open={serviceRequiredOpen}

@@ -1,5 +1,3 @@
-"use client";
-
 import Footer from "@/components/Footer.jsx";
 import FloatingCTA from "@/components/FloatingCTA.jsx";
 

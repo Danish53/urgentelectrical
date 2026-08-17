@@ -57,7 +57,7 @@ export default function OtherServiceDetailRich({
   relatedLinks = [],
 }) {
   const heroImage = imageUrl || layout.image;
-  const related = relatedLinks.length ? relatedLinks : layout.related;
+  const related = relatedLinks;
   const sectionNumbers = buildPageSectionNumbers(layout);
   const sections = [
     layout.paragraphs.length ? { id: "overview", label: "Overview" } : null,

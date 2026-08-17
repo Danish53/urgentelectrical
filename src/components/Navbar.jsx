@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
-import { EASE_SMOOTH } from "@/lib/motion";
 import { CONTAINER, NAV_SHELL } from "@/components/home1/constants";
 import NavAuthControl from "@/components/nav/NavAuthControl";
 import NavMenuSkeleton from "@/components/skeletons/NavMenuSkeleton";
@@ -79,6 +77,7 @@ function BrandLogo({ compact = false }) {
         alt="Urgent Electrical Services"
         width={logoSize}
         height={logoSize}
+        sizes={`${logoSize}px`}
         className="shrink-0 object-contain"
         priority
       />
@@ -216,8 +215,6 @@ export default function Navbar() {
   const [mobileAccordion, setMobileAccordion] = useState(null);
   const { navGroups, loading: navMenuLoading } = useNavMenu();
   const { incVat, toggleVat } = useVatPreference();
-  const reduceMotion = useReducedMotion();
-
   useEffect(() => {
     if (!navMenuLoading && navGroups.length && mobileAccordion === null) {
       setMobileAccordion(navGroups[0].label);
@@ -254,12 +251,9 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.header
+      <header
         ref={headerRef}
         className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-[#e8e8e8] shadow-[0_1px_3px_rgba(0,0,0,0.06)]"
-        initial={reduceMotion ? false : { y: -120, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.85, ease: EASE_SMOOTH }}
       >
         <NavTopUtilityBar
           incVat={incVat}
@@ -353,7 +347,7 @@ export default function Navbar() {
             </div>
           </div>
         )}
-      </motion.header>
+      </header>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-[60] bg-white flex flex-col lg:hidden">

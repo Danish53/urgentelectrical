@@ -91,13 +91,12 @@ export default function Slider({
       </div>
 
       {showDots && pages > 1 && (
-        <div className="flex justify-center gap-2 mt-6" role="tablist" aria-label="Slide pages">
+        <div className="flex justify-center gap-2 mt-6" role="group" aria-label="Slide pages">
           {Array.from({ length: pages }).map((_, p) => (
             <button
               key={p}
               type="button"
-              role="tab"
-              aria-selected={index === p}
+              aria-current={index === p ? "true" : undefined}
               aria-label={`Go to slide ${p + 1}`}
               onClick={() => setIndex(p)}
               className={`home2-slider-dot ${index === p ? "home2-slider-dot--active" : ""}`}

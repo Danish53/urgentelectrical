@@ -151,13 +151,12 @@ export default function ReviewsSection() {
           </div>
 
           {/* Pagination dots */}
-          <div className="flex justify-center items-center gap-2.5 mt-8 sm:mt-10" role="tablist" aria-label="Review slides">
+          <div className="flex justify-center items-center gap-2.5 mt-8 sm:mt-10" role="group" aria-label="Review slides">
             {CUSTOMER_REVIEWS.map((_, i) => (
               <button
                 key={i}
                 type="button"
-                role="tab"
-                aria-selected={i === index}
+                aria-current={i === index ? "true" : undefined}
                 onClick={() => setIndex(Math.min(i, maxIndex))}
                 className={`rounded-full transition-all duration-500 ease-in-out ${
                   i === index ? "w-2.5 h-2.5 bg-[#2563eb]" : "w-2 h-2 bg-[#d1d5db] hover:bg-[#9ca3af]"

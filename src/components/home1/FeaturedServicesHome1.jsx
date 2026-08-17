@@ -117,7 +117,6 @@ function FeaturedServicesSlider({ services, bookable }) {
                   service={s}
                   detailHref={resolveHref(s, bookable)}
                   bookableMatch={bookable.find((b) => b.name === s.name) ?? null}
-                  imagePriority={i < slidesPerView}
                 />
               </li>
             ))}
@@ -126,7 +125,7 @@ function FeaturedServicesSlider({ services, bookable }) {
       </div>
 
       {canSlide && maxIndex > 0 ? (
-        <div className="home1-related-slider__dots" role="tablist" aria-label="Service slides">
+        <div className="home1-related-slider__dots" role="group" aria-label="Service slides">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
               key={i}
@@ -134,7 +133,7 @@ function FeaturedServicesSlider({ services, bookable }) {
               onClick={() => setIndex(i)}
               className={`home1-related-slider__dot${i === index ? " is-active" : ""}`}
               aria-label={`Go to slide ${i + 1}`}
-              aria-selected={i === index}
+              aria-current={i === index ? "true" : undefined}
             />
           ))}
         </div>
@@ -149,7 +148,7 @@ function resolveHref(featuredService, bookable) {
   return match?.href ?? "/services";
 }
 
-function ServiceCardHome1({ service, detailHref, imagePriority = false, bookableMatch = null }) {
+function ServiceCardHome1({ service, detailHref, bookableMatch = null }) {
   const [failed, setFailed] = useState(false);
   const { incVat } = useVatPreference();
   const priceExc = service.priceExcVat ?? service.price;
@@ -169,8 +168,7 @@ function ServiceCardHome1({ service, detailHref, imagePriority = false, bookable
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 280px"
             className="object-cover"
-            priority={imagePriority}
-            loading={imagePriority ? undefined : "lazy"}
+            loading="lazy"
             unoptimized={shouldUnoptimizeImage(service.image)}
             onError={() => setFailed(true)}
           />
@@ -295,7 +293,6 @@ export default function FeaturedServicesHome1({ compact = false }) {
                     service={s}
                     detailHref={resolveHref(s, bookable)}
                     bookableMatch={bookable.find((b) => b.name === s.name) ?? null}
-                    imagePriority={i === 0}
                   />
                 </div>
               ))}

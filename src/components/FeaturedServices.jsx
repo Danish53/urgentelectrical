@@ -213,7 +213,7 @@ export default function FeaturedServices() {
         )}
 
         {!loading && !failed && services.length > 0 ? (
-        <div className="flex justify-center gap-2 mt-6 md:hidden" role="tablist" aria-label="Service slides">
+        <div className="flex justify-center gap-2 mt-6 md:hidden" role="group" aria-label="Service slides">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
               key={i}
@@ -223,7 +223,7 @@ export default function FeaturedServices() {
                 i === index ? "w-6 bg-[#E32B2B]" : "w-2 bg-[#d1d5db]"
               }`}
               aria-label={`Go to slide ${i + 1}`}
-              aria-selected={i === index}
+              aria-current={i === index ? "true" : undefined}
             />
           ))}
         </div>

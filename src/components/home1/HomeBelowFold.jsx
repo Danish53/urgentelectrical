@@ -1,6 +1,3 @@
-"use client";
-
-import MotionSection from "@/components/MotionSection.jsx";
 import CompanyStatsHome1 from "@/components/home1/CompanyStatsHome1";
 import FeaturedServicesHome1 from "@/components/home1/FeaturedServicesHome1";
 import EmergencyHome1 from "@/components/home1/EmergencyHome1";
@@ -14,44 +11,48 @@ import FAQHome1 from "@/components/home1/FAQHome1";
 import QuoteFormHome1 from "@/components/home1/QuoteFormHome1";
 import CTAHome1 from "@/components/home1/CTAHome1";
 
-/** Single chunk for below-fold homepage sections — fewer JS requests for SEO audits. */
+function HomeSection({ children }) {
+  return <div className="w-full min-w-0">{children}</div>;
+}
+
+/** Server-rendered below-fold homepage sections with minimal client JavaScript. */
 export default function HomeBelowFold() {
   return (
     <>
-      <MotionSection variant="fade-up">
+      <HomeSection>
         <HowItWorksHome1 />
-      </MotionSection>
+      </HomeSection>
       <CompanyStatsHome1 />
-      <MotionSection variant="fade-up">
+      <HomeSection>
         <FeaturedServicesHome1 compact />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <EmergencyHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <WhyChooseUsHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <AboutCompanyHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <ProjectsHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <TrustedCertificationsHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <TestimonialsHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <FAQHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <QuoteFormHome1 />
-      </MotionSection>
-      <MotionSection variant="fade-up">
+      </HomeSection>
+      <HomeSection>
         <CTAHome1 />
-      </MotionSection>
+      </HomeSection>
     </>
   );
 }

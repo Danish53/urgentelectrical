@@ -114,7 +114,7 @@ export default function RelatedServicesSlider({ services }) {
       </div>
 
       {canSlide && maxIndex > 0 ? (
-        <div className="home1-related-slider__dots" role="tablist" aria-label="Related service slides">
+        <div className="home1-related-slider__dots" role="group" aria-label="Related service slides">
           {Array.from({ length: maxIndex + 1 }).map((_, i) => (
             <button
               key={i}
@@ -122,7 +122,7 @@ export default function RelatedServicesSlider({ services }) {
               onClick={() => setIndex(i)}
               className={`home1-related-slider__dot${i === index ? " is-active" : ""}`}
               aria-label={`Go to slide ${i + 1}`}
-              aria-selected={i === index}
+              aria-current={i === index ? "true" : undefined}
             />
           ))}
         </div>

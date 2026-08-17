@@ -163,7 +163,7 @@ export default function TestimonialsSection() {
           </div>
         </div>
 
-        <div className="flex justify-center items-center gap-2 mt-8 sm:mt-10" role="tablist" aria-label="Testimonial slides">
+        <div className="flex justify-center items-center gap-2 mt-8 sm:mt-10" role="group" aria-label="Testimonial slides">
           {testimonials.map((_, i) => (
             <button
               key={i}
@@ -173,7 +173,7 @@ export default function TestimonialsSection() {
                 i === index ? "w-2.5 h-2.5 bg-[#2563eb]" : "w-2 h-2 bg-[#c5cec9] hover:bg-[#9ca3af]"
               }`}
               aria-label={`Go to testimonial ${i + 1}`}
-              aria-selected={i === index}
+              aria-current={i === index ? "true" : undefined}
             />
           ))}
         </div>

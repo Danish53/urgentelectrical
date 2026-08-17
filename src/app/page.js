@@ -1,4 +1,7 @@
-import HomePageClient from "@/components/home1/HomePageClient";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import HomeBelowFold from "@/components/home1/HomeBelowFold";
+import HomePageChrome from "@/components/home1/HomePageChrome";
 import { HOME_JSON_LD, HOME_METADATA } from "@/data/homeSeo";
 import { getBookableServices } from "@/lib/services/getServices";
 import "./home1/home1.css";
@@ -7,6 +10,7 @@ export const metadata = HOME_METADATA;
 
 export default async function Home() {
   const bookable = await getBookableServices();
+  const bookingOptions = bookable.map(({ name, slug }) => ({ name, slug }));
   const itemList =
     bookable.length > 0
       ? {
@@ -29,7 +33,14 @@ export default async function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <HomePageClient />
+      <div className="home1-page w-full min-w-0">
+        <Navbar />
+        <main id="main-content" className="w-full min-w-0">
+          <Hero initialServices={bookingOptions} />
+          <HomeBelowFold />
+        </main>
+        <HomePageChrome />
+      </div>
     </>
   );
 }

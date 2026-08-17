@@ -32,11 +32,20 @@ export function useBookingOptions() {
 }
 
 /** Lightweight service list (title + slug) for hero and location search dropdowns */
-export function useSimpleServicesList() {
-  const [options, setOptions] = useState(/** @type {{ name: string, slug: string }[]} */ ([]));
-  const [status, setStatus] = useState(/** @type {"idle" | "loading" | "succeeded" | "failed"} */ ("loading"));
+export function useSimpleServicesList(initialOptions = []) {
+  const hasInitialOptions = initialOptions.length > 0;
+  const [options, setOptions] = useState(
+    /** @type {{ name: string, slug: string }[]} */ (initialOptions)
+  );
+  const [status, setStatus] = useState(
+    /** @type {"idle" | "loading" | "succeeded" | "failed"} */ (
+      hasInitialOptions ? "succeeded" : "loading"
+    )
+  );
 
   useEffect(() => {
+    if (hasInitialOptions) return undefined;
+
     let cancelled = false;
 
     fetchSimpleServicesList()
@@ -54,7 +63,7 @@ export function useSimpleServicesList() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [hasInitialOptions]);
 
   return {
     options,

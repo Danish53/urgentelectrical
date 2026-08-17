@@ -8,7 +8,7 @@ import { CONTAINER, SECTION_PY } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconCheck } from "./icons";
 
-function PartnerLogo({ partner, index }) {
+function PartnerLogo({ partner }) {
   const [failed, setFailed] = useState(false);
   const alt = `${partner.name} — trusted partner of Urgent Electrical Services Nottingham`;
   const isRemote = Boolean(partner.image?.startsWith("http"));
@@ -29,8 +29,7 @@ function PartnerLogo({ partner, index }) {
                 height={56}
                 sizes="(max-width: 640px) 42vw, (max-width: 1024px) 28vw, 140px"
                 className="max-h-12 w-auto h-auto object-contain object-center"
-                priority={index < 2}
-                loading={index < 2 ? undefined : "lazy"}
+                loading="lazy"
                 unoptimized={isRemote}
                 onError={() => setFailed(true)}
               />
@@ -85,8 +84,8 @@ export default function TrustedCertificationsHome1() {
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 sm:gap-5 list-none p-0 m-0"
           aria-label="Organisations we work with"
         >
-          {partners.map((p, i) => (
-            <PartnerLogo key={p.id} partner={p} index={i} />
+          {partners.map((p) => (
+            <PartnerLogo key={p.id} partner={p} />
           ))}
         </ul>
       </div>
