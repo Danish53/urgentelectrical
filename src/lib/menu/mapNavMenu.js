@@ -1,26 +1,8 @@
 import { getApiSiteOrigin } from "@/lib/siteUrl";
-import { SERVICE_DETAIL_EXTRA } from "@/data/serviceDetails";
-import {
-  resolveServiceDetailSlug,
-  toPublicServiceSlug,
-} from "@/lib/services/resolveServiceDetailSlug";
 
 /** @returns {string} */
 export function getSiteOrigin() {
   return getApiSiteOrigin();
-}
-
-/**
- * Bookable services live under /services; informative CMS pages under /pages.
- * @param {string} slug
- */
-function hrefForMenuSlug(slug) {
-  if (!slug) return "/pages";
-  const detailKey = resolveServiceDetailSlug(slug);
-  if (detailKey && SERVICE_DETAIL_EXTRA[detailKey]) {
-    return `/services/${toPublicServiceSlug(detailKey)}`;
-  }
-  return `/pages/${slug}`;
 }
 
 /**
@@ -49,7 +31,7 @@ function mapMenuChild(child, index) {
   return {
     label,
     slug: slug || null,
-    href: hrefForMenuSlug(slug),
+    href: slug ? `/pages/${slug}` : "/pages",
     key: slug ? `${slug}-${index}` : `menu-item-${index}`,
   };
 }

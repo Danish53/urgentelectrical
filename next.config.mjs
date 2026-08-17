@@ -180,6 +180,33 @@ const nextConfig = {
         permanent: true,
       },
 
+      // —— Retired /pages slugs (no CMS page) → closest live service ——
+      {
+        source: "/pages/pat-testing-nottingham",
+        destination: "/services/portable-appliance-testing-pat",
+        permanent: true,
+      },
+      {
+        source: "/pages/commercial-electrician",
+        destination: "/pages/commercial-electrician-nottingham",
+        permanent: true,
+      },
+      {
+        source: "/pages/electric-shower-installation-nottingham",
+        destination: "/services/electric-shower-replacement",
+        permanent: true,
+      },
+      {
+        source: "/pages/ev-charger-installation-nottingham",
+        destination: "/services/ev-charger-installation-nottingham-east-midlands",
+        permanent: true,
+      },
+      {
+        source: "/pages/fuse-board-consumer-units",
+        destination: "/services/fuse-box-consumer-unit-replacement",
+        permanent: true,
+      },
+
       // —— Missing image assets → existing public files ——
       {
         source: "/og-image.jpg",
