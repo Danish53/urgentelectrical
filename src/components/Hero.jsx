@@ -174,7 +174,7 @@ export default function Hero({ initialServices = [] }) {
 
         <form
           id="book"
-          className="w-full max-w-[920px] mx-auto text-left bg-[#0a0a0a]/95 border border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.55)] backdrop-blur-sm"
+          className="w-full max-w-[920px] mx-auto text-left bg-[#0a0a0a]/95 border border-white/10 rounded-2xl p-5 sm:p-6 shadow-[0_24px_60px_rgba(0,0,0,0.55)] sm:backdrop-blur-sm"
           aria-label="Book an electrician online"
           onSubmit={handleBookSubmit}
         >

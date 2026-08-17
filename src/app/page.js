@@ -1,25 +1,29 @@
+import dynamic from "next/dynamic";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import HomeBelowFold from "@/components/home1/HomeBelowFold";
-import HomePageChrome from "@/components/home1/HomePageChrome";
 import { HOME_JSON_LD, HOME_METADATA } from "@/data/homeSeo";
-import { getBookableServices } from "@/lib/services/getServices";
+import { getHomepageBookingOptions } from "@/lib/services/getServices";
+import { absoluteSiteUrl } from "@/lib/siteUrl";
 import "./home1/home1.css";
+
+const HomePageChrome = dynamic(() => import("@/components/home1/HomePageChrome"), {
+  ssr: true,
+});
 
 export const metadata = HOME_METADATA;
 
 export default async function Home() {
-  const bookable = await getBookableServices();
-  const bookingOptions = bookable.map(({ name, slug }) => ({ name, slug }));
+  const bookingOptions = await getHomepageBookingOptions();
   const itemList =
-    bookable.length > 0
+    bookingOptions.length > 0
       ? {
           "@type": "ItemList",
           name: "Our electrical services",
-          itemListElement: bookable.slice(0, 6).map((s, i) => ({
+          itemListElement: bookingOptions.slice(0, 6).map((s, i) => ({
             "@type": "ListItem",
             position: i + 1,
-            url: s.canonicalUrl,
+            url: absoluteSiteUrl(`/services/${s.slug}`),
             name: s.name,
           })),
         }

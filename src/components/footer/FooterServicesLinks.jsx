@@ -26,7 +26,7 @@ export default function FooterServicesLinks() {
 
         return {
           label: group.label,
-          href: `/pages/${first.slug}`,
+          href: first.href || `/pages/${first.slug}`,
           key: group.slug || group.label,
         };
       })

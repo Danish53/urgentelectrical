@@ -12,6 +12,7 @@ import {
 import { serviceSlug } from "@/lib/slugs";
 import { ApiError } from "@/lib/api/errors";
 import { fetchServiceBySlug, fetchServicesList } from "@/services/servicesApiService";
+import { fetchSimpleServicesList } from "@/services/simpleServicesApiService";
 import { fetchRelatedServices } from "@/services/relatedServicesApiService";
 import { cache } from "react";
 
@@ -34,6 +35,19 @@ export const getBookableServices = cache(async function getBookableServices() {
     /* build/SSR: no static fallback */
   }
   return [];
+});
+
+/**
+ * Lightweight name+slug list for homepage booking dropdown / JSON-LD.
+ * Avoids waiting on the fully paginated services catalog.
+ */
+export const getHomepageBookingOptions = cache(async function getHomepageBookingOptions() {
+  try {
+    const list = await fetchSimpleServicesList();
+    return list.map(({ title, slug }) => ({ name: title, slug }));
+  } catch {
+    return [];
+  }
 });
 
 export { getServiceCategories };

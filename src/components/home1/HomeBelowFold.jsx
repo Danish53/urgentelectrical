@@ -12,7 +12,7 @@ import QuoteFormHome1 from "@/components/home1/QuoteFormHome1";
 import CTAHome1 from "@/components/home1/CTAHome1";
 
 function HomeSection({ children }) {
-  return <div className="w-full min-w-0">{children}</div>;
+  return <div className="home1-deferred-section w-full min-w-0">{children}</div>;
 }
 
 /** Server-rendered below-fold homepage sections with minimal client JavaScript. */
@@ -22,7 +22,9 @@ export default function HomeBelowFold() {
       <HomeSection>
         <HowItWorksHome1 />
       </HomeSection>
-      <CompanyStatsHome1 />
+      <HomeSection>
+        <CompanyStatsHome1 />
+      </HomeSection>
       <HomeSection>
         <FeaturedServicesHome1 compact />
       </HomeSection>

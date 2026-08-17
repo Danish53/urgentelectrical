@@ -29,7 +29,7 @@
 
 
 
-import { Plus_Jakarta_Sans, Anton } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import AppProviders from "@/components/providers/AppProviders";
 import { withMetaNameTitle } from "@/lib/seo/buildSeoMetadata";
@@ -39,19 +39,10 @@ import "./globals.css";
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  // One variable font file replaces five render-blocking weight files.
+  weight: "variable",
   display: "swap",
   preload: true,
-  adjustFontFallback: true,
-});
-
-/** Legacy /home1 emergency headline only — single weight, no preload on every page */
-const anton = Anton({
-  variable: "--font-anton",
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap",
-  preload: false,
   adjustFontFallback: true,
 });
 
@@ -199,7 +190,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body
-        className={`${plusJakarta.variable} ${anton.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}
+        className={`${plusJakarta.variable} font-sans antialiased overflow-x-clip w-full min-w-0`}
         suppressHydrationWarning
       >
         <Script

@@ -23,6 +23,20 @@ const nextConfig = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Strict-Transport-Security",
+            // 1 year + subdomains. Browsers only honor this over HTTPS.
+            value: "max-age=31536000; includeSubDomains; preload",
+          },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       // —— Locations: aliases / unpublished areas → live pages ——
@@ -127,6 +141,11 @@ const nextConfig = {
       },
       {
         source: "/pages/fire-alarm-inspection-and-testing",
+        destination: "/services/fire-alarm-inspection-testing",
+        permanent: true,
+      },
+      {
+        source: "/pages/fire-alarm-inspection-testing",
         destination: "/services/fire-alarm-inspection-testing",
         permanent: true,
       },

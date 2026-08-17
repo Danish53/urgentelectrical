@@ -31,9 +31,12 @@ export function parseSimpleServicesListResponse(payload) {
   return list.length ? /** @type {SimpleService[]} */ (list) : null;
 }
 
-/** @returns {Promise<SimpleService[]>} */
-export async function fetchSimpleServicesList() {
-  const payload = await apiRequest(SERVICES_SIMPLE_LIST_API_PATH, { method: "GET" });
+/**
+ * @param {Pick<RequestInit, "cache"> & { next?: { revalidate?: number, tags?: string[] } }} [options]
+ * @returns {Promise<SimpleService[]>}
+ */
+export async function fetchSimpleServicesList(options = {}) {
+  const payload = await apiRequest(SERVICES_SIMPLE_LIST_API_PATH, { method: "GET", ...options });
   const list = parseSimpleServicesListResponse(payload);
 
   if (!list?.length) {

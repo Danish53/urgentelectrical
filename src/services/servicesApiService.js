@@ -70,9 +70,10 @@ function servicesPathForPage(page) {
 
 /**
  * Fetches all pages when the API returns Laravel pagination (`meta.last_page`).
+ * @param {Pick<RequestInit, "cache"> & { next?: { revalidate?: number, tags?: string[] } }} [options]
  * @returns {Promise<ServicesListResult>}
  */
-export async function fetchServicesList() {
+export async function fetchServicesList(options = {}) {
   /** @type {ApiService[]} */
   const all = [];
   let meta = null;
@@ -81,7 +82,7 @@ export async function fetchServicesList() {
   let lastPage = 1;
 
   do {
-    const payload = await apiRequest(servicesPathForPage(page), { method: "GET" });
+    const payload = await apiRequest(servicesPathForPage(page), { method: "GET", ...options });
     const parsed = parseServicesApiPayload(payload);
 
     if (!parsed?.services) {

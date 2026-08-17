@@ -35,9 +35,12 @@ export function parseServiceCategoriesResponse(payload) {
   return [];
 }
 
-/** GET /service-categories */
-export async function fetchServiceCategories() {
-  const payload = await apiRequest(SERVICE_CATEGORIES_API_PATH, { method: "GET" });
+/**
+ * GET /service-categories
+ * @param {Pick<RequestInit, "cache"> & { next?: { revalidate?: number, tags?: string[] } }} [options]
+ */
+export async function fetchServiceCategories(options = {}) {
+  const payload = await apiRequest(SERVICE_CATEGORIES_API_PATH, { method: "GET", ...options });
   const categories = parseServiceCategoriesResponse(payload);
 
   if (!categories.length) {

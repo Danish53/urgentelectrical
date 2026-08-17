@@ -168,7 +168,6 @@ section {
 
 .hero-marquee-track {
   animation: hero-marquee 35s linear infinite;
-  will-change: transform;
   backface-visibility: hidden;
 }
 
@@ -1103,6 +1102,20 @@ section {
 
 .floating-cta-enter {
   animation: floatCtaIn 0.65s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+/*
+ * Painting animated full-viewport gradients is expensive on low-end phones.
+ * Mobile starts in the exact same final visual state; desktop motion remains.
+ */
+@media (max-width: 767px) {
+  .hero-grid-bg,
+  .hero-top-glow,
+  .hero-bottom-glow {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

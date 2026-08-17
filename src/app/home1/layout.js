@@ -1,4 +1,14 @@
+import { Anton } from "next/font/google";
 import { buildSeoMetadata } from "@/lib/seo/buildSeoMetadata";
+
+const anton = Anton({
+  variable: "--font-anton",
+  subsets: ["latin"],
+  weight: ["400"],
+  display: "swap",
+  preload: false,
+  adjustFontFallback: true,
+});
 
 export const metadata = buildSeoMetadata(
   "Original Homepage",
@@ -7,5 +17,5 @@ export const metadata = buildSeoMetadata(
 );
 
 export default function Home1Layout({ children }) {
-  return children;
+  return <div className={anton.variable}>{children}</div>;
 }

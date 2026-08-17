@@ -16,6 +16,15 @@
   color: var(--home1-text);
 }
 
+/*
+ * Skip layout/paint for off-screen homepage sections until they approach the
+ * viewport. The intrinsic size keeps the initial scrollbar stable.
+ */
+.home1-deferred-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
 /* Hero â€” premium dark (logo red + black grid) */
 .home1-hero {
   background-color: #000000;
