@@ -641,7 +641,6 @@
 .home1-location-detail-page .home1-page-detail-prose a,
 .home1-other-service-detail-page .home1-page-detail-prose a {
   color: var(--home1-red);
-  font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 0.12em;
 }
