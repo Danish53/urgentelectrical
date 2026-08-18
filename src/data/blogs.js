@@ -55,12 +55,13 @@ export function getBlogImageUrl(post) {
 
 export function buildBlogListingMetadata({ page = 1 } = {}) {
   const pageNumber = Number.parseInt(String(page), 10);
-  const title =
-    Number.isFinite(pageNumber) && pageNumber > 1
-      ? `Blog & Electrical News | Page ${pageNumber}`
-      : "Blog & Electrical News | Nottingham";
-  const description =
-    "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.";
+  const isPaginated = Number.isFinite(pageNumber) && pageNumber > 1;
+  const title = isPaginated
+    ? `Blog & Electrical News | Page ${pageNumber}`
+    : "Blog & Electrical News | Nottingham";
+  const description = isPaginated
+    ? `Page ${pageNumber} of expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.`
+    : "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.";
 
   return buildSeoMetadata(title, description, {
     keywords: [

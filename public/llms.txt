@@ -35,7 +35,7 @@ Sitemap: https://www.urgentelectrical.services/sitemap.xml
 
 ## Key areas served
 
-- [Nottingham](https://www.urgentelectrical.services/locations/nottingham): Local electrician coverage for Nottingham
+- [Nottingham](https://www.urgentelectrical.services/locations/electrician-nottingham): Local electrician coverage for Nottingham
 - [Arnold](https://www.urgentelectrical.services/locations/electrician-arnold-nottingham): Electrician services in Arnold, Nottingham
 - [Derby](https://www.urgentelectrical.services/locations/electricians-derby): Electrician services in Derby
 - [Leicester](https://www.urgentelectrical.services/locations/leicester): Electrician services in Leicester

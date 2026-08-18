@@ -46,8 +46,13 @@ const nextConfig = {
         permanent: true,
       },
       {
+        source: "/locations/nottingham",
+        destination: "/locations/electrician-nottingham",
+        permanent: true,
+      },
+      {
         source: "/locations/nottingham-city-centre",
-        destination: "/locations/nottingham",
+        destination: "/locations/electrician-nottingham",
         permanent: true,
       },
       {

@@ -47,6 +47,7 @@ import { SERVER_FETCH } from "@/lib/api/serverFetch";
  *   long_description?: string,
  *   seo_title?: string,
  *   seo_description?: string,
+ *   description_html?: string,
  *   updated_at?: string,
  *   benefits?: string[],
  *   common_signs?: string[],
@@ -114,6 +115,15 @@ export function normalizeOtherServiceListItem(item) {
 }
 
 /**
+ * @param {unknown} value
+ */
+function parseDescriptionHtml(value) {
+  const html = String(value ?? "").trim();
+  if (!html || html.toLowerCase() === "null") return "";
+  return html;
+}
+
+/**
  * @param {Record<string, unknown>} data
  * @returns {ApiInfoPageDetail}
  */
@@ -122,6 +132,7 @@ export function normalizeOtherServiceDetailItem(data) {
   const displayName =
     (typeof data.page_display_name === "string" && data.page_display_name.trim()) || fullTitle;
   const description = typeof data.description === "string" ? data.description.trim() : "";
+  const descriptionHtml = parseDescriptionHtml(data.description_html ?? data.descriptionHtml);
 
   /** @type {string[] | undefined} */
   const benefits = Array.isArray(data.benefits)
@@ -171,6 +182,7 @@ export function normalizeOtherServiceDetailItem(data) {
     full_title: displayName !== fullTitle ? fullTitle : undefined,
     slug: normalizePageSlug(data),
     description,
+    description_html: descriptionHtml || undefined,
     page_image: typeof data.page_image === "string" ? data.page_image : undefined,
     seo_title: typeof data.seo_title === "string" ? data.seo_title : undefined,
     seo_description: typeof data.seo_description === "string" ? data.seo_description : undefined,

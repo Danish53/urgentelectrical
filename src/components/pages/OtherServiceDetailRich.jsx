@@ -30,7 +30,7 @@ function buildPageSectionNumbers(layout) {
     numbers[key] = formatSectionNumber(index);
   };
 
-  if (layout.paragraphs.length) assign("overview");
+  if (layout.descriptionHtml || layout.paragraphs.length) assign("overview");
   if (layout.features.length) assign("benefits");
   if (layout.process.length) assign("process");
   if (layout.symptoms.length) assign("symptoms");
@@ -60,7 +60,7 @@ export default function OtherServiceDetailRich({
   const related = relatedLinks;
   const sectionNumbers = buildPageSectionNumbers(layout);
   const sections = [
-    layout.paragraphs.length ? { id: "overview", label: "Overview" } : null,
+    layout.descriptionHtml || layout.paragraphs.length ? { id: "overview", label: "Overview" } : null,
     layout.features.length ? { id: "benefits", label: "Benefits" } : null,
     layout.process.length ? { id: "process", label: "How it works" } : null,
     layout.symptoms.length ? { id: "symptoms", label: "Common signs" } : null,
@@ -69,7 +69,7 @@ export default function OtherServiceDetailRich({
   ].filter(Boolean);
 
   return (
-    <div className="home1-page home1-page-detail-rich w-full min-w-0">
+    <div className="home1-page home1-other-service-detail-page home1-page-detail-rich w-full min-w-0">
       <Navbar />
       <main id="main-content" className="w-full min-w-0">
         <section
@@ -143,7 +143,7 @@ export default function OtherServiceDetailRich({
                   </nav>
                 ) : null}
 
-                {layout.paragraphs.length ? (
+                {layout.descriptionHtml || layout.paragraphs.length ? (
                 <article className="home1-page-detail-card" id="overview">
                   <header className="home1-page-detail-card-head">
                     <span className="home1-page-detail-card-num">{sectionNumbers.overview}</span>
@@ -152,11 +152,18 @@ export default function OtherServiceDetailRich({
                       <p>What this service covers and when to book</p>
                     </div>
                   </header>
-                  <div className="home1-page-detail-prose">
-                    {layout.paragraphs.map((para) => (
-                      <p key={para.slice(0, 40)}>{para}</p>
-                    ))}
-                  </div>
+                  {layout.descriptionHtml ? (
+                    <div
+                      className="home1-page-detail-prose"
+                      dangerouslySetInnerHTML={{ __html: layout.descriptionHtml }}
+                    />
+                  ) : (
+                    <div className="home1-page-detail-prose">
+                      {layout.paragraphs.map((para) => (
+                        <p key={para.slice(0, 40)}>{para}</p>
+                      ))}
+                    </div>
+                  )}
                   {layout.keywords.length ? (
                     <ul className="home1-page-detail-tags" aria-label="Related topics">
                       {layout.keywords.map((kw) => (

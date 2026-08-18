@@ -289,6 +289,15 @@ function splitDescriptionParagraphs(text) {
 }
 
 /**
+ * @param {unknown} value
+ */
+function parseDescriptionHtml(value) {
+  const html = String(value ?? "").trim();
+  if (!html || html.toLowerCase() === "null") return "";
+  return html;
+}
+
+/**
  * @param {import("@/services/pagesApiService").ApiInfoPageDetail["how_it_work"]} items
  */
 function mapHowItWorkSteps(items) {
@@ -325,6 +334,7 @@ export function getPageDetailLayout(slug, page = null) {
     fallbackTitle;
 
   const descriptionParagraphs = splitDescriptionParagraphs(page?.description);
+  const descriptionHtml = parseDescriptionHtml(page?.description_html ?? page?.descriptionHtml);
 
   const lead = isApiPage
     ? page?.seo_description?.trim() || descriptionParagraphs[0] || ""
@@ -395,6 +405,7 @@ export function getPageDetailLayout(slug, page = null) {
     source: page?.source,
     title,
     lead,
+    descriptionHtml,
     paragraphs,
     features,
     includes,

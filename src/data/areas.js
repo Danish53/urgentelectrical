@@ -28,8 +28,8 @@ const DEFAULT_REGION_ID = "nottingham";
  * Never invent short slugs here — unknown names resolve to /locations via getAreaLocationHref.
  */
 export const AREA_LOCATION_SLUG_OVERRIDES = {
-  "Nottingham City Centre": "nottingham",
-  Nottingham: "nottingham",
+  "Nottingham City Centre": "electrician-nottingham",
+  Nottingham: "electrician-nottingham",
   "Derby City Centre": "electricians-derby",
   Derby: "electricians-derby",
   "Leicester City Centre": "leicester",
