@@ -53,8 +53,12 @@ export function getBlogImageUrl(post) {
   return trimmed.startsWith("http") ? trimmed : `${SITE}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
 }
 
-export function buildBlogListingMetadata() {
-  const title = "Blog & Electrical News | Nottingham";
+export function buildBlogListingMetadata({ page = 1 } = {}) {
+  const pageNumber = Number.parseInt(String(page), 10);
+  const title =
+    Number.isFinite(pageNumber) && pageNumber > 1
+      ? `Blog & Electrical News | Page ${pageNumber}`
+      : "Blog & Electrical News | Nottingham";
   const description =
     "Expert electrical guides, safety tips, and industry news from NICEIC approved electricians in Nottingham and the East Midlands.";
 

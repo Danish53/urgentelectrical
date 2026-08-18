@@ -124,6 +124,16 @@ function parseParagraphs(value, name, regionLabel, fallback) {
 }
 
 /**
+ * Main page body HTML from the location-details API (`description_html`).
+ * @param {unknown} value
+ */
+function parseDescriptionHtml(value) {
+  const html = String(value ?? "").trim();
+  if (!html || html.toLowerCase() === "null") return "";
+  return html;
+}
+
+/**
  * @param {unknown} value
  * @param {string[]} fallback
  */
@@ -256,6 +266,7 @@ export function mapLocationDetailFromApi(payload) {
         : "",
   );
 
+  const descriptionHtml = parseDescriptionHtml(root.description_html ?? root.descriptionHtml);
   const paragraphs = parseParagraphs(root.description, name, regionLabel, fallback.paragraphs);
   const whyChoose = parseWhyChoose(root.why_choose ?? root.whyChoose, fallback.whyChoose);
   const commonJobs = parseWhyChoose(
@@ -318,6 +329,7 @@ export function mapLocationDetailFromApi(payload) {
       lead: parseHeroLead(root, fallback.hero.lead),
     },
     highlights: fallback.highlights,
+    descriptionHtml,
     paragraphs,
     whyChoose,
     commonJobs,

@@ -631,6 +631,23 @@
   margin-bottom: 0;
 }
 
+.home1-location-detail-page .home1-page-detail-prose {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--home1-text);
+}
+
+.home1-location-detail-page .home1-page-detail-prose a {
+  color: var(--home1-red);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.home1-location-detail-page .home1-page-detail-prose a:hover {
+  color: var(--home1-red-dark);
+}
+
 .home1-page-detail-tags {
   display: flex;
   flex-wrap: wrap;

@@ -29,7 +29,7 @@ function buildLocationSectionNumbers(location) {
     numbers[key] = formatSectionNumber(index);
   };
 
-  if (location.paragraphs?.length) assign("about");
+  if (location.descriptionHtml || location.paragraphs?.length) assign("about");
   if (location.commonJobs?.length) assign("jobs");
   if (location.whyChoose?.length) assign("why");
   if (location.faqs?.length) assign("faqs");
@@ -66,7 +66,9 @@ function LocationHeroImage({ location }) {
 export default function LocationDetailClient({ location }) {
   const sectionNumbers = buildLocationSectionNumbers(location);
   const jumpSections = [
-    location.paragraphs?.length ? { id: "about", label: "Overview" } : null,
+    location.descriptionHtml || location.paragraphs?.length
+      ? { id: "about", label: "Overview" }
+      : null,
     location.commonJobs?.length ? { id: "jobs", label: "Common jobs" } : null,
     location.whyChoose?.length ? { id: "why", label: "Why choose us" } : null,
     location.faqs?.length ? { id: "faqs", label: "FAQs" } : null,
@@ -164,7 +166,7 @@ export default function LocationDetailClient({ location }) {
                   </nav>
                 ) : null}
 
-                {location.paragraphs?.length ? (
+                {location.descriptionHtml || location.paragraphs?.length ? (
                   <article className="home1-page-detail-card" id="about">
                     <header className="home1-page-detail-card-head">
                       <span className="home1-page-detail-card-num">{sectionNumbers.about}</span>
@@ -173,11 +175,18 @@ export default function LocationDetailClient({ location }) {
                         <p>Local coverage, response times, and what we handle</p>
                       </div>
                     </header>
-                    <div className="home1-page-detail-prose">
-                      {location.paragraphs.map((para) => (
-                        <p key={para.slice(0, 40)}>{para}</p>
-                      ))}
-                    </div>
+                    {location.descriptionHtml ? (
+                      <div
+                        className="home1-page-detail-prose"
+                        dangerouslySetInnerHTML={{ __html: location.descriptionHtml }}
+                      />
+                    ) : (
+                      <div className="home1-page-detail-prose">
+                        {location.paragraphs.map((para) => (
+                          <p key={para.slice(0, 40)}>{para}</p>
+                        ))}
+                      </div>
+                    )}
                   </article>
                 ) : null}
 

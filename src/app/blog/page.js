@@ -10,7 +10,7 @@ export async function generateMetadata({ searchParams }) {
   const categories = await getBlogCategories();
   const { page, category } = parseBlogListingParams(params, categories);
   const canonical = `${getSiteUrl()}${blogListingHref({ page, category })}`;
-  const meta = buildBlogListingMetadata();
+  const meta = buildBlogListingMetadata({ page });
 
   return {
     metadataBase: new URL(getSiteUrl()),
