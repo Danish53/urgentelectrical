@@ -1,17 +1,47 @@
 import Link from "next/link";
-import { FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
+import { FOOTER_AREAS, FOOTER_PHONE, FOOTER_PHONE_TEL } from "@/data/footer";
 import { CONTAINER } from "./constants";
 import SectionHeader from "./SectionHeader";
 import { IconArrow, IconCheck, IconPhone } from "./icons";
 
-const HIGHLIGHTS = [
-  "NICEIC approved since 2014",
-  "Domestic, commercial & industrial",
-  "Fixed-price online booking",
-  "24/7 emergency response",
+/** Same /pages targets as footer Services (first CMS page in each nav group). */
+const SECTOR_LINKS = [
+  { label: "Domestic", href: "/pages/domestic-electrician-nottingham" },
+  { label: "commercial", href: "/pages/fire-alarm-installation-nottingham" },
+  { label: "industrial", href: "/pages/electrical-certificates-nottingham" },
 ];
 
-const COVERAGE_AREAS = ["Nottingham", "Derby", "Leicester", "Loughborough", "East Midlands"];
+const HIGHLIGHTS = [
+  { key: "niceic", label: "NICEIC approved since 2014" },
+  { key: "sectors", type: "sectors" },
+  { key: "booking", label: "Fixed-price online booking" },
+  { key: "emergency", label: "24/7 emergency response" },
+];
+
+const LINK_CLASS = "hover:text-[var(--home1-red)] transition-colors";
+
+function SectorLinks() {
+  return (
+    <span>
+      <Link href={SECTOR_LINKS[0].href} className={LINK_CLASS}>
+        {SECTOR_LINKS[0].label}
+      </Link>
+      {", "}
+      <Link href={SECTOR_LINKS[1].href} className={LINK_CLASS}>
+        {SECTOR_LINKS[1].label}
+      </Link>
+      {" & "}
+      <Link href={SECTOR_LINKS[2].href} className={LINK_CLASS}>
+        {SECTOR_LINKS[2].label}
+      </Link>
+    </span>
+  );
+}
+
+/** Same valid location slugs as footer Areas Served. */
+const COVERAGE_AREAS = ["Nottingham", "Derby", "Leicester", "Loughborough", "East Midlands"].map(
+  (label) => FOOTER_AREAS.find((area) => area.label === label) || { label, href: "/locations" }
+);
 
 const METRICS = [
   { value: "2014", label: "Est." },
@@ -39,9 +69,12 @@ export default function AboutCompanyHome1() {
             />
             <ul className="grid sm:grid-cols-2 gap-3 mb-8 mt-2">
               {HIGHLIGHTS.map((h) => (
-                <li key={h} className="flex items-center gap-2 text-[14px] font-medium text-[var(--home1-text)]">
+                <li
+                  key={h.key}
+                  className="flex items-center gap-2 text-[14px] font-medium text-[var(--home1-text)]"
+                >
                   <IconCheck className="w-4 h-4 text-[var(--home1-red)] shrink-0" aria-hidden="true" />
-                  {h}
+                  {h.type === "sectors" ? <SectorLinks /> : h.label}
                 </li>
               ))}
             </ul>
@@ -60,8 +93,10 @@ export default function AboutCompanyHome1() {
               <h3 className="home1-about-panel-title">Covering the East Midlands</h3>
               <ul className="home1-about-areas">
                 {COVERAGE_AREAS.map((area) => (
-                  <li key={area}>
-                    <span className="home1-about-area-pill">{area}</span>
+                  <li key={area.label}>
+                    <Link href={area.href} className="home1-about-area-pill">
+                      {area.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
