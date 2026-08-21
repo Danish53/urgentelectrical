@@ -164,13 +164,13 @@ function OrderCard({
       <div className="home1-orders-card-actions">
         <div className="home1-orders-card-actions-left">
           {/* <button
-            type="button"
-            className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--detail inline-flex items-center justify-center gap-2"
-            onClick={() => onViewDetails(order)}
-            disabled={detailLoading}
-            aria-busy={detailLoading}
-          >
-            {detailLoading ? <ButtonSpinner /> : null}
+          type="button"
+          className="home1-btn-outline home1-orders-card-btn home1-orders-card-btn--detail inline-flex items-center justify-center gap-2"
+          onClick={() => onViewDetails(order)}
+          disabled={detailLoading}
+          aria-busy={detailLoading}
+        >
+          {detailLoading ? <ButtonSpinner /> : null}
             {detailLoading ? "Loading…" : "Order Details"}
           </button> */}
 
@@ -214,19 +214,19 @@ function OrderCard({
               onClick={() => onCancel?.(order)}
             >
               Cancel Order
-            </button>
+        </button>
           ) : order.status === "completed" || order.status === "cancelled" ? (
             <Link
               href={getOrderServiceDetailHref(order)}
               className="home1-btn-primary home1-orders-card-btn"
             >
               Reorder
-            </Link>
-          ) : (
-            <a href="tel:01157780622" className="home1-btn-primary home1-orders-card-btn">
+          </Link>
+        ) : (
+          <a href="tel:01157780622" className="home1-btn-primary home1-orders-card-btn">
               Call Engineer
-            </a>
-          )}
+          </a>
+        )}
         </div>
       </div>
     </article>
@@ -486,14 +486,14 @@ export default function OrdersPageClient() {
         >
           {filteredOrders.map((order) => (
             <li key={order.id}>
-                <OrderCard
-                  order={order}
-                  onViewDetails={openOrderDetail}
+              <OrderCard
+                order={order}
+                onViewDetails={openOrderDetail}
                   onCancel={openCancelModal}
                   onSendInvoiceEmail={handleSendInvoiceEmail}
-                  detailLoading={detailLoading && detailOrderId === order.id}
+                detailLoading={detailLoading && detailOrderId === order.id}
                   invoiceEmailLoading={invoiceSendingOrderId === order.id}
-                />
+              />
             </li>
           ))}
         </ul>

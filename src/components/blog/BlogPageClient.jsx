@@ -21,7 +21,6 @@ export default function BlogPageClient({
       <main className="w-full min-w-0">
         <BlogHero />
         <BlogListing
-          key={`${initialCategory}-${initialPage}`}
           categories={categories}
           initialPosts={initialPosts}
           initialMeta={initialMeta}

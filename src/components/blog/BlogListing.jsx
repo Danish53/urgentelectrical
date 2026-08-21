@@ -43,8 +43,10 @@ export default function BlogListing({
   const router = useRouter();
   const active = initialCategory;
   const page = initialPage;
+  const listingKey = `${initialCategory}-${initialPage}`;
   const [posts, setPosts] = useState(initialPosts ?? []);
   const [meta, setMeta] = useState(initialMeta ?? null);
+  const [syncedKey, setSyncedKey] = useState(listingKey);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,6 +54,14 @@ export default function BlogListing({
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState(null);
   const [searchRetryKey, setSearchRetryKey] = useState(0);
+
+  if (syncedKey !== listingKey) {
+    setSyncedKey(listingKey);
+    setPosts(initialPosts ?? []);
+    setMeta(initialMeta ?? null);
+    setError(null);
+    setLoading(false);
+  }
 
   const categoryLabelFor = useCallback(
     (categorySlug) =>
@@ -146,7 +156,7 @@ export default function BlogListing({
   function handleCategoryChange(catId) {
     if (catId === active) return;
     setSearchQuery("");
-    router.push(blogListingHref({ category: catId, page: 1 }));
+    router.push(blogListingHref({ category: catId, page: 1 }), { scroll: false });
   }
 
   const featured = !searchActive && active === "all" && page === 1 ? posts.find((p) => p.featured) : null;
